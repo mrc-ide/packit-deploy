@@ -1,10 +1,10 @@
-import io
 from contextlib import redirect_stdout
-from unittest import mock
+import io
 import pytest
+from unittest import mock
 
 from src.packit_deploy import cli
-from src.packit_deploy.cli import verify_data_loss, prompt_yes_no, PackitArgs
+from src.packit_deploy.cli import verify_data_loss, prompt_yes_no
 from src.packit_deploy.config import PackitConfig
 
 
@@ -52,13 +52,13 @@ def test_prints_version():
 
 
 def test_args_passed_to_start():
-    with mock.patch('src.packit_deploy.cli.packit_start') as f:
+    with mock.patch("src.packit_deploy.cli.packit_start") as f:
         cli.main(["start", "config/basic"])
 
     assert f.called
     assert f.call_args[0][1].pull is False
 
-    with mock.patch('src.packit_deploy.cli.packit_start') as f:
+    with mock.patch("src.packit_deploy.cli.packit_start") as f:
         cli.main(["start", "config/basic", "--pull"])
 
     assert f.called
@@ -66,7 +66,7 @@ def test_args_passed_to_start():
 
 
 def test_args_passed_to_stop():
-    with mock.patch('src.packit_deploy.cli.packit_stop') as f:
+    with mock.patch("src.packit_deploy.cli.packit_stop") as f:
         cli.main(["stop", "config/basic"])
 
     assert f.called
@@ -74,7 +74,7 @@ def test_args_passed_to_stop():
     assert f.call_args[0][1].network is False
     assert f.call_args[0][1].volumes is False
 
-    with mock.patch('src.packit_deploy.cli.packit_stop') as f:
+    with mock.patch("src.packit_deploy.cli.packit_stop") as f:
         cli.main(["stop", "config/basic", "--volumes", "--network"])
 
     assert f.called
@@ -86,7 +86,7 @@ def test_args_passed_to_stop():
 def test_verify_data_loss_called():
     f = io.StringIO()
     with redirect_stdout(f):
-        with mock.patch('src.packit_deploy.cli.verify_data_loss') as verify:
+        with mock.patch("src.packit_deploy.cli.verify_data_loss") as verify:
             verify.return_value = True
             cli.main(["stop", "config/basic", "--volumes"])
 
@@ -96,7 +96,7 @@ def test_verify_data_loss_called():
 def test_verify_data_loss_not_called():
     f = io.StringIO()
     with redirect_stdout(f):
-        with mock.patch('src.packit_deploy.cli.verify_data_loss') as verify:
+        with mock.patch("src.packit_deploy.cli.verify_data_loss") as verify:
             verify.return_value = True
             cli.main(["stop", "config/basic"])
 
@@ -107,7 +107,7 @@ def test_verify_data_loss_warns_if_loss():
     cfg = PackitConfig("config/basic")
     f = io.StringIO()
     with redirect_stdout(f):
-        with mock.patch('src.packit_deploy.cli.prompt_yes_no') as prompt:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
             verify_data_loss(cfg)
 
@@ -117,7 +117,7 @@ def test_verify_data_loss_warns_if_loss():
 
 def test_verify_data_loss_throws_if_loss():
     cfg = PackitConfig("config/basic")
-    with mock.patch('src.packit_deploy.cli.prompt_yes_no') as prompt:
+    with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
         prompt.return_value = False
         with pytest.raises(Exception, match="Not continuing"):
             verify_data_loss(cfg)
@@ -127,7 +127,7 @@ def test_verify_data_prevents_unwanted_loss():
     cfg = PackitConfig("config/basic")
     cfg.protect_data = True
     msg = "Cannot remove volumes with this configuration"
-    with mock.patch('src.packit_deploy.cli.prompt_yes_no') as prompt:
+    with mock.patch("src.packit_deploy.cli.prompt_yes_no"):
         with pytest.raises(Exception, match=msg):
             verify_data_loss(cfg)
 

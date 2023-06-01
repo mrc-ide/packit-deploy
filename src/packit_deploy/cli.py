@@ -67,16 +67,17 @@ def packit_stop(obj, args, cfg):
 
 def verify_data_loss(cfg):
     if cfg.protect_data:
-        raise Exception("Cannot remove volumes with this configuration")
+        err = "Cannot remove volumes with this configuration"
+        raise Exception(err)
     else:
         print("""WARNING! PROBABLE IRREVERSIBLE DATA LOSS!
-
 You are about to delete the data volumes. This action cannot be undone
 and will result in the irreversible loss of *all* data associated with
-the application. This includes all databases, packet data etc.""")
-
-        if not prompt_yes_no():
-            raise Exception("Not continuing")
+the application. This includes all databases, packet data etc."""
+              )
+    if not prompt_yes_no():
+        msg = "Not continuing"
+        raise Exception(msg)
 
 
 def prompt_yes_no(get_input=input):

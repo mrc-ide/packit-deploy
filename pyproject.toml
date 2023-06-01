@@ -43,10 +43,7 @@ path = "src/packit_deploy/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
-    "constellation==1.0.0",
     "coverage[toml]>=6.5",
-    "docker",
-    "docopt",
     "pytest"
 ]
 [tool.hatch.envs.default.scripts]

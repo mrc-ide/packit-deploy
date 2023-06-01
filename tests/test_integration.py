@@ -30,22 +30,21 @@ def test_start_and_stop():
         assert docker_util.container_exists("packit-packit")
 
         api = cfg.get_container("packit-api")
-        api_config = docker_util.string_from_container(
-            api, "/etc/packit/config.properties").split("\n")
+        api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
 
         assert "outpack.server=http://orderly-web-orderly:8321" in api_config
 
         # Trivial check that the proxy container works too:
         proxy = cfg.get_container("proxy")
         ports = proxy.attrs["HostConfig"]["PortBindings"]
-        assert set(ports.keys()) == set(["443/tcp", "80/tcp"])
+        assert set(ports.keys()) == {"443/tcp", "80/tcp"}
         dat = json.loads(http_get("http://localhost/api/"))
         assert dat["status"] == "success"
         dat = json.loads(http_get("https://localhost/api/"))
         assert dat["status"] == "success"
 
         # Bring the whole lot down:
-        with mock.patch('src.packit_deploy.cli.prompt_yes_no') as prompt:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
             cli.main(["stop", path, "--kill", "--volumes", "--network"])
             containers = cl.containers.list()
@@ -57,7 +56,7 @@ def test_start_and_stop():
             assert not docker_util.container_exists("packit-packit")
             assert not docker_util.container_exists("packit-outpack-server")
     finally:
-        with mock.patch('src.packit_deploy.cli.prompt_yes_no') as prompt:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
             cli.main(["stop", path, "--kill", "--volumes", "--network"])
 
@@ -68,7 +67,7 @@ def http_get(url, retries=5, poll=0.5):
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
-    for i in range(retries):
+    for _i in range(retries):
         try:
             r = urllib.request.urlopen(url, context=ctx)
             return r.read().decode("UTF-8")
