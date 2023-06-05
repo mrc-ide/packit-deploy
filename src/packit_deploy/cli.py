@@ -22,6 +22,7 @@ import yaml
 
 def main(argv=None):
     path, extra, options, args = parse_args(argv)
+    print(args.action)
 
 
 def parse_args(argv=None):

@@ -4,9 +4,9 @@ on:
   pull_request:
     branches:
       - main
-    push:
-      branches:
-        - main
+  push:
+    branches:
+      - main
 
 jobs:
   build:
@@ -31,4 +31,4 @@ jobs:
           hatch run lint:style
       - name: Test
         run: |
-          hatch run test
+          hatch run cov
