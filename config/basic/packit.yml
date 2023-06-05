@@ -1,0 +1,54 @@
+## Prefix for container names; we'll use {container_prefix}-(container_name)
+container_prefix: packit
+
+## Docker org for images
+repo: mrcide
+
+## The name of the docker network that containers will be attached to.
+## If you want to proxy Packit to the host, you will need to
+## arrange a proxy on this network
+network: packit-network
+
+protect_data: false
+
+## Names of the docker volumes to use:
+##
+## outpack: stores the outpack metadata
+## proxy_logs: stores logs from the reverse proxy (only used if proxy is given)
+## (More volumes are anticipated as the tool develops)
+volumes:
+  outpack: outpack_volume
+  proxy_logs: orderly_web_proxy_logs
+
+outpack:
+  server:
+    name: outpack_server
+    tag: main
+  migrate:
+    name: outpack.orderly
+    tag: main
+
+packit:
+  api:
+    name: packit-api
+    tag: main
+  app:
+    name: packit
+    tag: main
+  db:
+    name: packit-db
+    tag: main
+    user: packituser
+    password: changeme
+
+## If running a proxy directly, fill this section in.  Otherwise you
+## are responsible for proxying the application out of the docker
+## network
+proxy:
+  enabled: true
+  hostname: localhost
+  port_http: 80
+  port_https: 443
+  image:
+    name: packit-proxy
+    tag: main
