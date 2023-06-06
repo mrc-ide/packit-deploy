@@ -1,4 +1,5 @@
 """Usage:
+  packit --version
   packit start <path> [--extra=PATH] [--option=OPTION]... [--pull]
   packit status <path>
   packit stop <path> [--volumes] [--network] [--kill] [--force]
@@ -18,19 +19,25 @@ Options:
 
 import docopt
 import yaml
+import packit_deploy.__about__ as about
 
 
 def main(argv=None):
-    path, extra, options, args = parse_args(argv)
-    print(args.action)
+    opts = docopt.docopt(__doc__, argv)
+    if opts["--version"]:
+        print(about.__version__)
+        return about.__version__
+    else:
+        path, extra, options, args = parse_args(opts)
+        print(args.action)
+        return path, extra, options, args
 
 
-def parse_args(argv=None):
-    args = docopt.docopt(__doc__, argv)
-    path = args["<path>"]
-    extra = args["--extra"]
-    options = parse_option(args)
-    return path, extra, options, PackitArgs(args)
+def parse_args(opts):
+    path = opts["<path>"]
+    extra = opts["--extra"]
+    options = parse_option(opts)
+    return path, extra, options, PackitArgs(opts)
 
 
 def parse_option(args):

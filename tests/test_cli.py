@@ -2,7 +2,7 @@ from src.packit_deploy import cli
 
 
 def test_parse_args():
-    res = cli.parse_args(["start", "config/basic", "--pull"])
+    res = cli.main(["start", "config/basic", "--pull"])
     assert res[0] == "config/basic"
     assert res[1] is None
     assert res[2] == []
@@ -13,13 +13,13 @@ def test_parse_args():
     assert args.volumes is False
     assert args.network is False
 
-    res = cli.parse_args(["start", "config/basic", "--extra=extra.yml"])
+    res = cli.main(["start", "config/basic", "--extra=extra.yml"])
     assert res[1] == "extra.yml"
 
-    res = cli.parse_args(["start", "config/basic", "--option=a=x", "--option=b.c=y"])
+    res = cli.main(["start", "config/basic", "--option=a=x", "--option=b.c=y"])
     assert res[2] == [{"a": "x"}, {"b": {"c": "y"}}]
 
-    res = cli.parse_args(["stop", "config/basic", "--kill", "--network", "--volumes"])
+    res = cli.main(["stop", "config/basic", "--kill", "--network", "--volumes"])
     args = res[3]
     assert args.action == "stop"
     assert args.pull is False
@@ -27,6 +27,9 @@ def test_parse_args():
     assert args.volumes is True
     assert args.network is True
 
-    res = cli.parse_args(["status", "config/basic"])
+    res = cli.main(["status", "config/basic"])
     args = res[3]
     assert args.action == "status"
+
+    res = cli.main(["--version"])
+    assert res == "0.0.0"
