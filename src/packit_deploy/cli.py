@@ -19,6 +19,7 @@ Options:
 
 import docopt
 import yaml
+
 import packit_deploy.__about__ as about
 
 
