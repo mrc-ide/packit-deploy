@@ -21,6 +21,13 @@ volumes:
   proxy_logs: orderly_web_proxy_logs
 
 outpack:
+  ## Initial data source for the outpack directory.  This section is
+  ## optional - if not present, it is up to you to initialise the
+  ## outpack volume (in the volumes section above) with appropriate
+  ## data (if data is not present, the app will not function).  This
+  ## section only has an effect if the volume is empty.
+  initial:
+    source: demo
   server:
     name: outpack_server
     tag: main

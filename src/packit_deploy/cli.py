@@ -22,7 +22,7 @@ import yaml
 
 import packit_deploy.__about__ as about
 from packit_deploy.config import PackitConfig
-from packit_deploy.packit_constellation import packit_constellation
+from packit_deploy.packit_constellation import PackitConstellation
 
 
 def main(argv=None):
@@ -32,7 +32,7 @@ def main(argv=None):
         return about.__version__
     else:
         cfg = PackitConfig(path, extra, options)
-        obj = packit_constellation(cfg)
+        obj = PackitConstellation(cfg)
         if args.action == "start":
             packit_start(obj, args)
         elif args.action == "status":
@@ -61,7 +61,7 @@ def packit_status(obj):
 def packit_stop(obj, args, cfg):
     if args.volumes:
         verify_data_loss(cfg)
-    obj.stop(args.kill, remove_network=args.network,
+    obj.stop(kill=args.kill, remove_network=args.network,
              remove_volumes=args.volumes)
 
 

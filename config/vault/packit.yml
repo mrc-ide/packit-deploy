@@ -21,6 +21,8 @@ volumes:
   proxy_logs: orderly_web_proxy_logs
 
 outpack:
+  initial:
+    source: demo
   server:
     name: outpack_server
     tag: main
