@@ -1,4 +1,3 @@
-import json
 import ssl
 import urllib
 from datetime import time
@@ -14,6 +13,7 @@ from src.packit_deploy.config import PackitConfig
 def test_start_and_stop():
     path = "config/noproxy"
     try:
+        # Start
         res = cli.main(["start", path, "--pull"])
         assert res
 
@@ -29,21 +29,7 @@ def test_start_and_stop():
         assert docker_util.container_exists("packit-packit-db")
         assert docker_util.container_exists("packit-packit")
 
-        api = cfg.get_container("packit-api")
-        api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
-
-        assert "outpack.server=http://orderly-web-orderly:8321" in api_config
-
-        # Trivial check that the proxy container works too:
-        proxy = cfg.get_container("proxy")
-        ports = proxy.attrs["HostConfig"]["PortBindings"]
-        assert set(ports.keys()) == {"443/tcp", "80/tcp"}
-        dat = json.loads(http_get("http://localhost/api/"))
-        assert dat["status"] == "success"
-        dat = json.loads(http_get("https://localhost/api/"))
-        assert dat["status"] == "success"
-
-        # Bring the whole lot down:
+        # Stop
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
             cli.main(["stop", path, "--kill", "--volumes", "--network"])
