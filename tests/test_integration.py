@@ -19,7 +19,6 @@ def test_start_and_stop():
 
         cl = docker.client.from_env()
         containers = cl.containers.list()
-        print(containers)
         assert len(containers) == 4
         cfg = PackitConfig(path)
         assert docker_util.network_exists(cfg.network)
@@ -41,6 +40,30 @@ def test_start_and_stop():
             assert not docker_util.container_exists("packit-packit-db")
             assert not docker_util.container_exists("packit-packit")
             assert not docker_util.container_exists("packit-outpack-server")
+    finally:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+            prompt.return_value = True
+            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+
+
+def test_api_configured():
+    path = "config/noproxy"
+    try:
+        cli.main(["start", path, "--pull"])
+        cl = docker.client.from_env()
+        containers = cl.containers.list()
+        assert len(containers) == 4
+        cfg = PackitConfig(path)
+
+        api = cfg.get_container("packit-api")
+        api_config = docker_util.string_from_container(
+            api, "/etc/packit/config.properties").split("\n")
+
+        assert "db.url=jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified" in api_config
+        assert "db.user=packituser" in api_config
+        assert "db.password=changeme" in api_config
+        assert "outpack.server.url=http://packit-outpack-server:8000" in api_config
+
     finally:
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
