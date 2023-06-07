@@ -1,6 +1,3 @@
-import pytest
-from unittest import mock
-
 from src.packit_deploy.config import PackitConfig
 
 

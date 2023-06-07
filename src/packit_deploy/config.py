@@ -10,15 +10,13 @@ class PackitConfig:
         dat = config.config_build(path, dat, extra, options)
         self.network = config.config_string(dat, ["network"])
         self.protect_data = config.config_boolean(dat, ["protect_data"])
-        self.volumes = {
-            "outpack": config.config_string(dat, ["volumes", "outpack"])}
+        self.volumes = {"outpack": config.config_string(dat, ["volumes", "outpack"])}
 
         self.container_prefix = config.config_string(dat, ["container_prefix"])
         self.repo = config.config_string(dat, ["repo"])
 
         if "initial" in dat["outpack"]:
-            self.outpack_demo = config.config_string(dat, ["outpack", "initial",
-                                                           "source"]) == "demo"
+            self.outpack_demo = config.config_string(dat, ["outpack", "initial", "source"]) == "demo"
         else:
             self.outpack_demo = False
 
@@ -26,10 +24,8 @@ class PackitConfig:
         self.packit_api_ref = self.build_ref(dat, "packit", "api")
         self.packit_ref = self.build_ref(dat, "packit", "app")
         self.packit_db_ref = self.build_ref(dat, "packit", "db")
-        self.packit_db_user = config.config_string(dat,
-                                                   ["packit", "db", "user"])
-        self.packit_db_password = config.config_string(dat, ["packit", "db",
-                                                             "password"])
+        self.packit_db_user = config.config_string(dat, ["packit", "db", "user"])
+        self.packit_db_password = config.config_string(dat, ["packit", "db", "password"])
 
         self.containers = {
             "outpack-server": "outpack-server",
@@ -46,16 +42,13 @@ class PackitConfig:
         }
 
         if "proxy" in dat and dat["proxy"]:
-            self.proxy_enabled = config.config_boolean(dat,
-                                                       ["proxy", "enabled"],
-                                                       True)
+            self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)
         else:
             self.proxy_enabled = False
 
     def get_container(self, name):
         with DockerClient() as cl:
-            return cl.containers.get(
-                f"{self.container_prefix}-{self.containers[name]}")
+            return cl.containers.get(f"{self.container_prefix}-{self.containers[name]}")
 
     def build_ref(self, dat, section, subsection):
         name = config.config_string(dat, [section, subsection, "name"])
