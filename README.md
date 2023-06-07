@@ -50,6 +50,9 @@ Here `<path>` is the path to a directory that contains a configuration file `pac
 1. `hatch run test`
 2. `hatch run lint:fmt`
 
+To get coverage reported locally in the console, use `hatch run cov`. 
+On CI, use `hatch run cov-ci` to generate an xml report.
+
 ## Build
 
 ```console

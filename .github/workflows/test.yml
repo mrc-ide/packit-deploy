@@ -8,6 +8,9 @@ on:
     branches:
       - main
 
+env:
+  CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+
 jobs:
   build:
 
@@ -31,6 +34,8 @@ jobs:
           hatch run lint:style
       - name: Test
         run: |
-          hatch run cov
+          hatch run cov-ci
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
+        with:
+          fail_ci_if_error: true
