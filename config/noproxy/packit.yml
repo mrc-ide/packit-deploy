@@ -46,8 +46,3 @@ packit:
     tag: main
     user: packituser
     password: changeme
-
-
-## No proxy enabled as the proxy section is falsy (missing is also ok,
-## null [yaml: ~] is also falsy)
-proxy: false

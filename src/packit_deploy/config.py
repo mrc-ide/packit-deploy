@@ -1,8 +1,6 @@
 import constellation
 from constellation import config
 
-from packit_deploy.docker_helpers import DockerClient
-
 
 class PackitConfig:
     def __init__(self, path, extra=None, options=None):
@@ -16,9 +14,18 @@ class PackitConfig:
         self.repo = config.config_string(dat, ["repo"])
 
         if "initial" in dat["outpack"]:
-            self.outpack_demo = config.config_string(dat, ["outpack", "initial", "source"]) == "demo"
+            source = config.config_string(dat, ["outpack", "initial", "source"])
+            if source == "demo":
+                self.outpack_demo = True
+                self.outpack_source_url = None
+            elif source == "clone":
+                self.outpack_demo = False
+                self.outpack_source_url = config.config_string(dat, ["outpack", "initial", "url"])
+            else:
+                raise Exception("Unknown outpack initial source. Valid values are 'demo' and 'clone'")
         else:
             self.outpack_demo = False
+            self.outpack_source_url = None
 
         self.outpack_ref = self.build_ref(dat, "outpack", "server")
         self.packit_api_ref = self.build_ref(dat, "packit", "api")
@@ -45,10 +52,6 @@ class PackitConfig:
             self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)
         else:
             self.proxy_enabled = False
-
-    def get_container(self, name):
-        with DockerClient() as cl:
-            return cl.containers.get(f"{self.container_prefix}-{self.containers[name]}")
 
     def build_ref(self, dat, section, subsection):
         name = config.config_string(dat, [section, subsection, "name"])
