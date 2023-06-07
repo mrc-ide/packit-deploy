@@ -31,31 +31,18 @@ def test_config_no_proxy():
 
 
 def test_config_proxy():
-    options = {
-        "proxy": {
-            "enabled": False
-        }
-    }
+    options = {"proxy": {"enabled": False}}
     cfg = PackitConfig("config/noproxy", options=options)
     assert cfg.proxy_enabled is False
 
 
 def test_outpack_initial_source():
-    options = {
-        "outpack": {
-            "initial": {"source": "wrong"}
-        }
-    }
+    options = {"outpack": {"initial": {"source": "wrong"}}}
     with pytest.raises(Exception) as err:
         PackitConfig("config/noproxy", options=options)
     assert str(err.value) == "Unknown outpack initial source. Valid values are 'demo' and 'clone'"
 
-
-    options = {
-        "outpack": {
-            "initial": {"source": "clone", "url": "whatever"}
-        }
-    }
+    options = {"outpack": {"initial": {"source": "clone", "url": "whatever"}}}
     cfg = PackitConfig("config/noproxy", options=options)
     assert cfg.outpack_demo is False
     assert cfg.outpack_source_url == "whatever"

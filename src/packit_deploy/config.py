@@ -22,7 +22,8 @@ class PackitConfig:
                 self.outpack_demo = False
                 self.outpack_source_url = config.config_string(dat, ["outpack", "initial", "url"])
             else:
-                raise Exception("Unknown outpack initial source. Valid values are 'demo' and 'clone'")
+                err = "Unknown outpack initial source. Valid values are 'demo' and 'clone'"
+                raise Exception(err)
         else:
             self.outpack_demo = False
             self.outpack_source_url = None
