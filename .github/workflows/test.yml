@@ -31,6 +31,6 @@ jobs:
           hatch run lint:style
       - name: Test
         run: |
-          hatch run cov
+          hatch run cov-ci
       - name: Upload to Codecov
         uses: codecov/codecov-action@v3
