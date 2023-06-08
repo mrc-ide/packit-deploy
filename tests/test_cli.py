@@ -134,8 +134,8 @@ def test_verify_data_prevents_unwanted_loss():
 
 
 def test_prompt_is_quite_strict():
-    assert prompt_yes_no(lambda x: "yes")
-    assert not prompt_yes_no(lambda x: "no")
-    assert not prompt_yes_no(lambda x: "Yes")
-    assert not prompt_yes_no(lambda x: "Great idea!")
-    assert not prompt_yes_no(lambda x: "")
+    assert prompt_yes_no(lambda _: "yes")
+    assert not prompt_yes_no(lambda _: "no")
+    assert not prompt_yes_no(lambda _: "Yes")
+    assert not prompt_yes_no(lambda _: "Great idea!")
+    assert not prompt_yes_no(lambda _: "")
