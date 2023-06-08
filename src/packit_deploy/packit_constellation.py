@@ -6,7 +6,6 @@ from src.packit_deploy.docker_helpers import DockerClient
 
 
 class PackitConstellation:
-
     def __init__(self, cfg):
         outpack = outpack_server_container(cfg)
         packit_db = packit_db_container(cfg)
@@ -20,9 +19,7 @@ class PackitConstellation:
 
         self.cfg = cfg
         self.obj = constellation.Constellation(
-            "packit", cfg.container_prefix, containers, cfg.network,
-            cfg.volumes,
-            data=cfg
+            "packit", cfg.container_prefix, containers, cfg.network, cfg.volumes, data=cfg
         )
 
     def start(self, **kwargs):
@@ -39,17 +36,16 @@ class PackitConstellation:
 
 def outpack_init(cfg):
     if outpack_is_initialised(cfg):
-        print("[outpack] outpack volume already contains data - "
-              "not initialising")
+        print("[outpack] outpack volume already contains data - " "not initialising")
     else:
         print("[outpack] Initialising outpack")
         image = "mrcide/outpack.orderly:main"
         mount = docker.types.Mount("/outpack", cfg.volumes["outpack"])
 
         with DockerClient() as cl:
-            cl.containers.run(image, mounts=[mount], remove=True,
-                              entrypoint=["R", "-e",
-                                          "outpack::outpack_init('/outpack')"])
+            cl.containers.run(
+                image, mounts=[mount], remove=True, entrypoint=["R", "-e", "outpack::outpack_init('/outpack')"]
+            )
 
 
 def outpack_is_initialised(cfg):
@@ -57,10 +53,9 @@ def outpack_is_initialised(cfg):
     mount = docker.types.Mount("/outpack", cfg.volumes["outpack"])
 
     with DockerClient() as cl:
-        container = cl.containers.run(image, mounts=[mount],
-                                      detach=True,
-                                      command=["test", "-f",
-                                               "/outpack/.outpack/config.json"])
+        container = cl.containers.run(
+            image, mounts=[mount], detach=True, command=["test", "-f", "/outpack/.outpack/config.json"]
+        )
         result = container.wait()
         container.remove()
         return result["StatusCode"] == 0
@@ -69,30 +64,26 @@ def outpack_is_initialised(cfg):
 def outpack_server_container(cfg):
     name = cfg.containers["outpack-server"]
     mounts = [constellation.ConstellationMount("outpack", "/outpack")]
-    outpack_server = constellation.ConstellationContainer(name, cfg.outpack_ref,
-                                                          mounts=mounts)
+    outpack_server = constellation.ConstellationContainer(name, cfg.outpack_ref, mounts=mounts)
     return outpack_server
 
 
 def packit_db_container(cfg):
     name = cfg.containers["packit-db"]
-    packit_db = constellation.ConstellationContainer(name, cfg.packit_db_ref,
-                                                     configure=packit_db_configure)
+    packit_db = constellation.ConstellationContainer(name, cfg.packit_db_ref, configure=packit_db_configure)
     return packit_db
 
 
 def packit_db_configure(container, _):
     docker_util.exec_safely(container, ["wait-for-db"])
     docker_util.exec_safely(
-        container, ["psql", "-U", "packituser", "-d", "packit", "-a", "-f",
-                    "/packit-schema/schema.sql"]
+        container, ["psql", "-U", "packituser", "-d", "packit", "-a", "-f", "/packit-schema/schema.sql"]
     )
 
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
-    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref,
-                                                      configure=packit_api_configure)
+    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, configure=packit_api_configure)
     return packit_api
 
 
@@ -107,8 +98,7 @@ def packit_api_configure(container, cfg):
         "outpack.server.url": f"http://{cfg.container_prefix}-{outpack}:8000",
     }
     txt = "".join([f"{k}={v}\n" for k, v in opts.items()])
-    docker_util.string_into_container(txt, container,
-                                      "/etc/packit/config.properties")
+    docker_util.string_into_container(txt, container, "/etc/packit/config.properties")
 
 
 def packit_container(cfg):

@@ -1,10 +1,11 @@
-from contextlib import redirect_stdout
 import io
-import pytest
+from contextlib import redirect_stdout
 from unittest import mock
 
+import pytest
+
 from src.packit_deploy import cli
-from src.packit_deploy.cli import verify_data_loss, prompt_yes_no
+from src.packit_deploy.cli import prompt_yes_no, verify_data_loss
 from src.packit_deploy.config import PackitConfig
 
 

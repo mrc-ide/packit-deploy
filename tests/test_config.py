@@ -46,3 +46,7 @@ def test_outpack_initial_source():
     cfg = PackitConfig("config/noproxy", options=options)
     assert cfg.outpack_demo is False
     assert cfg.outpack_source_url == "whatever"
+
+    cfg = PackitConfig("config/basic")
+    assert cfg.outpack_demo is False
+    assert cfg.outpack_source_url is None

@@ -56,8 +56,7 @@ def test_api_configured():
         cfg = PackitConfig(path)
 
         api = cfg.get_container("packit-api")
-        api_config = docker_util.string_from_container(
-            api, "/etc/packit/config.properties").split("\n")
+        api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
 
         assert "db.url=jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified" in api_config
         assert "db.user=packituser" in api_config
