@@ -36,7 +36,7 @@ class PackitConstellation:
 
 def outpack_init(cfg):
     if outpack_is_initialised(cfg):
-        print("[outpack] outpack volume already contains data - " "not initialising")
+        print("[outpack] outpack volume already contains data - not initialising")
     else:
         print("[outpack] Initialising outpack")
         image = "mrcide/outpack.orderly:main"
