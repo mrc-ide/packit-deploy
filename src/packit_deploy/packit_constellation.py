@@ -2,7 +2,7 @@ import constellation
 import docker
 from constellation import docker_util
 
-from src.packit_deploy.docker_helpers import DockerClient
+from packit_deploy.docker_helpers import DockerClient
 
 
 class PackitConstellation:
@@ -24,6 +24,9 @@ class PackitConstellation:
         )
 
     def start(self, **kwargs):
+        if self.cfg.outpack_source_url is not None:
+            msg = "Outpack source cloning not yet supported. Setup outpack volume manually or use demo."
+            raise Exception(msg)
         if self.cfg.outpack_demo:
             outpack_init(self.cfg)
         self.obj.start(**kwargs)

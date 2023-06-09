@@ -1,7 +1,7 @@
 import constellation
 from constellation import config
 
-from src.packit_deploy.docker_helpers import DockerClient
+from packit_deploy.docker_helpers import DockerClient
 
 
 class PackitConfig:

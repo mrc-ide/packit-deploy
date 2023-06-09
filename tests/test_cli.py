@@ -49,7 +49,7 @@ def test_prints_version():
         cli.main(["--version"])
 
     assert p.called
-    assert p.call_args[0][0] == "0.0.5"
+    assert p.call_args[0][0] == "0.0.6"
 
 
 def test_args_passed_to_start():
