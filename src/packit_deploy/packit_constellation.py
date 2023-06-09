@@ -15,7 +15,8 @@ class PackitConstellation:
         containers = [outpack, packit_db, packit_api, packit]
 
         if cfg.proxy_enabled:
-            print("Proxy not yet enabled. Ignoring proxy configuration.")
+            err = "Proxy not yet supported. Ignoring proxy configuration."
+            raise Exception(err)
 
         self.cfg = cfg
         self.obj = constellation.Constellation(
