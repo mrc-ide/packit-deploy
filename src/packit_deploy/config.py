@@ -1,6 +1,8 @@
 import constellation
 from constellation import config
 
+from packit_deploy.docker_helpers import DockerClient
+
 
 class PackitConfig:
     def __init__(self, path, extra=None, options=None):
@@ -58,3 +60,7 @@ class PackitConfig:
         name = config.config_string(dat, [section, subsection, "name"])
         tag = config.config_string(dat, [section, subsection, "tag"])
         return constellation.ImageReference(self.repo, name, tag)
+
+    def get_container(self, name):
+        with DockerClient() as cl:
+            return cl.containers.get(f"{self.container_prefix}-{self.containers[name]}")

@@ -21,24 +21,67 @@ import docopt
 import yaml
 
 import packit_deploy.__about__ as about
+from packit_deploy.config import PackitConfig
+from packit_deploy.packit_constellation import PackitConstellation
 
 
 def main(argv=None):
-    opts = docopt.docopt(__doc__, argv)
-    if opts["--version"]:
+    path, extra, options, args = parse_args(argv)
+    if args.version:
         print(about.__version__)
         return about.__version__
     else:
-        path, extra, options, args = parse_args(opts)
-        print(args.action)
-        return path, extra, options, args
+        cfg = PackitConfig(path, extra, options)
+        obj = PackitConstellation(cfg)
+        if args.action == "start":
+            packit_start(obj, args)
+        elif args.action == "status":
+            packit_status(obj)
+        elif args.action == "stop":
+            packit_stop(obj, args, cfg)
+        return True
 
 
-def parse_args(opts):
+def parse_args(argv=None):
+    opts = docopt.docopt(__doc__, argv)
     path = opts["<path>"]
     extra = opts["--extra"]
     options = parse_option(opts)
     return path, extra, options, PackitArgs(opts)
+
+
+def packit_start(obj, args):
+    obj.start(pull_images=args.pull)
+
+
+def packit_status(obj):
+    obj.status()
+
+
+def packit_stop(obj, args, cfg):
+    if args.volumes:
+        verify_data_loss(cfg)
+    obj.stop(kill=args.kill, remove_network=args.network, remove_volumes=args.volumes)
+
+
+def verify_data_loss(cfg):
+    if cfg.protect_data:
+        err = "Cannot remove volumes with this configuration"
+        raise Exception(err)
+    else:
+        print(
+            """WARNING! PROBABLE IRREVERSIBLE DATA LOSS!
+You are about to delete the data volumes. This action cannot be undone
+and will result in the irreversible loss of *all* data associated with
+the application. This includes all databases, packet data etc."""
+        )
+    if not prompt_yes_no():
+        msg = "Not continuing"
+        raise Exception(msg)
+
+
+def prompt_yes_no(get_input=input):
+    return get_input("\nContinue? [yes/no] ") == "yes"
 
 
 def parse_option(args):
@@ -82,3 +125,4 @@ class PackitArgs:
         self.kill = args["--kill"]
         self.volumes = args["--volumes"]
         self.network = args["--network"]
+        self.version = args["--version"]

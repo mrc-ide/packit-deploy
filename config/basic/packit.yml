@@ -1,3 +1,7 @@
+## The name of the docker network that containers will be attached to.
+## If you want to proxy OrderlyWeb to the host, you will need to
+## arrange a proxy on this network, or use dev_mode in the web section
+## below.
 ## Prefix for container names; we'll use {container_prefix}-(container_name)
 container_prefix: packit
 
@@ -23,8 +27,6 @@ volumes:
   proxy_logs: orderly_web_proxy_logs
 
 outpack:
-  initial:
-    source: demo
   server:
     name: outpack_server
     tag: main
