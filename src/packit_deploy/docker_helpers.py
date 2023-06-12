@@ -7,7 +7,7 @@
 #
 # This little helper can be used with python's with statement as
 #
-#      with docker_client() as cl:
+#      with DockerClient() as cl:
 #        cl.containers...
 #
 # and will close *most* unused handles on exit.  It's easier to look
