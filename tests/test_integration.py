@@ -5,6 +5,7 @@ from unittest import mock
 
 import docker
 import pytest
+import vault_dev
 from constellation import docker_util
 
 from src.packit_deploy import cli
@@ -72,6 +73,30 @@ def test_start_and_stop_proxy():
         http_get("http://localhost")
         res = http_get("http://localhost/packit/api/packets", poll=3)
         assert res == "[]"
+    finally:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+            prompt.return_value = True
+            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+
+
+def test_proxy_ssl_configured():
+    path = "config/complete"
+    try:
+        with vault_dev.server() as s:
+            url = f"http://localhost:{s.port}"
+            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            cl = cfg.vault.client()
+            cl.write("secret/cert", value="c3rt")
+            cl.write("secret/key", value="s3cret")
+
+            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+
+            proxy = cfg.get_container("proxy")
+            cert = docker_util.string_from_container(proxy, "run/proxy/certificate.pem")
+            key = docker_util.string_from_container(proxy, "run/proxy/key.pem")
+            assert "c3rt" in cert
+            assert "s3cret" in key
+
     finally:
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True

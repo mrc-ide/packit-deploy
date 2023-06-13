@@ -49,8 +49,8 @@ def test_config_proxy():
     cfg = PackitConfig("config/complete")
     assert cfg.proxy_enabled
     assert not cfg.proxy_ssl_self_signed
-    assert cfg.proxy_ssl_certificate == "cert"
-    assert cfg.proxy_ssl_key == "keyval"
+    assert cfg.proxy_ssl_certificate == "VAULT:secret/cert:value"
+    assert cfg.proxy_ssl_key == "VAULT:secret/key:value"
 
 
 def test_outpack_initial_source():

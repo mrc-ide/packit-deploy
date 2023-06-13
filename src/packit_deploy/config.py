@@ -8,6 +8,7 @@ class PackitConfig:
     def __init__(self, path, extra=None, options=None):
         dat = config.read_yaml(f"{path}/packit.yml")
         dat = config.config_build(path, dat, extra, options)
+        self.vault = config.config_vault(dat, ["vault"])
         self.network = config.config_string(dat, ["network"])
         self.protect_data = config.config_boolean(dat, ["protect_data"])
         self.volumes = {"outpack": config.config_string(dat, ["volumes", "outpack"])}
