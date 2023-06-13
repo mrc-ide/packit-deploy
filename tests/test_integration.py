@@ -1,4 +1,3 @@
-import json
 import ssl
 import time
 import urllib
@@ -89,9 +88,7 @@ def test_api_configured():
         cfg = PackitConfig(path)
 
         api = cfg.get_container("packit-api")
-        api_config = docker_util.string_from_container(api,
-                                                       "/etc/packit/config.properties").split(
-            "\n")
+        api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
 
         assert "db.url=jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified" in api_config
         assert "db.user=packituser" in api_config
@@ -108,10 +105,8 @@ def test_outpack_cloning_unsupported():
     path = "config/noproxy"
     try:
         with pytest.raises(Exception) as err:
-            cli.main(["start", path, "--option=outpack.initial.url=whatever",
-                      "--option=outpack.initial.source=clone"])
-        assert str(
-            err.value) == "Outpack source cloning not yet supported. Setup outpack volume manually or use demo."
+            cli.main(["start", path, "--option=outpack.initial.url=whatever", "--option=outpack.initial.source=clone"])
+        assert str(err.value) == "Outpack source cloning not yet supported. Setup outpack volume manually or use demo."
     finally:
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
@@ -122,14 +117,11 @@ def test_outpack_already_initialised():
     path = "config/noproxy"
     outpack_vol = docker.types.Mount("/outpack", "outpack_volume")
     with DockerClient() as cl:
-        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol],
-                          command=["mkdir", "/outpack/.outpack"])
+        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol], command=["mkdir", "/outpack/.outpack"])
         cl.containers.run(
-            "ubuntu", remove=True, mounts=[outpack_vol],
-            command=["touch", "/outpack/.outpack/config.json"]
+            "ubuntu", remove=True, mounts=[outpack_vol], command=["touch", "/outpack/.outpack/config.json"]
         )
-        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol],
-                          command=["mkdir", "/outpack/.outpack/test.txt"])
+        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol], command=["mkdir", "/outpack/.outpack/test.txt"])
     try:
         cli.main(["start", path])
     finally:
@@ -144,9 +136,9 @@ def http_get(url, retries=5, poll=1):
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
-    for i in range(retries):
+    for _i in range(retries):
         try:
-            r = urllib.request.urlopen(url, context=ctx)
+            r = urllib.request.urlopen(url, context=ctx)   # noqa: S310
             return r.read().decode("UTF-8")
         except (urllib.error.URLError, ConnectionResetError) as e:
             print("sleeping...")

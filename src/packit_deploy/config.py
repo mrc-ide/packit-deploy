@@ -57,30 +57,21 @@ class PackitConfig:
             self.proxy_enabled = False
 
         if self.proxy_enabled:
-            self.proxy_hostname = config.config_string(
-                dat, ["proxy", "hostname"])
-            self.proxy_port_http = config.config_integer(
-                dat, ["proxy", "port_http"])
-            self.proxy_port_https = config.config_integer(
-                dat, ["proxy", "port_https"])
+            self.proxy_hostname = config.config_string(dat, ["proxy", "hostname"])
+            self.proxy_port_http = config.config_integer(dat, ["proxy", "port_http"])
+            self.proxy_port_https = config.config_integer(dat, ["proxy", "port_https"])
             ssl = config.config_dict(dat, ["proxy", "ssl"], True)
             self.proxy_ssl_self_signed = ssl is None
             if not self.proxy_ssl_self_signed:
-                self.proxy_ssl_certificate = config.config_string(
-                    dat, ["proxy", "ssl", "certificate"], True)
-                self.proxy_ssl_key = config.config_string(
-                    dat, ["proxy", "ssl", "key"], True)
+                self.proxy_ssl_certificate = config.config_string(dat, ["proxy", "ssl", "certificate"], True)
+                self.proxy_ssl_key = config.config_string(dat, ["proxy", "ssl", "key"], True)
 
-            self.proxy_name = config.config_string(
-                dat, ["proxy", "image", "name"])
-            self.proxy_tag = config.config_string(
-                dat, ["proxy", "image", "tag"])
-            self.proxy_ref = constellation.ImageReference(
-                self.repo, self.proxy_name, self.proxy_tag)
+            self.proxy_name = config.config_string(dat, ["proxy", "image", "name"])
+            self.proxy_tag = config.config_string(dat, ["proxy", "image", "tag"])
+            self.proxy_ref = constellation.ImageReference(self.repo, self.proxy_name, self.proxy_tag)
             self.containers["proxy"] = "proxy"
             self.images["proxy"] = self.proxy_ref
-            self.volumes["proxy_logs"] = config.config_string(
-                dat, ["volumes", "proxy_logs"])
+            self.volumes["proxy_logs"] = config.config_string(dat, ["volumes", "proxy_logs"])
 
     def build_ref(self, dat, section, subsection):
         name = config.config_string(dat, [section, subsection, "name"])

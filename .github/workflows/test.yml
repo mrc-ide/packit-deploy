@@ -13,7 +13,7 @@ env:
   BRANCH_NAME: ${{ github.head_ref || github.ref_name }}
 
 jobs:
-  build:
+  run:
 
     runs-on: ubuntu-latest
     strategy:
