@@ -47,6 +47,7 @@ dependencies = [
     "coverage[toml]>=6.5",
     "docker",
     "docopt",
+    "hvac",
     "pytest",
     "vault_dev"
 ]
