@@ -30,10 +30,21 @@ def test_config_no_proxy():
     assert cfg.packit_db_password == "changeme"
 
 
-def test_config_proxy():
+def test_config_proxy_disabled():
     options = {"proxy": {"enabled": False}}
-    cfg = PackitConfig("config/noproxy", options=options)
+    cfg = PackitConfig("config/basic", options=options)
     assert cfg.proxy_enabled is False
+
+
+def test_config_proxy():
+    cfg = PackitConfig("config/basic")
+    assert cfg.proxy_enabled
+    assert cfg.proxy_ssl_self_signed
+    assert "proxy" in cfg.containers
+    assert str(cfg.images["proxy"]) == "mrcide/packit-proxy:mrc-4319"
+    assert cfg.proxy_hostname == "localhost"
+    assert cfg.proxy_port_http == 80
+    assert cfg.proxy_port_https == 443
 
 
 def test_outpack_initial_source():
@@ -47,6 +58,6 @@ def test_outpack_initial_source():
     assert cfg.outpack_demo is False
     assert cfg.outpack_source_url == "whatever"
 
-    cfg = PackitConfig("config/basic")
+    cfg = PackitConfig("config/nodemo")
     assert cfg.outpack_demo is False
     assert cfg.outpack_source_url is None

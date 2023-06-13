@@ -15,12 +15,13 @@ class PackitConstellation:
         containers = [outpack, packit_db, packit_api, packit]
 
         if cfg.proxy_enabled:
-            err = "Proxy not yet supported. Ignoring proxy configuration."
-            raise Exception(err)
+            proxy = proxy_container(cfg, packit_api, packit)
+            containers.append(proxy)
 
         self.cfg = cfg
         self.obj = constellation.Constellation(
-            "packit", cfg.container_prefix, containers, cfg.network, cfg.volumes, data=cfg
+            "packit", cfg.container_prefix, containers, cfg.network,
+            cfg.volumes, data=cfg
         )
 
     def start(self, **kwargs):
@@ -40,7 +41,8 @@ class PackitConstellation:
 
 def outpack_init(cfg):
     if outpack_is_initialised(cfg):
-        print("[outpack] outpack volume already contains data - not initialising")
+        print(
+            "[outpack] outpack volume already contains data - not initialising")
     else:
         print("[outpack] Initialising outpack")
         image = "mrcide/outpack.orderly:main"
@@ -48,7 +50,8 @@ def outpack_init(cfg):
 
         with DockerClient() as cl:
             cl.containers.run(
-                image, mounts=[mount], remove=True, entrypoint=["R", "-e", "outpack::outpack_init('/outpack')"]
+                image, mounts=[mount], remove=True,
+                entrypoint=["R", "-e", "outpack::outpack_init('/outpack')"]
             )
 
 
@@ -58,7 +61,8 @@ def outpack_is_initialised(cfg):
 
     with DockerClient() as cl:
         container = cl.containers.run(
-            image, mounts=[mount], detach=True, command=["test", "-f", "/outpack/.outpack/config.json"]
+            image, mounts=[mount], detach=True,
+            command=["test", "-f", "/outpack/.outpack/config.json"]
         )
         result = container.wait()
         container.remove()
@@ -68,31 +72,36 @@ def outpack_is_initialised(cfg):
 def outpack_server_container(cfg):
     name = cfg.containers["outpack-server"]
     mounts = [constellation.ConstellationMount("outpack", "/outpack")]
-    outpack_server = constellation.ConstellationContainer(name, cfg.outpack_ref, mounts=mounts)
+    outpack_server = constellation.ConstellationContainer(name, cfg.outpack_ref,
+                                                          mounts=mounts)
     return outpack_server
 
 
 def packit_db_container(cfg):
     name = cfg.containers["packit-db"]
-    packit_db = constellation.ConstellationContainer(name, cfg.packit_db_ref, configure=packit_db_configure)
+    packit_db = constellation.ConstellationContainer(name, cfg.packit_db_ref,
+                                                     configure=packit_db_configure)
     return packit_db
 
 
 def packit_db_configure(container, _):
+    print("[packit-db] Configuring DB container")
     docker_util.exec_safely(container, ["wait-for-db"])
     docker_util.exec_safely(
-        container, ["psql", "-U", "packituser", "-d", "packit", "-a", "-f", "/packit-schema/schema.sql"]
+        container, ["psql", "-U", "packituser", "-d", "packit", "-a", "-f",
+                    "/packit-schema/schema.sql"]
     )
 
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
-    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, configure=packit_api_configure)
+    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref,
+                                                      configure=packit_api_configure)
     return packit_api
 
 
 def packit_api_configure(container, cfg):
-    print("[web] Configuring Packit API container")
+    print("[packit-api] Configuring API container")
     outpack = cfg.containers["outpack-server"]
     packit_db = cfg.containers["packit-db"]
     opts = {
@@ -102,10 +111,42 @@ def packit_api_configure(container, cfg):
         "outpack.server.url": f"http://{cfg.container_prefix}-{outpack}:8000",
     }
     txt = "".join([f"{k}={v}\n" for k, v in opts.items()])
-    docker_util.string_into_container(txt, container, "/etc/packit/config.properties")
+    docker_util.string_into_container(txt, container,
+                                      "/etc/packit/config.properties")
 
 
 def packit_container(cfg):
     name = cfg.containers["packit"]
     packit = constellation.ConstellationContainer(name, cfg.packit_ref)
     return packit
+
+
+def proxy_container(cfg, packit_api=None, packit=None):
+    proxy_name = cfg.containers["proxy"]
+    packit_api_addr = "{}:8080".format(
+        packit_api.name_external(cfg.container_prefix))
+    packit_addr = packit.name_external(cfg.container_prefix)
+    proxy_args = [cfg.proxy_hostname, str(cfg.proxy_port_http),
+                  str(cfg.proxy_port_https), packit_api_addr,
+                  packit_addr]
+    proxy_mounts = [constellation.ConstellationMount(
+        "proxy_logs", "/var/log/nginx")]
+    proxy_ports = [cfg.proxy_port_http, cfg.proxy_port_https]
+    proxy = constellation.ConstellationContainer(
+        proxy_name, cfg.proxy_ref, ports=proxy_ports, args=proxy_args,
+        mounts=proxy_mounts, configure=proxy_configure)
+    return proxy
+
+
+def proxy_configure(container, cfg):
+    print("[proxy] Configuring proxy container")
+    if cfg.proxy_ssl_self_signed:
+        print("[proxy] Generating self-signed certificates for proxy")
+        docker_util.exec_safely(
+            container, ["self-signed-certificate", "/run/proxy"])
+    else:
+        print("[proxy] Copying ssl certificate and key into proxy")
+        docker_util.string_into_container(cfg.proxy_ssl_certificate, container,
+                                          "/run/proxy/certificate.pem")
+        docker_util.string_into_container(cfg.proxy_ssl_key, container,
+                                          "/run/proxy/key.pem")

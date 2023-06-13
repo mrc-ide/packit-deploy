@@ -44,12 +44,9 @@ def test_parse_args():
     assert args.version is True
 
 
-def test_prints_version():
-    with mock.patch("builtins.print") as p:
-        cli.main(["--version"])
-
-    assert p.called
-    assert p.call_args[0][0] == "0.0.6"
+def test_version():
+    res = cli.main(["--version"])
+    assert res == "0.0.7"
 
 
 def test_args_passed_to_start():

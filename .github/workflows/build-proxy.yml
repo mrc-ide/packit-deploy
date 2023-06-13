@@ -27,4 +27,4 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
       - name: Build and push
-        run: proxy/scripts/build && proxy/scripts/push
+        run: proxy/build && proxy/push

@@ -6,9 +6,9 @@ PACKAGE_NAME=packit-proxy
 PACKAGE_ORG=mrcide
 
 if [[ -v "GITHUB_SHA" ]]; then
-    GIT_ID=${GITHUB_SHA:0:7}
+    GIT_SHA=${GITHUB_SHA:0:7}
 else
-    GIT_ID=$(git rev-parse --short=7 HEAD)
+    GIT_SHA=$(git rev-parse --short=7 HEAD)
 fi
 
 if [[ -v "BRANCH_NAME" ]]; then

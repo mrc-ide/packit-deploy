@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -eu
 
-if [ "$#" -eq 6 ]; then
+if [ "$#" -eq 5 ]; then
     export HTTP_HOST=$1
     export HTTP_PORT=$2
     export HTTPS_PORT=$3

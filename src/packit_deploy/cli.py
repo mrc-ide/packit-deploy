@@ -28,7 +28,6 @@ from packit_deploy.packit_constellation import PackitConstellation
 def main(argv=None):
     path, extra, options, args = parse_args(argv)
     if args.version:
-        print(about.__version__)
         return about.__version__
     else:
         cfg = PackitConfig(path, extra, options)
