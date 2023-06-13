@@ -46,6 +46,12 @@ def test_config_proxy():
     assert cfg.proxy_port_http == 80
     assert cfg.proxy_port_https == 443
 
+    cfg = PackitConfig("config/complete")
+    assert cfg.proxy_enabled
+    assert not cfg.proxy_ssl_self_signed
+    assert cfg.proxy_ssl_certificate == "cert"
+    assert cfg.proxy_ssl_key == "keyval"
+
 
 def test_outpack_initial_source():
     options = {"outpack": {"initial": {"source": "wrong"}}}
