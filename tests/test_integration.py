@@ -138,7 +138,7 @@ def http_get(url, retries=5, poll=1):
     ctx.verify_mode = ssl.CERT_NONE
     for _i in range(retries):
         try:
-            r = urllib.request.urlopen(url, context=ctx)   # noqa: S310
+            r = urllib.request.urlopen(url, context=ctx)  # noqa: S310
             return r.read().decode("UTF-8")
         except (urllib.error.URLError, ConnectionResetError) as e:
             print("sleeping...")
