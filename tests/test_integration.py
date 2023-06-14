@@ -88,6 +88,8 @@ def test_proxy_ssl_configured():
             cl = cfg.vault.client()
             cl.write("secret/cert", value="c3rt")
             cl.write("secret/key", value="s3cret")
+            cl.write("secret/db/user", value="us3r")
+            cl.write("secret/db/password", value="p@ssword")
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
@@ -149,6 +151,32 @@ def test_outpack_already_initialised():
         cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol], command=["mkdir", "/outpack/.outpack/test.txt"])
     try:
         cli.main(["start", path])
+    finally:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+            prompt.return_value = True
+            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+
+
+def test_vault():
+    path = "config/complete"
+    try:
+        with vault_dev.server() as s:
+            url = f"http://localhost:{s.port}"
+            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            cl = cfg.vault.client()
+            cl.write("secret/cert", value="c3rt")
+            cl.write("secret/key", value="s3cret")
+            cl.write("secret/db/user", value="us3r")
+            cl.write("secret/db/password", value="p@ssword")
+
+            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+
+            api = cfg.get_container("packit-api")
+            api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
+
+            assert "db.user=us3r" in api_config
+            assert "db.password=p@ssword" in api_config
+
     finally:
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
