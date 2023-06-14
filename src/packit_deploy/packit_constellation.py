@@ -20,8 +20,7 @@ class PackitConstellation:
 
         self.cfg = cfg
         self.obj = constellation.Constellation(
-            "packit", cfg.container_prefix, containers, cfg.network, cfg.volumes,
-            data=cfg, vault_config=cfg.vault
+            "packit", cfg.container_prefix, containers, cfg.network, cfg.volumes, data=cfg, vault_config=cfg.vault
         )
 
     def start(self, **kwargs):
