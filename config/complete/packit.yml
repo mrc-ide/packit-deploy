@@ -1,0 +1,72 @@
+## The name of the docker network that containers will be attached to.
+## If you want to proxy Packit to the host, you will need to
+## arrange a proxy on this network, or use dev_mode in the web section
+## below.
+## Prefix for container names; we'll use {container_prefix}-(container_name)
+container_prefix: packit
+
+## Set this flag to true to prevent use of --volumes in the cli to remove
+## volumes on stop
+protect_data: false
+
+## Docker org for images
+repo: mrcide
+
+## The name of the docker network that containers will be attached to.
+## If you want to proxy Packit to the host, you will need to
+## arrange a proxy on this network
+network: packit-network
+
+## Names of the docker volumes to use:
+##
+## outpack: stores the outpack metadata
+## proxy_logs: stores logs from the reverse proxy (only used if proxy is given)
+## (More volumes are anticipated as the tool develops)
+volumes:
+  outpack: outpack_volume
+  proxy_logs: packit_proxy_logs
+
+outpack:
+  initial:
+    source: demo
+  server:
+    name: outpack_server
+    tag: main
+  migrate:
+    name: outpack.orderly
+    tag: main
+
+packit:
+  api:
+    name: packit-api
+    tag: main
+  app:
+    name: packit
+    tag: main
+  db:
+    name: packit-db
+    tag: main
+    user: VAULT:secret/db/user:value
+    password: VAULT:secret/db/password:value
+
+## If running a proxy directly, fill this section in.  Otherwise you
+## are responsible for proxying the application out of the docker
+## network
+proxy:
+  enabled: false
+
+vault:
+  ## Address of the vault server.  This should be a string if it is
+  ## present.
+  addr: ~
+  auth:
+    ## Authentication type - must be either "token" or the name of a
+    ## supported authentication method.  These seem to be poorly
+    ## documented in the hvac, but include "github" for github
+    ## authentication.
+    ##
+    ## On a vault client object, see auth.implemented_class_names for
+    ## a list, which is currently
+    ##
+    ##     azure, github, gcp, kubernetes, ldap, mfa, okta
+    method: token

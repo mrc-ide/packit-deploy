@@ -47,7 +47,8 @@ dependencies = [
     "coverage[toml]>=6.5",
     "docker",
     "docopt",
-    "pytest"
+    "pytest",
+    "vault_dev"
 ]
 [tool.hatch.envs.default.scripts]
 test = "pytest {args:tests}"
