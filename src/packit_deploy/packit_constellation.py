@@ -15,8 +15,8 @@ class PackitConstellation:
         containers = [outpack, packit_db, packit_api, packit]
 
         if cfg.proxy_enabled:
-            err = "Proxy not yet supported. Ignoring proxy configuration."
-            raise Exception(err)
+            proxy = proxy_container(cfg, packit_api, packit)
+            containers.append(proxy)
 
         self.cfg = cfg
         self.obj = constellation.Constellation(
@@ -79,6 +79,7 @@ def packit_db_container(cfg):
 
 
 def packit_db_configure(container, _):
+    print("[packit-db] Configuring DB container")
     docker_util.exec_safely(container, ["wait-for-db"])
     docker_util.exec_safely(
         container, ["psql", "-U", "packituser", "-d", "packit", "-a", "-f", "/packit-schema/schema.sql"]
@@ -92,7 +93,7 @@ def packit_api_container(cfg):
 
 
 def packit_api_configure(container, cfg):
-    print("[web] Configuring Packit API container")
+    print("[packit-api] Configuring API container")
     outpack = cfg.containers["outpack-server"]
     packit_db = cfg.containers["packit-db"]
     opts = {
@@ -109,3 +110,27 @@ def packit_container(cfg):
     name = cfg.containers["packit"]
     packit = constellation.ConstellationContainer(name, cfg.packit_ref)
     return packit
+
+
+def proxy_container(cfg, packit_api=None, packit=None):
+    proxy_name = cfg.containers["proxy"]
+    packit_api_addr = f"{packit_api.name_external(cfg.container_prefix)}:8080"
+    packit_addr = packit.name_external(cfg.container_prefix)
+    proxy_args = [cfg.proxy_hostname, str(cfg.proxy_port_http), str(cfg.proxy_port_https), packit_api_addr, packit_addr]
+    proxy_mounts = [constellation.ConstellationMount("proxy_logs", "/var/log/nginx")]
+    proxy_ports = [cfg.proxy_port_http, cfg.proxy_port_https]
+    proxy = constellation.ConstellationContainer(
+        proxy_name, cfg.proxy_ref, ports=proxy_ports, args=proxy_args, mounts=proxy_mounts, configure=proxy_configure
+    )
+    return proxy
+
+
+def proxy_configure(container, cfg):
+    print("[proxy] Configuring proxy container")
+    if cfg.proxy_ssl_self_signed:
+        print("[proxy] Generating self-signed certificates for proxy")
+        docker_util.exec_safely(container, ["self-signed-certificate", "/run/proxy"])
+    else:
+        print("[proxy] Copying ssl certificate and key into proxy")
+        docker_util.string_into_container(cfg.proxy_ssl_certificate, container, "/run/proxy/certificate.pem")
+        docker_util.string_into_container(cfg.proxy_ssl_key, container, "/run/proxy/key.pem")

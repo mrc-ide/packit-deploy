@@ -1,3 +1,6 @@
+import ssl
+import time
+import urllib
 from unittest import mock
 
 import docker
@@ -10,7 +13,7 @@ from src.packit_deploy.config import PackitConfig
 from src.packit_deploy.docker_helpers import DockerClient
 
 
-def test_start_and_stop():
+def test_start_and_stop_noproxy():
     path = "config/noproxy"
     try:
         # Start
@@ -51,10 +54,55 @@ def test_status():
     assert res
 
 
-def test_proxy_not_allowed():
-    with pytest.raises(Exception) as err:
-        cli.main(["start", "config/basic", "--option=proxy.enabled=true"])
-    assert str(err.value) == "Proxy not yet supported. Ignoring proxy configuration."
+def test_start_and_stop_proxy():
+    path = "config/basic"
+    try:
+        res = cli.main(["start", path])
+        assert res
+
+        cl = docker.client.from_env()
+        containers = cl.containers.list()
+        assert len(containers) == 5
+        assert docker_util.container_exists("packit-proxy")
+
+        # Trivial check that the proxy container works:
+        cfg = PackitConfig(path)
+        proxy = cfg.get_container("proxy")
+        ports = proxy.attrs["HostConfig"]["PortBindings"]
+        assert set(ports.keys()) == {"443/tcp", "80/tcp"}
+        http_get("http://localhost")
+        res = http_get("http://localhost/packit/api/packets", poll=3)
+        assert res == "[]"
+    finally:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+            prompt.return_value = True
+            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+
+
+def test_proxy_ssl_configured():
+    path = "config/complete"
+    try:
+        with vault_dev.server() as s:
+            url = f"http://localhost:{s.port}"
+            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            cl = cfg.vault.client()
+            cl.write("secret/cert", value="c3rt")
+            cl.write("secret/key", value="s3cret")
+            cl.write("secret/db/user", value="us3r")
+            cl.write("secret/db/password", value="p@ssword")
+
+            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+
+            proxy = cfg.get_container("proxy")
+            cert = docker_util.string_from_container(proxy, "run/proxy/certificate.pem")
+            key = docker_util.string_from_container(proxy, "run/proxy/key.pem")
+            assert "c3rt" in cert
+            assert "s3cret" in key
+
+    finally:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+            prompt.return_value = True
+            cli.main(["stop", path, "--kill", "--volumes", "--network"])
 
 
 def test_api_configured():
@@ -116,6 +164,8 @@ def test_vault():
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             cl = cfg.vault.client()
+            cl.write("secret/cert", value="c3rt")
+            cl.write("secret/key", value="s3cret")
             cl.write("secret/db/user", value="us3r")
             cl.write("secret/db/password", value="p@ssword")
 
@@ -131,3 +181,20 @@ def test_vault():
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
             cli.main(["stop", path, "--kill", "--volumes", "--network"])
+
+
+# Because we wait for a go signal to come up, we might not be able to
+# make the request right away:
+def http_get(url, retries=5, poll=1):
+    ctx = ssl.create_default_context()
+    ctx.check_hostname = False
+    ctx.verify_mode = ssl.CERT_NONE
+    for _i in range(retries):
+        try:
+            r = urllib.request.urlopen(url, context=ctx)  # noqa: S310
+            return r.read().decode("UTF-8")
+        except (urllib.error.URLError, ConnectionResetError) as e:
+            print("sleeping...")
+            time.sleep(poll)
+            error = e
+    raise error
