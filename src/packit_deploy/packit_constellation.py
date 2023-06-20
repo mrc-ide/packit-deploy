@@ -25,9 +25,6 @@ class PackitConstellation:
 
     def start(self, **kwargs):
         if self.cfg.outpack_source_url is not None:
-            msg = "Outpack source cloning not yet supported. Setup outpack volume manually or use demo."
-            raise Exception(msg)
-        if self.cfg.outpack_demo:
             outpack_init(self.cfg)
         self.obj.start(**kwargs)
 
@@ -42,13 +39,30 @@ def outpack_init(cfg):
     if outpack_is_initialised(cfg):
         print("[outpack] outpack volume already contains data - not initialising")
     else:
-        print("[outpack] Initialising outpack")
+        outpack_init_clone(cfg)
+
+
+def outpack_init_clone(cfg):
+    print("[outpack] Initialising outpack by cloning")
+    # first clone source repo, using orderly container because it has git
+    image = "vimc/orderly"
+    outpack = docker.types.Mount("/outpack", cfg.volumes["outpack"])
+
+    url = cfg.outpack_source_url
+    with DockerClient() as cl:
+        cl.containers.run(
+            image, mounts=[outpack], remove=True,
+            entrypoint=["git", "clone", url, "/outpack"]
+        )
+
+    if not outpack_is_initialised(cfg):
         image = "mrcide/outpack.orderly:main"
         mount = docker.types.Mount("/outpack", cfg.volumes["outpack"])
 
         with DockerClient() as cl:
             cl.containers.run(
-                image, mounts=[mount], remove=True, entrypoint=["R", "-e", "outpack::outpack_init('/outpack')"]
+                image, mounts=[mount], remove=True,
+                entrypoint=["R", "-e", "outpack::outpack_init('/outpack')"]
             )
 
 

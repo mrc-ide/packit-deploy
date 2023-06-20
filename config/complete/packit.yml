@@ -27,8 +27,9 @@ volumes:
   proxy_logs: packit_proxy_logs
 
 outpack:
+  ## Initialise an empty outpack directory by cloning from github
   initial:
-    source: demo
+    url: https://github.com/reside-ic/orderly3-example.git
   server:
     name: outpack_server
     tag: main

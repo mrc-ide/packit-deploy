@@ -1,10 +1,10 @@
+import json
 import ssl
 import time
 import urllib
 from unittest import mock
 
 import docker
-import pytest
 import vault_dev
 from constellation import docker_util
 
@@ -71,8 +71,9 @@ def test_start_and_stop_proxy():
         ports = proxy.attrs["HostConfig"]["PortBindings"]
         assert set(ports.keys()) == {"443/tcp", "80/tcp"}
         http_get("http://localhost")
+        time.sleep(5)
         res = http_get("http://localhost/packit/api/packets", poll=3)
-        assert res == "[]"
+        assert len(json.loads(res)) > 1
     finally:
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
@@ -84,17 +85,20 @@ def test_proxy_ssl_configured():
     try:
         with vault_dev.server() as s:
             url = f"http://localhost:{s.port}"
-            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            cfg = PackitConfig(path, options={
+                "vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             cl = cfg.vault.client()
             cl.write("secret/cert", value="c3rt")
             cl.write("secret/key", value="s3cret")
             cl.write("secret/db/user", value="us3r")
             cl.write("secret/db/password", value="p@ssword")
 
-            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+            cli.main(["start", path, f"--option=vault.addr={url}",
+                      f"--option=vault.auth.args.token={s.token}"])
 
             proxy = cfg.get_container("proxy")
-            cert = docker_util.string_from_container(proxy, "run/proxy/certificate.pem")
+            cert = docker_util.string_from_container(proxy,
+                                                     "run/proxy/certificate.pem")
             key = docker_util.string_from_container(proxy, "run/proxy/key.pem")
             assert "c3rt" in cert
             assert "s3cret" in key
@@ -115,7 +119,9 @@ def test_api_configured():
         cfg = PackitConfig(path)
 
         api = cfg.get_container("packit-api")
-        api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
+        api_config = docker_util.string_from_container(api,
+                                                       "/etc/packit/config.properties").split(
+            "\n")
 
         assert "db.url=jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified" in api_config
         assert "db.user=packituser" in api_config
@@ -128,27 +134,18 @@ def test_api_configured():
             cli.main(["stop", path, "--kill", "--volumes", "--network"])
 
 
-def test_outpack_cloning_unsupported():
-    path = "config/noproxy"
-    try:
-        with pytest.raises(Exception) as err:
-            cli.main(["start", path, "--option=outpack.initial.url=whatever", "--option=outpack.initial.source=clone"])
-        assert str(err.value) == "Outpack source cloning not yet supported. Setup outpack volume manually or use demo."
-    finally:
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
-            prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
-
-
 def test_outpack_already_initialised():
     path = "config/noproxy"
     outpack_vol = docker.types.Mount("/outpack", "outpack_volume")
     with DockerClient() as cl:
-        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol], command=["mkdir", "/outpack/.outpack"])
+        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol],
+                          command=["mkdir", "/outpack/.outpack"])
         cl.containers.run(
-            "ubuntu", remove=True, mounts=[outpack_vol], command=["touch", "/outpack/.outpack/config.json"]
+            "ubuntu", remove=True, mounts=[outpack_vol],
+            command=["touch", "/outpack/.outpack/config.json"]
         )
-        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol], command=["mkdir", "/outpack/.outpack/test.txt"])
+        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol],
+                          command=["mkdir", "/outpack/.outpack/test.txt"])
     try:
         cli.main(["start", path])
     finally:
@@ -162,17 +159,21 @@ def test_vault():
     try:
         with vault_dev.server() as s:
             url = f"http://localhost:{s.port}"
-            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            cfg = PackitConfig(path, options={
+                "vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             cl = cfg.vault.client()
             cl.write("secret/cert", value="c3rt")
             cl.write("secret/key", value="s3cret")
             cl.write("secret/db/user", value="us3r")
             cl.write("secret/db/password", value="p@ssword")
 
-            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+            cli.main(["start", path, f"--option=vault.addr={url}",
+                      f"--option=vault.auth.args.token={s.token}"])
 
             api = cfg.get_container("packit-api")
-            api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
+            api_config = docker_util.string_from_container(api,
+                                                           "/etc/packit/config.properties").split(
+                "\n")
 
             assert "db.user=us3r" in api_config
             assert "db.password=p@ssword" in api_config
