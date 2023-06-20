@@ -50,10 +50,7 @@ def outpack_init_clone(cfg):
 
     url = cfg.outpack_source_url
     with DockerClient() as cl:
-        cl.containers.run(
-            image, mounts=[outpack], remove=True,
-            entrypoint=["git", "clone", url, "/outpack"]
-        )
+        cl.containers.run(image, mounts=[outpack], remove=True, entrypoint=["git", "clone", url, "/outpack"])
 
     if not outpack_is_initialised(cfg):
         image = "mrcide/outpack.orderly:main"
@@ -61,8 +58,7 @@ def outpack_init_clone(cfg):
 
         with DockerClient() as cl:
             cl.containers.run(
-                image, mounts=[mount], remove=True,
-                entrypoint=["R", "-e", "outpack::outpack_init('/outpack')"]
+                image, mounts=[mount], remove=True, entrypoint=["R", "-e", "outpack::outpack_init('/outpack')"]
             )
 
 

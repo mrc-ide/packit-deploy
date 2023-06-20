@@ -85,20 +85,17 @@ def test_proxy_ssl_configured():
     try:
         with vault_dev.server() as s:
             url = f"http://localhost:{s.port}"
-            cfg = PackitConfig(path, options={
-                "vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             cl = cfg.vault.client()
             cl.write("secret/cert", value="c3rt")
             cl.write("secret/key", value="s3cret")
             cl.write("secret/db/user", value="us3r")
             cl.write("secret/db/password", value="p@ssword")
 
-            cli.main(["start", path, f"--option=vault.addr={url}",
-                      f"--option=vault.auth.args.token={s.token}"])
+            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
             proxy = cfg.get_container("proxy")
-            cert = docker_util.string_from_container(proxy,
-                                                     "run/proxy/certificate.pem")
+            cert = docker_util.string_from_container(proxy, "run/proxy/certificate.pem")
             key = docker_util.string_from_container(proxy, "run/proxy/key.pem")
             assert "c3rt" in cert
             assert "s3cret" in key
@@ -119,9 +116,7 @@ def test_api_configured():
         cfg = PackitConfig(path)
 
         api = cfg.get_container("packit-api")
-        api_config = docker_util.string_from_container(api,
-                                                       "/etc/packit/config.properties").split(
-            "\n")
+        api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
 
         assert "db.url=jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified" in api_config
         assert "db.user=packituser" in api_config
@@ -138,14 +133,11 @@ def test_outpack_already_initialised():
     path = "config/noproxy"
     outpack_vol = docker.types.Mount("/outpack", "outpack_volume")
     with DockerClient() as cl:
-        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol],
-                          command=["mkdir", "/outpack/.outpack"])
+        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol], command=["mkdir", "/outpack/.outpack"])
         cl.containers.run(
-            "ubuntu", remove=True, mounts=[outpack_vol],
-            command=["touch", "/outpack/.outpack/config.json"]
+            "ubuntu", remove=True, mounts=[outpack_vol], command=["touch", "/outpack/.outpack/config.json"]
         )
-        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol],
-                          command=["mkdir", "/outpack/.outpack/test.txt"])
+        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol], command=["mkdir", "/outpack/.outpack/test.txt"])
     try:
         cli.main(["start", path])
     finally:
@@ -159,21 +151,17 @@ def test_vault():
     try:
         with vault_dev.server() as s:
             url = f"http://localhost:{s.port}"
-            cfg = PackitConfig(path, options={
-                "vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             cl = cfg.vault.client()
             cl.write("secret/cert", value="c3rt")
             cl.write("secret/key", value="s3cret")
             cl.write("secret/db/user", value="us3r")
             cl.write("secret/db/password", value="p@ssword")
 
-            cli.main(["start", path, f"--option=vault.addr={url}",
-                      f"--option=vault.auth.args.token={s.token}"])
+            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
             api = cfg.get_container("packit-api")
-            api_config = docker_util.string_from_container(api,
-                                                           "/etc/packit/config.properties").split(
-                "\n")
+            api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
 
             assert "db.user=us3r" in api_config
             assert "db.password=p@ssword" in api_config

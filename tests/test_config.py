@@ -1,5 +1,3 @@
-import pytest
-
 from src.packit_deploy.config import PackitConfig
 
 
