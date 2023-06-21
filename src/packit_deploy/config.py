@@ -16,6 +16,20 @@ class PackitConfig:
         self.container_prefix = config.config_string(dat, ["container_prefix"])
         self.repo = config.config_string(dat, ["repo"])
 
+        ssh_volume = config.config_string(dat, ["volumes", "ssh"], True)
+        if "ssh" in dat:
+            self.ssh_public = config.config_string(dat, ["ssh", "public"])
+            self.ssh_private = config.config_string(dat, ["ssh", "private"])
+            if ssh_volume is None:
+                msg = "A volume named 'ssh' must be provided if using ssh keys"
+                raise Exception(msg)
+            self.volumes["ssh"] = ssh_volume
+            self.ssh = True
+        else:
+            if ssh_volume is not None:
+                print("ssh keys not provided; ignoring 'ssh' volume")
+            self.ssh = False
+
         if "initial" in dat["outpack"]:
             self.outpack_source_url = config.config_string(dat, ["outpack", "initial", "url"])
         else:
