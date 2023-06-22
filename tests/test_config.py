@@ -1,7 +1,3 @@
-from unittest import mock
-
-import pytest
-
 from src.packit_deploy.config import PackitConfig
 
 
@@ -70,11 +66,3 @@ def test_ssh():
 
     cfg = PackitConfig("config/basic")
     assert not cfg.ssh
-
-    msg = "A volume named 'ssh' must be provided if using ssh keys"
-    with pytest.raises(Exception, match=msg):
-        PackitConfig("config/nodemo", options={"ssh": {"public": "test", "private": "test"}})
-
-    with mock.patch("builtins.print") as p:
-        PackitConfig("config/nodemo", options={"volumes": {"ssh": "ssh"}})
-        p.assert_called_with("ssh keys not provided; ignoring 'ssh' volume")

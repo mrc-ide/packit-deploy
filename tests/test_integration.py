@@ -71,7 +71,7 @@ def test_start_and_stop_proxy():
         ports = proxy.attrs["HostConfig"]["PortBindings"]
         assert set(ports.keys()) == {"443/tcp", "80/tcp"}
         http_get("http://localhost")
-        time.sleep(5)
+        time.sleep(10)  # make sure data has time to appear
         res = http_get("http://localhost/packit/api/packets", poll=3)
         assert len(json.loads(res)) > 1
     finally:
@@ -189,26 +189,9 @@ def test_ssh():
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
-            assert docker_util.volume_exists(cfg.volumes["ssh"])
-            with DockerClient() as cl:
-                ssh_volume = docker.types.Mount("/root/.ssh", cfg.volumes["ssh"])
-                # use the orderly.server container as it has ssh utils installed
-                container = cl.containers.run(
-                    "vimc/orderly.server",
-                    mounts=[ssh_volume],
-                    detach=True,
-                    entrypoint=["/bin/sh", "-c", "sleep infinity"],
-                )
-
-                pub_key = docker_util.string_from_container(container, "/root/.ssh/id_rsa.pub")
-                container.kill()
-                container.remove()
-                assert pub_key == "publ1c"
-        assert docker_util.volume_exists(cfg.volumes["ssh"])
-        cli.main(["stop", path, "--kill"])
-        # check ssh volume has been removed
-        assert not docker_util.volume_exists(cfg.volumes["ssh"])
-        assert docker_util.volume_exists(cfg.volumes["outpack"])
+            outpack_server = cfg.get_container("outpack-server")
+            pub_key = docker_util.string_from_container(outpack_server, "/root/.ssh/id_rsa.pub")
+            assert pub_key == "publ1c"
     finally:
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True

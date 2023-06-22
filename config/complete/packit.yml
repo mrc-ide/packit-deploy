@@ -21,14 +21,10 @@ network: packit-network
 ##
 ## outpack: stores the outpack metadata
 ## proxy_logs: stores logs from the reverse proxy (only used if proxy is given)
-## ssh: stores the ssh keys for interacting with git, given below. Will only be
-## included if the ssh section is completed, and will always be destroyed when the
-## app is stopped.
 ## (More volumes are anticipated as the tool develops)
 volumes:
   outpack: outpack_volume
   proxy_logs: packit_proxy_logs
-  ssh: ssh_volume
 
 ## Path to ssh key for interacting with git. You
 ## might use a github deploy key here. For completeness both the

@@ -1,6 +1,6 @@
 import constellation
 import docker
-from constellation import docker_util, vault
+from constellation import docker_util
 
 from packit_deploy.docker_helpers import DockerClient
 
@@ -24,44 +24,59 @@ class PackitConstellation:
         )
 
     def start(self, **kwargs):
-        if self.cfg.outpack_source_url is not None:
-            vault.resolve_secrets(self.cfg, self.obj.vault_config.client())
-            outpack_init(self.cfg)
         self.obj.start(**kwargs)
 
     def stop(self, **kwargs):
         self.obj.stop(**kwargs)
-        if "ssh" in self.cfg.volumes:
-            docker_util.remove_volume(self.cfg.volumes["ssh"])
 
     def status(self):
         self.obj.status()
 
 
-def outpack_init(cfg):
-    if outpack_is_initialised(cfg):
-        print("[outpack] outpack volume already contains data - not initialising")
-    else:
-        outpack_init_clone(cfg)
+def outpack_is_initialised(container):
+    res = container.exec_run(["test", "-f", "/outpack/.outpack/config.json"])
+    return res[0] == 0
 
 
-def outpack_init_clone(cfg):
-    print("[outpack] Initialising outpack by cloning")
-    # first clone source repo, using orderly container because it has git
-    image = "vimc/orderly"
-    outpack = docker.types.Mount("/outpack", cfg.volumes["outpack"])
-    mounts = [outpack]
+def outpack_server_container(cfg):
+    name = cfg.containers["outpack-server"]
+    mounts = [constellation.ConstellationMount("outpack", "/outpack")]
+    outpack_server = constellation.ConstellationContainer(
+        name, cfg.outpack_ref, mounts=mounts, configure=outpack_server_configure
+    )
+    return outpack_server
 
+
+def outpack_server_configure(container, cfg):
     if cfg.ssh:
-        populate_ssh_volume(cfg)
-        ssh_volume = docker.types.Mount("/root/.ssh", cfg.volumes["ssh"])
-        mounts.append(ssh_volume)
+        outpack_ssh_configure(container, cfg)
+    if cfg.outpack_source_url is not None:
+        if outpack_is_initialised(container):
+            print("[outpack] outpack volume already contains data - not initialising")
+        else:
+            outpack_init_clone(container, cfg)
 
-    url = cfg.outpack_source_url
-    with DockerClient() as cl:
-        cl.containers.run(image, mounts=mounts, remove=True, entrypoint=["git", "clone", url, "/outpack"])
 
-    if not outpack_is_initialised(cfg):
+def outpack_ssh_configure(container, cfg):
+    print("[outpack] Configuring ssh")
+    path_private = "/root/.ssh/id_rsa"
+    path_public = "/root/.ssh/id_rsa.pub"
+    path_known_hosts = "/root/.ssh/known_hosts"
+    docker_util.exec_safely(container, ["mkdir", "-p", "/root/.ssh"])
+    docker_util.string_into_container(cfg.ssh_private, container, path_private)
+    docker_util.string_into_container(cfg.ssh_public, container, path_public)
+    docker_util.exec_safely(container, ["chmod", "600", path_private])
+    hosts = docker_util.exec_safely(container, ["ssh-keyscan", "github.com"])
+    docker_util.string_into_container(hosts[1].decode("UTF-8"), container, path_known_hosts)
+
+
+def outpack_init_clone(container, cfg):
+    print("[orderly] Initialising orderly by cloning")
+    args = ["git", "clone", cfg.outpack_source_url, "/orderly"]
+    docker_util.exec_safely(container, args)
+    # usually cloning a source repo will not ensure outpack is initialised
+    # so here, check that outpack config exists, and if not, initialise
+    if not outpack_is_initialised(container):
         image = "mrcide/outpack.orderly:main"
         mount = docker.types.Mount("/outpack", cfg.volumes["outpack"])
 
@@ -69,48 +84,6 @@ def outpack_init_clone(cfg):
             cl.containers.run(
                 image, mounts=[mount], remove=True, entrypoint=["R", "-e", "outpack::outpack_init('/outpack')"]
             )
-
-
-def populate_ssh_volume(cfg):
-    print("[outpack] Configuring ssh")
-    path_private = "/root/.ssh/id_rsa"
-    path_public = "/root/.ssh/id_rsa.pub"
-    path_known_hosts = "/root/.ssh/known_hosts"
-    ssh_volume = docker.types.Mount("/root/.ssh", cfg.volumes["ssh"])
-
-    with DockerClient() as cl:
-        # use the orderly.server container as it has ssh utils installed
-        container = cl.containers.run(
-            "vimc/orderly.server", mounts=[ssh_volume], detach=True, entrypoint=["/bin/sh", "-c", "sleep infinity"]
-        )
-
-        docker_util.string_into_container(cfg.ssh_private, container, path_private)
-        docker_util.string_into_container(cfg.ssh_public, container, path_public)
-        docker_util.exec_safely(container, ["chmod", "600", path_private])
-        hosts = docker_util.exec_safely(container, ["ssh-keyscan", "github.com"])
-        docker_util.string_into_container(hosts[1].decode("UTF-8"), container, path_known_hosts)
-        container.kill()
-        container.remove()
-
-
-def outpack_is_initialised(cfg):
-    image = "bash"
-    mount = docker.types.Mount("/outpack", cfg.volumes["outpack"])
-
-    with DockerClient() as cl:
-        container = cl.containers.run(
-            image, mounts=[mount], detach=True, command=["test", "-f", "/outpack/.outpack/config.json"]
-        )
-        result = container.wait()
-        container.remove()
-        return result["StatusCode"] == 0
-
-
-def outpack_server_container(cfg):
-    name = cfg.containers["outpack-server"]
-    mounts = [constellation.ConstellationMount("outpack", "/outpack")]
-    outpack_server = constellation.ConstellationContainer(name, cfg.outpack_ref, mounts=mounts)
-    return outpack_server
 
 
 def packit_db_container(cfg):
