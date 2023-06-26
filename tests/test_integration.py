@@ -152,6 +152,29 @@ def test_outpack_already_initialised():
             cli.main(["stop", path, "--kill", "--volumes", "--network"])
 
 
+def test_uninitialised_source_repo():
+    path = "config/noproxy"
+    try:
+        cli.main(["start", path, "--option=outpack.initial.url=https://github.com/reside-ic/reside-ic.github.io.git"])
+        cl = docker.client.from_env()
+        containers = cl.containers.list()
+        assert len(containers) == 4
+        cfg = PackitConfig(path)
+        assert docker_util.network_exists(cfg.network)
+        assert docker_util.volume_exists(cfg.volumes["outpack"])
+        assert docker_util.container_exists("packit-outpack-server")
+        assert docker_util.container_exists("packit-packit-api")
+        assert docker_util.container_exists("packit-packit-db")
+        assert docker_util.container_exists("packit-packit")
+        outpack = cfg.get_container("outpack-server")
+        config = docker_util.string_from_container(outpack, "/outpack/.outpack/config.json")
+        assert config is not None
+    finally:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+            prompt.return_value = True
+            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+
+
 def test_vault():
     path = "config/complete"
     try:
