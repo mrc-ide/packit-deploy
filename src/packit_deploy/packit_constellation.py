@@ -72,7 +72,7 @@ def outpack_ssh_configure(container, cfg):
 
 def outpack_init_clone(container, cfg):
     print("[orderly] Initialising orderly by cloning")
-    args = ["git", "clone", cfg.outpack_source_url, "/orderly"]
+    args = ["git", "clone", cfg.outpack_source_url, "/outpack"]
     docker_util.exec_safely(container, args)
     # usually cloning a source repo will not ensure outpack is initialised
     # so here, check that outpack config exists, and if not, initialise
