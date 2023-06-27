@@ -74,7 +74,7 @@ def test_start_and_stop_proxy():
         res = http_get("http://localhost/packit/api/packets", poll=3)
         # might take some seconds for packets to appear
         retries = 1
-        while len(json.loads(res)) > 1 and retries < 5:
+        while len(json.loads(res)) < 1 and retries < 5:
             res = http_get("http://localhost/packit/api/packets")
             time.sleep(5)
             retries = retries + 1
