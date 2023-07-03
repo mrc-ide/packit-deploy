@@ -1,5 +1,3 @@
-import pytest
-
 from src.packit_deploy.config import PackitConfig
 
 
@@ -21,8 +19,7 @@ def test_config_no_proxy():
     assert str(cfg.images["packit-db"]) == "mrcide/packit-db:main"
     assert str(cfg.images["packit-api"]) == "mrcide/packit-api:main"
 
-    assert cfg.outpack_demo is True
-    assert cfg.outpack_source_url is None
+    assert cfg.outpack_source_url is not None
     assert cfg.proxy_enabled is False
     assert cfg.protect_data is False
 
@@ -54,16 +51,18 @@ def test_config_proxy():
 
 
 def test_outpack_initial_source():
-    options = {"outpack": {"initial": {"source": "wrong"}}}
-    with pytest.raises(Exception) as err:
-        PackitConfig("config/noproxy", options=options)
-    assert str(err.value) == "Unknown outpack initial source. Valid values are 'demo' and 'clone'"
-
-    options = {"outpack": {"initial": {"source": "clone", "url": "whatever"}}}
-    cfg = PackitConfig("config/noproxy", options=options)
-    assert cfg.outpack_demo is False
-    assert cfg.outpack_source_url == "whatever"
+    cfg = PackitConfig("config/complete")
+    assert cfg.outpack_source_url == "https://github.com/reside-ic/orderly3-example.git"
 
     cfg = PackitConfig("config/nodemo")
-    assert cfg.outpack_demo is False
     assert cfg.outpack_source_url is None
+
+
+def test_ssh():
+    cfg = PackitConfig("config/complete")
+    assert cfg.ssh_public == "VAULT:secret/ssh:public"
+    assert cfg.ssh_private == "VAULT:secret/ssh:private"
+    assert cfg.ssh
+
+    cfg = PackitConfig("config/basic")
+    assert not cfg.ssh

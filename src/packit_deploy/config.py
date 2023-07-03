@@ -16,19 +16,16 @@ class PackitConfig:
         self.container_prefix = config.config_string(dat, ["container_prefix"])
         self.repo = config.config_string(dat, ["repo"])
 
-        if "initial" in dat["outpack"]:
-            source = config.config_string(dat, ["outpack", "initial", "source"])
-            if source == "demo":
-                self.outpack_demo = True
-                self.outpack_source_url = None
-            elif source == "clone":
-                self.outpack_demo = False
-                self.outpack_source_url = config.config_string(dat, ["outpack", "initial", "url"])
-            else:
-                err = "Unknown outpack initial source. Valid values are 'demo' and 'clone'"
-                raise Exception(err)
+        if "ssh" in dat:
+            self.ssh_public = config.config_string(dat, ["ssh", "public"])
+            self.ssh_private = config.config_string(dat, ["ssh", "private"])
+            self.ssh = True
         else:
-            self.outpack_demo = False
+            self.ssh = False
+
+        if "initial" in dat["outpack"]:
+            self.outpack_source_url = config.config_string(dat, ["outpack", "initial", "url"])
+        else:
             self.outpack_source_url = None
 
         self.outpack_ref = self.build_ref(dat, "outpack", "server")

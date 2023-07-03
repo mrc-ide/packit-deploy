@@ -28,7 +28,7 @@ volumes:
 
 outpack:
   initial:
-    source: demo
+    url: https://github.com/reside-ic/orderly3-example.git
   server:
     name: outpack_server
     tag: main

@@ -26,9 +26,19 @@ volumes:
   outpack: outpack_volume
   proxy_logs: packit_proxy_logs
 
+## Path to ssh key for interacting with git. You
+## might use a github deploy key here. For completeness both the
+## public and private parts of the keypair are listed.
+ssh:
+  public: VAULT:secret/ssh:public
+  private: VAULT:secret/ssh:private
+
 outpack:
+  ## Initialise an outpack directory by cloning from github
   initial:
-    source: demo
+    ##  If using a private repo, then use an ssh url and provide ssh keys in the
+    ## "ssh" section above.
+    url: https://github.com/reside-ic/orderly3-example.git
   server:
     name: outpack_server
     tag: main

@@ -1,10 +1,10 @@
+import json
 import ssl
 import time
 import urllib
 from unittest import mock
 
 import docker
-import pytest
 import vault_dev
 from constellation import docker_util
 
@@ -72,7 +72,13 @@ def test_start_and_stop_proxy():
         assert set(ports.keys()) == {"443/tcp", "80/tcp"}
         http_get("http://localhost")
         res = http_get("http://localhost/packit/api/packets", poll=3)
-        assert res == "[]"
+        # might take some seconds for packets to appear
+        retries = 1
+        while len(json.loads(res)) < 1 and retries < 5:
+            res = http_get("http://localhost/packit/api/packets")
+            time.sleep(5)
+            retries = retries + 1
+        assert len(json.loads(res)) > 1
     finally:
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
@@ -90,6 +96,7 @@ def test_proxy_ssl_configured():
             cl.write("secret/key", value="s3cret")
             cl.write("secret/db/user", value="us3r")
             cl.write("secret/db/password", value="p@ssword")
+            cl.write("secret/ssh", public="publ1c", private="private")
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
@@ -128,18 +135,6 @@ def test_api_configured():
             cli.main(["stop", path, "--kill", "--volumes", "--network"])
 
 
-def test_outpack_cloning_unsupported():
-    path = "config/noproxy"
-    try:
-        with pytest.raises(Exception) as err:
-            cli.main(["start", path, "--option=outpack.initial.url=whatever", "--option=outpack.initial.source=clone"])
-        assert str(err.value) == "Outpack source cloning not yet supported. Setup outpack volume manually or use demo."
-    finally:
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
-            prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
-
-
 def test_outpack_already_initialised():
     path = "config/noproxy"
     outpack_vol = docker.types.Mount("/outpack", "outpack_volume")
@@ -157,6 +152,29 @@ def test_outpack_already_initialised():
             cli.main(["stop", path, "--kill", "--volumes", "--network"])
 
 
+def test_uninitialised_source_repo():
+    path = "config/noproxy"
+    try:
+        cli.main(["start", path, "--option=outpack.initial.url=https://github.com/reside-ic/reside-ic.github.io.git"])
+        cl = docker.client.from_env()
+        containers = cl.containers.list()
+        assert len(containers) == 4
+        cfg = PackitConfig(path)
+        assert docker_util.network_exists(cfg.network)
+        assert docker_util.volume_exists(cfg.volumes["outpack"])
+        assert docker_util.container_exists("packit-outpack-server")
+        assert docker_util.container_exists("packit-packit-api")
+        assert docker_util.container_exists("packit-packit-db")
+        assert docker_util.container_exists("packit-packit")
+        outpack = cfg.get_container("outpack-server")
+        config = docker_util.string_from_container(outpack, "/outpack/.outpack/config.json")
+        assert config is not None
+    finally:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+            prompt.return_value = True
+            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+
+
 def test_vault():
     path = "config/complete"
     try:
@@ -168,6 +186,7 @@ def test_vault():
             cl.write("secret/key", value="s3cret")
             cl.write("secret/db/user", value="us3r")
             cl.write("secret/db/password", value="p@ssword")
+            cl.write("secret/ssh", public="publ1c", private="private")
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
@@ -177,6 +196,30 @@ def test_vault():
             assert "db.user=us3r" in api_config
             assert "db.password=p@ssword" in api_config
 
+    finally:
+        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+            prompt.return_value = True
+            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+
+
+def test_ssh():
+    path = "config/complete"
+    try:
+        with vault_dev.server() as s:
+            url = f"http://localhost:{s.port}"
+            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            cl = cfg.vault.client()
+            cl.write("secret/cert", value="c3rt")
+            cl.write("secret/key", value="s3cret")
+            cl.write("secret/db/user", value="us3r")
+            cl.write("secret/db/password", value="p@ssword")
+            cl.write("secret/ssh", public="publ1c", private="private")
+
+            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+
+            outpack_server = cfg.get_container("outpack-server")
+            pub_key = docker_util.string_from_container(outpack_server, "/root/.ssh/id_rsa.pub")
+            assert pub_key == "publ1c"
     finally:
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
             prompt.return_value = True
