@@ -34,7 +34,6 @@ class PackitConfig:
         self.packit_db_ref = self.build_ref(dat, "packit", "db")
         self.packit_db_user = config.config_string(dat, ["packit", "db", "user"])
         self.packit_db_password = config.config_string(dat, ["packit", "db", "password"])
-
         self.packit_auth_secret = config.config_string(dat, ["packit", "auth", "secret"])
         self.packit_auth_redirectUrl = config.config_string(dat, ["packit", "auth", "redirectUrl"])
         self.packit_auth_enableGithubLogin = config.config_boolean(dat, ["packit", "auth", "enableGithubLogin"])
@@ -43,7 +42,6 @@ class PackitConfig:
         self.packit_auth_enabled = config.config_boolean(dat, ["packit", "auth", "enabled"])
         self.packit_auth_authGithubClientId = config.config_string(dat, ["packit", "auth", "authGithubClientId"])
         self.packit_auth_authGithubSecret = config.config_string(dat, ["packit", "auth", "authGithubSecret"])
-
 
         self.containers = {
             "outpack-server": "outpack-server",
