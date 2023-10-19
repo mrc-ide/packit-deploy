@@ -26,6 +26,11 @@ def test_config_no_proxy():
     assert cfg.packit_db_user == "packituser"
     assert cfg.packit_db_password == "changeme"
 
+    assert cfg.packit_auth_redirectUrl == "http://localhost:3000/redirect/"
+    assert cfg.packit_auth_secret == "changesecretkey"
+    assert cfg.packit_auth_authGithubSecret == "changeSecret"
+    assert cfg.packit_auth_authGithubClientId == "changeId"
+
 
 def test_config_proxy_disabled():
     options = {"proxy": {"enabled": False}}

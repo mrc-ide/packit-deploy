@@ -44,3 +44,11 @@ packit:
     tag: main
     user: packituser
     password: changeme
+  auth:
+    basic:
+      secret: changeSecret
+    oauth2:
+      redirect:
+        url: test
+    authGithubClientId: test
+    authGithubSecret: test
