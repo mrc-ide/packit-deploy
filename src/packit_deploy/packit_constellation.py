@@ -114,6 +114,14 @@ def packit_api_configure(container, cfg):
         "db.url": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
         "db.user": cfg.packit_db_user,
         "db.password": cfg.packit_db_password,
+        "auth.basic.secret": cfg.packit_auth_secret,
+        "auth.oauth2.redirect.url": cfg.packit_auth_redirectUrl,
+        "auth.enableGithubLogin": cfg.packit_auth_enableGithubLogin,
+        "auth.enableFormLogin": cfg.packit_auth_enableFormLogin,
+        "auth.expiryDays": cfg.packit_auth_expiryDays,
+        "auth.enabled": cfg.packit_auth_enabled,
+        "authGithubClientId": cfg.packit_auth_authGithubClientId,
+        "authGithubSecret": cfg.packit_auth_authGithubSecret,
         "outpack.server.url": f"http://{cfg.container_prefix}-{outpack}:8000",
     }
     txt = "".join([f"{k}={v}\n" for k, v in opts.items()])
