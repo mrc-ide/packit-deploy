@@ -38,7 +38,7 @@ def test_config_proxy():
     assert cfg.proxy_enabled
     assert cfg.proxy_ssl_self_signed
     assert "proxy" in cfg.containers
-    assert str(cfg.images["proxy"]) == "mrcide/packit-proxy:mrc-4319"
+    assert str(cfg.images["proxy"]) == "mrcide/packit-proxy:main"
     assert cfg.proxy_hostname == "localhost"
     assert cfg.proxy_port_http == 80
     assert cfg.proxy_port_https == 443
