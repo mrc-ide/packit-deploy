@@ -58,6 +58,20 @@ packit:
     tag: main
     user: VAULT:secret/db/user:value
     password: VAULT:secret/db/password:value
+  auth:
+    enabled: true
+    enableGithubLogin: true
+    expiryDays: 1
+    githubAPIOrg: mrc-ide
+    githubAPITeam: packit
+    githubClient:
+      id: VAULT:secret/auth/githubclient/id:value
+      secret: VAULT:secret/auth/githubclient/secret:value
+    jwt:
+      secret: VAULT:secret/auth/jwt/secret:value
+    oauth2:
+      redirect:
+        url: "https://packit-api:3000/redirect"
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker
