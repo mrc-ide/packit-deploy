@@ -72,7 +72,8 @@ def outpack_ssh_configure(container, cfg):
 
 def outpack_init_clone(container, cfg):
     print("[orderly] Initialising orderly by cloning")
-    args = ["git", "clone", cfg.outpack_source_url, "/outpack"]
+    # TODO: revert this branch pin
+    args = ["git", "clone", "-b", "mrc-4922", "--single-branch", cfg.outpack_source_url, "/outpack"]
     docker_util.exec_safely(container, args)
     # usually cloning a source repo will not ensure outpack is initialised
     # so here, check that outpack config exists, and if not, initialise
@@ -102,7 +103,13 @@ def packit_db_configure(container, _):
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
-    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, configure=packit_api_configure)
+    env = {
+      "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
+      "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret
+    }
+    packit_api = constellation.ConstellationContainer(
+        name, cfg.packit_api_ref, configure=packit_api_configure, environment=env
+    )
     return packit_api
 
 
@@ -115,9 +122,25 @@ def packit_api_configure(container, cfg):
         "db.user": cfg.packit_db_user,
         "db.password": cfg.packit_db_password,
         "outpack.server.url": f"http://{cfg.container_prefix}-{outpack}:8000",
+        "auth.enabled": cfg.packit_auth_enabled
     }
+    if (cfg.packit_auth_enabled):
+        opts["auth.enableGithubLogin"] = cfg.packit_auth_enable_github_login
+        opts["auth.expiryDays"] = cfg.packit_auth_expiry_days
+        opts["auth.githubAPIOrg"] = cfg.packit_auth_github_api_org
+        opts["auth.githubAPITeam"] = cfg.packit_auth_github_api_team
+        opts["auth.jwt.secret"] = cfg.packit_auth_jwt_secret
+        opts["auth.oauth2.redirect.url"] = cfg.packit_auth_oauth2_redirect_url
+
     txt = "".join([f"{k}={v}\n" for k, v in opts.items()])
     docker_util.string_into_container(txt, container, "/etc/packit/config.properties")
+
+    #app_props = {
+    #    "spring.security.oauth2.client.registration.github.client-id": cfg.packit_auth_github_client_id,
+    #    "spring.security.oauth2.client.registration.github.client-secret": cfg.packit_auth_github_client_secret
+    #}
+    #app_props_txt = "".join([f"{k}={v}\n" for k, v in app_props.items()]) # TODO: util this
+    #docker_util.string_into_container(txt, container, "/etc/packit/application.properties")  # TODO: will defaults actually be picked up?? will these??
 
 
 def packit_container(cfg):

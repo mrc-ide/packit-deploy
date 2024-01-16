@@ -60,11 +60,11 @@ packit:
     password: VAULT:secret/db/password:value
   auth:
     enabled: true
-    enableGithubLogin: true
-    expiryDays: 1
-    githubAPIOrg: mrc-ide
-    githubAPITeam: packit
-    githubClient:
+    enable_github_login: true
+    expiry_days: 1
+    github_api_org: mrc-ide
+    github_api_team: packit
+    github_client:
       id: VAULT:secret/auth/githubclient/id:value
       secret: VAULT:secret/auth/githubclient/secret:value
     jwt:
