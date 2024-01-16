@@ -135,13 +135,6 @@ def packit_api_configure(container, cfg):
     txt = "".join([f"{k}={v}\n" for k, v in opts.items()])
     docker_util.string_into_container(txt, container, "/etc/packit/config.properties")
 
-    #app_props = {
-    #    "spring.security.oauth2.client.registration.github.client-id": cfg.packit_auth_github_client_id,
-    #    "spring.security.oauth2.client.registration.github.client-secret": cfg.packit_auth_github_client_secret
-    #}
-    #app_props_txt = "".join([f"{k}={v}\n" for k, v in app_props.items()]) # TODO: util this
-    #docker_util.string_into_container(txt, container, "/etc/packit/application.properties")  # TODO: will defaults actually be picked up?? will these??
-
 
 def packit_container(cfg):
     name = cfg.containers["packit"]
