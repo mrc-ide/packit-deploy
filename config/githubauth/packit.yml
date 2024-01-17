@@ -64,7 +64,7 @@ packit:
       secret: VAULT:secret/packit/githubauth/auth/jwt:secret
     oauth2:
       redirect:
-        url: "https://localhost:3000/redirect"
+        url: "https://localhost/redirect"
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker

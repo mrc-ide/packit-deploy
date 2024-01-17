@@ -106,7 +106,7 @@ def packit_api_container(cfg):
     env = {
       "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
       "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret
-    }
+    } if (cfg.packit_auth_enabled and cf.packit_auth_enable_github_login) else {}
     packit_api = constellation.ConstellationContainer(
         name, cfg.packit_api_ref, configure=packit_api_configure, environment=env
     )

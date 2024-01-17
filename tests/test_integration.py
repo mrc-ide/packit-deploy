@@ -187,6 +187,9 @@ def test_vault():
             cl.write("secret/db/user", value="us3r")
             cl.write("secret/db/password", value="p@ssword")
             cl.write("secret/ssh", public="publ1c", private="private")
+            cl.write("secret/auth/githubclient/id", value="ghclientid")
+            cl.write("secret/auth/githubclient/secret", value="ghs3cret")
+            cl.write("secret/auth/jwt/secret", value="jwts3cret")
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
@@ -195,6 +198,10 @@ def test_vault():
 
             assert "db.user=us3r" in api_config
             assert "db.password=p@ssword" in api_config
+
+            assert cfg.packit_auth_github_client_id == "ghclientid"
+            assert cfg.packit_auth_github_client_secret == "ghs3cret"
+            assert cfg.packit_auth_jwt_secret == "jwts3cret"
 
     finally:
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
@@ -214,6 +221,9 @@ def test_ssh():
             cl.write("secret/db/user", value="us3r")
             cl.write("secret/db/password", value="p@ssword")
             cl.write("secret/ssh", public="publ1c", private="private")
+            cl.write("secret/auth/githubclient/id", value="ghclientid")
+            cl.write("secret/auth/githubclient/secret", value="ghs3cret")
+            cl.write("secret/auth/jwt/secret", value="jwts3cret")
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
