@@ -66,3 +66,15 @@ def test_ssh():
 
     cfg = PackitConfig("config/basic")
     assert not cfg.ssh
+
+def test_github_auth():
+    cfg = PackitConfig("config/githubauth")
+    assert cfg.packit_auth_enabled == True
+    assert cfg.packit_auth_enable_github_login == True
+    assert cfg.packit_auth_expiry_days == 1
+    assert cfg.packit_auth_github_api_org == "mrc-ide"
+    assert cfg.packit_auth_github_api_team == "packit"
+    assert cfg.packit_auth_github_client_id == "VAULT:secret/packit/githubauth/auth/githubclient:id"
+    assert cfg.packit_auth_github_client_secret == "VAULT:secret/packit/githubauth/auth/githubclient:secret"
+    assert cfg.packit_auth_jwt_secret == "VAULT:secret/packit/githubauth/auth/jwt:secret"
+    assert cfg.packit_auth_oauth2_redirect_url == "https://localhost:3000/redirect"
