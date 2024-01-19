@@ -1,6 +1,7 @@
 import constellation
 import docker
 from constellation import docker_util
+from constellation import vault
 
 from packit_deploy.docker_helpers import DockerClient
 
@@ -103,10 +104,19 @@ def packit_db_configure(container, _):
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
-    env = {
-      "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
-      "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret
-    } if (cfg.packit_auth_enabled and cf.packit_auth_enable_github_login) else {}
+
+    env = {}
+    if cfg.packit_auth_enabled and cfg.packit_auth_enable_github_login:
+        if cfg.vault:
+            # resolve secrets early so we can set these env vars from vault values
+            vault.resolve_secrets(cfg, cfg.vault.client())
+        print("SETTING PACKIT_API_ROOT to " + cfg.packit_auth_oauth2_redirect_packit_api_root)
+        env = {
+          "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
+          "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
+          "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root
+        }
+
     packit_api = constellation.ConstellationContainer(
         name, cfg.packit_api_ref, configure=packit_api_configure, environment=env
     )
@@ -122,10 +132,10 @@ def packit_api_configure(container, cfg):
         "db.user": cfg.packit_db_user,
         "db.password": cfg.packit_db_password,
         "outpack.server.url": f"http://{cfg.container_prefix}-{outpack}:8000",
-        "auth.enabled": cfg.packit_auth_enabled
+        "auth.enabled": "true" if cfg.packit_auth_enabled else "false"
     }
     if (cfg.packit_auth_enabled):
-        opts["auth.enableGithubLogin"] = cfg.packit_auth_enable_github_login
+        opts["auth.enableGithubLogin"] = "true" if cfg.packit_auth_enable_github_login else "false"
         opts["auth.expiryDays"] = cfg.packit_auth_expiry_days
         opts["auth.githubAPIOrg"] = cfg.packit_auth_github_api_org
         opts["auth.githubAPITeam"] = cfg.packit_auth_github_api_team

@@ -71,7 +71,9 @@ packit:
       secret: VAULT:secret/auth/jwt/secret:value
     oauth2:
       redirect:
-        url: "https://packit-api:3000/redirect"
+        # Root url which OAuth2 app will use to redirect back to packit api - must match OAuth2 app's registered url
+        packit_api_root: "https://packit/packit/api"
+        url: "https://packit/redirect"  # Url for redirecting back to the front end after successful authentication
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker

@@ -44,6 +44,7 @@ class PackitConfig:
             self.packit_auth_github_client_id = config.config_string(dat, ["packit", "auth", "github_client", "id"])
             self.packit_auth_github_client_secret = config.config_string(dat, ["packit", "auth", "github_client", "secret"])
             self.packit_auth_jwt_secret = config.config_string(dat, ["packit", "auth", "jwt", "secret"])
+            self.packit_auth_oauth2_redirect_packit_api_root = config.config_string(dat, ["packit", "auth", "oauth2", "redirect", "packit_api_root"])
             self.packit_auth_oauth2_redirect_url = config.config_string(dat, ["packit", "auth", "oauth2", "redirect", "url"])
         else:
             self.packit_auth_enabled = False

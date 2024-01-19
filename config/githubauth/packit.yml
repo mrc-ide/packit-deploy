@@ -42,7 +42,7 @@ outpack:
 packit:
   api:
     name: packit-api
-    tag: main
+    tag: mrc-4922
   app:
     name: packit
     tag: main
@@ -64,7 +64,9 @@ packit:
       secret: VAULT:secret/packit/githubauth/auth/jwt:secret
     oauth2:
       redirect:
-        url: "https://localhost/redirect"
+        # Root url which OAuth2 app will be requested to use to redirect back to packit api - must match root of OAuth2 app's registered url
+        packit_api_root: "https://localhost/packit/api"
+        url: "https://localhost/redirect" # Url for redirecting back to the front end after successful authentication
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker
