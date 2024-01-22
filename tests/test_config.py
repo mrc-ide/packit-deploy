@@ -67,6 +67,7 @@ def test_ssh():
     cfg = PackitConfig("config/basic")
     assert not cfg.ssh
 
+
 def test_github_auth():
     cfg = PackitConfig("config/githubauth")
     assert cfg.packit_auth_enabled is True

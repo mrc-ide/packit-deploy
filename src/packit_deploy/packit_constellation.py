@@ -113,9 +113,9 @@ def packit_api_container(cfg):
         # These values are set in the packit api's application.properties file from env vars, rather than written
         # to config.properties and copied into the container with the other config values
         env = {
-          "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
-          "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
-          "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root
+            "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
+            "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
+            "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root,
         }
 
     packit_api = constellation.ConstellationContainer(
@@ -133,9 +133,9 @@ def packit_api_configure(container, cfg):
         "db.user": cfg.packit_db_user,
         "db.password": cfg.packit_db_password,
         "outpack.server.url": f"http://{cfg.container_prefix}-{outpack}:8000",
-        "auth.enabled": "true" if cfg.packit_auth_enabled else "false"
+        "auth.enabled": "true" if cfg.packit_auth_enabled else "false",
     }
-    if (cfg.packit_auth_enabled):
+    if cfg.packit_auth_enabled:
         opts["auth.enableGithubLogin"] = "true" if cfg.packit_auth_enable_github_login else "false"
         opts["auth.expiryDays"] = cfg.packit_auth_expiry_days
         opts["auth.githubAPIOrg"] = cfg.packit_auth_github_api_org
