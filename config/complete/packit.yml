@@ -71,6 +71,7 @@ packit:
       id: VAULT:secret/auth/githubclient/id:value
       secret: VAULT:secret/auth/githubclient/secret:value
     jwt:
+      # Secret used to generate JWT tokens
       secret: VAULT:secret/auth/jwt/secret:value
     oauth2:
       redirect:

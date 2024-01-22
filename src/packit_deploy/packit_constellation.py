@@ -110,7 +110,9 @@ def packit_api_container(cfg):
         if cfg.vault:
             # resolve secrets early so we can set these env vars from vault values
             vault.resolve_secrets(cfg, cfg.vault.client())
-        print("SETTING PACKIT_API_ROOT to " + cfg.packit_auth_oauth2_redirect_packit_api_root)
+
+        # These values are set in the packit api's application.properties file from env vars, rather than written
+        # to config.properties and copied into the container with the other config values
         env = {
           "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
           "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
