@@ -69,8 +69,8 @@ def test_ssh():
 
 def test_github_auth():
     cfg = PackitConfig("config/githubauth")
-    assert cfg.packit_auth_enabled == True
-    assert cfg.packit_auth_enable_github_login == True
+    assert cfg.packit_auth_enabled is True
+    assert cfg.packit_auth_enable_github_login is True
     assert cfg.packit_auth_expiry_days == 1
     assert cfg.packit_auth_github_api_org == "mrc-ide"
     assert cfg.packit_auth_github_api_team == "packit"

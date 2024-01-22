@@ -1,7 +1,6 @@
 import constellation
 import docker
-from constellation import docker_util
-from constellation import vault
+from constellation import docker_util, vault
 
 from packit_deploy.docker_helpers import DockerClient
 
