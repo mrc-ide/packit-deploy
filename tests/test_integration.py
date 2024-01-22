@@ -97,6 +97,9 @@ def test_proxy_ssl_configured():
             cl.write("secret/db/user", value="us3r")
             cl.write("secret/db/password", value="p@ssword")
             cl.write("secret/ssh", public="publ1c", private="private")
+            cl.write("secret/auth/githubclient/id", value="ghclientid")
+            cl.write("secret/auth/githubclient/secret", value="ghs3cret")
+            cl.write("secret/auth/jwt/secret", value="jwts3cret")
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
