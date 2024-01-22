@@ -57,6 +57,9 @@ packit:
     expiry_days: 1
     github_api_org: mrc-ide
     github_api_team: packit
+    # Details of your Github OAuth app, which should be kept in the vault. The app's Authorization callback url must
+    # have the same root as the packit_api_root specified below, and should be of the form
+    # {PACKIT_API_ROOT}/login/oauth2/code/github
     github_client:
       id: VAULT:secret/packit/githubauth/auth/githubclient:id
       secret: VAULT:secret/packit/githubauth/auth/githubclient:secret
