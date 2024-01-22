@@ -45,7 +45,7 @@ packit:
     tag: mrc-4922
   app:
     name: packit
-    tag: main
+    tag: mrc-4922
   db:
     name: packit-db
     tag: main
@@ -78,7 +78,7 @@ proxy:
   port_https: 443
   image:
     name: packit-proxy
-    tag: main
+    tag: 0e35431
 
 vault:
   ## Address of the vault server.  This should be a string if it is
