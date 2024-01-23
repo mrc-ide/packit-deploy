@@ -73,7 +73,10 @@ def outpack_ssh_configure(container, cfg):
 def outpack_init_clone(container, cfg):
     print("[orderly] Initialising orderly by cloning")
     # TODO: revert this branch pin
-    args = ["git", "clone", "-b", "mrc-4922", "--single-branch", cfg.outpack_source_url, "/outpack"]
+    if cfg.outpack_source_url == "https://github.com/reside-ic/orderly3-example.git":
+        args = ["git", "clone", "-b", "mrc-4922", "--single-branch", cfg.outpack_source_url, "/outpack"]
+    else:
+        args = ["git", "clone", cfg.outpack_source_url, "/outpack"]
     docker_util.exec_safely(container, args)
     # usually cloning a source repo will not ensure outpack is initialised
     # so here, check that outpack config exists, and if not, initialise
@@ -106,7 +109,7 @@ def packit_api_container(cfg):
 
     env = {}
     if cfg.packit_auth_enabled and cfg.packit_auth_enable_github_login:
-        if cfg.vault:
+        if cfg.vault and cfg.vault.url:
             # resolve secrets early so we can set these env vars from vault values
             vault.resolve_secrets(cfg, cfg.vault.client())
 
