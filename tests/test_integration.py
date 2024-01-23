@@ -187,6 +187,7 @@ def stop_packit(path):
         prompt.return_value = True
         cli.main(["stop", path, "--kill", "--volumes", "--network"])
 
+
 def write_secrets_to_vault(cfg):
     cl = cfg.vault.client()
     cl.write("secret/cert", value="c3rt")
@@ -197,6 +198,7 @@ def write_secrets_to_vault(cfg):
     cl.write("secret/auth/githubclient/id", value="ghclientid")
     cl.write("secret/auth/githubclient/secret", value="ghs3cret")
     cl.write("secret/auth/jwt/secret", value="jwts3cret")
+
 
 # Because we wait for a go signal to come up, we might not be able to
 # make the request right away:
