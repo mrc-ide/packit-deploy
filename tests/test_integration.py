@@ -10,7 +10,6 @@ from constellation import docker_util
 
 from src.packit_deploy import cli
 from src.packit_deploy.config import PackitConfig
-from src.packit_deploy.docker_helpers import DockerClient
 
 
 def test_start_and_stop_noproxy():
