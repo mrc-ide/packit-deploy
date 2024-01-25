@@ -79,13 +79,12 @@ def outpack_init_clone(container, cfg):
     # usually cloning a source repo will not ensure outpack is initialised
     # so here, check that outpack config exists, and if not, initialise
     if not outpack_is_initialised(container):
-        image = "mrcide/outpack.orderly:main"
-        mount = docker.types.Mount("/outpack", cfg.volumes["outpack"])
+        image = cfg.outpack_ref
+        mounts = [docker.types.Mount("/outpack", cfg.volumes["outpack"])]
 
         with DockerClient() as cl:
-            cl.containers.run(
-                image, mounts=[mount], remove=True, entrypoint=["R", "-e", "outpack::outpack_init('/outpack')"]
-            )
+            args = ["outpack", "init", "--require-complete-tree", "--use-file-store", "/outpack"]
+            cl.containers.run(image, mounts=mounts, remove=True, entrypoint=args)
 
 
 def packit_db_container(cfg):
