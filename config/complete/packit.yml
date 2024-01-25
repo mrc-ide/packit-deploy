@@ -71,7 +71,8 @@ packit:
       id: VAULT:secret/auth/githubclient/id:value
       secret: VAULT:secret/auth/githubclient/secret:value
     jwt:
-      # Secret used to generate JWT tokens
+      # Secret used to generate JWT tokens - this can be any string, the secret at this key in the vault is a random
+      # 32 char string, and is probably fine to re-use
       secret: VAULT:secret/auth/jwt/secret:value
     oauth2:
       redirect:

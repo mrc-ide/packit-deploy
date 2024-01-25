@@ -42,10 +42,10 @@ outpack:
 packit:
   api:
     name: packit-api
-    tag: mrc-4922
+    tag: main
   app:
     name: packit
-    tag: mrc-4922
+    tag: main
   db:
     name: packit-db
     tag: main
@@ -64,7 +64,8 @@ packit:
       id: VAULT:secret/packit/githubauth/auth/githubclient:id
       secret: VAULT:secret/packit/githubauth/auth/githubclient:secret
     jwt:
-      # Secret used to generate JWT tokens
+      # Secret used to generate JWT tokens - this can be any string, the secret at this key in the vault is a random
+      # 32 char string, and is probably fine to re-use
       secret: VAULT:secret/packit/githubauth/auth/jwt:secret
     oauth2:
       redirect:
