@@ -79,7 +79,7 @@ def outpack_init_clone(container, cfg):
     # usually cloning a source repo will not ensure outpack is initialised
     # so here, check that outpack config exists, and if not, initialise
     if not outpack_is_initialised(container):
-        image = cfg.outpack_ref
+        image = str(cfg.outpack_ref)
         mounts = [docker.types.Mount("/outpack", cfg.volumes["outpack"])]
 
         with DockerClient() as cl:
