@@ -96,3 +96,16 @@ If it is working, you can publish to the real PyPi:
 ```console
 hatch publish
 ```
+
+## Config
+
+The following example configurations are included under `/config`:
+- `basic`: does not use any vault values, but does include proxy (using self-signed cert) and demo data
+- `complete`: example of vault secrets required for a full configuration
+- `githubauth`: example with github auth enabled, includes proxy (using self-signed cert) and demo data
+- `nodemo`: does not include the demo data
+- `noproxy`: does not include proxy container
+
+These configurations should all be runnable for local testing, except for `complete`, which includes non-existent vault secrets.
+You will need access to the vault to run the `githubauth` configuration, which requires secrets for the github oauth2 client app
+details. 

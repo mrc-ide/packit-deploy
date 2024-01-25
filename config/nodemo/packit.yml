@@ -57,4 +57,4 @@ proxy:
   port_https: 443
   image:
     name: packit-proxy
-    tag: mrc-4319
+    tag: main

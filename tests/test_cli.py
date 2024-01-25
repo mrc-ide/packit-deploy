@@ -46,7 +46,7 @@ def test_parse_args():
 
 def test_version():
     res = cli.main(["--version"])
-    assert res == "0.0.8"
+    assert res == "0.0.9"
 
 
 def test_args_passed_to_start():

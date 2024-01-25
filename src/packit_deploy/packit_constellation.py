@@ -1,6 +1,6 @@
 import constellation
 import docker
-from constellation import docker_util
+from constellation import docker_util, vault
 
 from packit_deploy.docker_helpers import DockerClient
 
@@ -72,18 +72,19 @@ def outpack_ssh_configure(container, cfg):
 
 def outpack_init_clone(container, cfg):
     print("[orderly] Initialising orderly by cloning")
+    # TODO: revert this branch pin to:
     args = ["git", "clone", cfg.outpack_source_url, "/outpack"]
+
     docker_util.exec_safely(container, args)
     # usually cloning a source repo will not ensure outpack is initialised
     # so here, check that outpack config exists, and if not, initialise
     if not outpack_is_initialised(container):
-        image = "mrcide/outpack.orderly:main"
-        mount = docker.types.Mount("/outpack", cfg.volumes["outpack"])
+        image = str(cfg.outpack_ref)
+        mounts = [docker.types.Mount("/outpack", cfg.volumes["outpack"])]
 
         with DockerClient() as cl:
-            cl.containers.run(
-                image, mounts=[mount], remove=True, entrypoint=["R", "-e", "outpack::outpack_init('/outpack')"]
-            )
+            args = ["outpack", "init", "--require-complete-tree", "--use-file-store", "/outpack"]
+            cl.containers.run(image, mounts=mounts, remove=True, entrypoint=args)
 
 
 def packit_db_container(cfg):
@@ -102,7 +103,24 @@ def packit_db_configure(container, _):
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
-    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, configure=packit_api_configure)
+
+    env = {}
+    if cfg.packit_auth_enabled and cfg.packit_auth_enable_github_login:
+        if cfg.vault and cfg.vault.url:
+            # resolve secrets early so we can set these env vars from vault values
+            vault.resolve_secrets(cfg, cfg.vault.client())
+
+        # These values are set in the packit api's application.properties file from env vars, rather than written
+        # to config.properties and copied into the container with the other config values
+        env = {
+            "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
+            "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
+            "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root,
+        }
+
+    packit_api = constellation.ConstellationContainer(
+        name, cfg.packit_api_ref, configure=packit_api_configure, environment=env
+    )
     return packit_api
 
 
@@ -115,7 +133,16 @@ def packit_api_configure(container, cfg):
         "db.user": cfg.packit_db_user,
         "db.password": cfg.packit_db_password,
         "outpack.server.url": f"http://{cfg.container_prefix}-{outpack}:8000",
+        "auth.enabled": "true" if cfg.packit_auth_enabled else "false",
     }
+    if cfg.packit_auth_enabled:
+        opts["auth.enableGithubLogin"] = "true" if cfg.packit_auth_enable_github_login else "false"
+        opts["auth.expiryDays"] = cfg.packit_auth_expiry_days
+        opts["auth.githubAPIOrg"] = cfg.packit_auth_github_api_org
+        opts["auth.githubAPITeam"] = cfg.packit_auth_github_api_team
+        opts["auth.jwt.secret"] = cfg.packit_auth_jwt_secret
+        opts["auth.oauth2.redirect.url"] = cfg.packit_auth_oauth2_redirect_url
+
     txt = "".join([f"{k}={v}\n" for k, v in opts.items()])
     docker_util.string_into_container(txt, container, "/etc/packit/config.properties")
 

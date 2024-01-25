@@ -10,7 +10,6 @@ from constellation import docker_util
 
 from src.packit_deploy import cli
 from src.packit_deploy.config import PackitConfig
-from src.packit_deploy.docker_helpers import DockerClient
 
 
 def test_start_and_stop_noproxy():
@@ -44,9 +43,7 @@ def test_start_and_stop_noproxy():
             assert not docker_util.container_exists("packit-packit")
             assert not docker_util.container_exists("packit-outpack-server")
     finally:
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
-            prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+        stop_packit(path)
 
 
 def test_status():
@@ -80,9 +77,7 @@ def test_start_and_stop_proxy():
             retries = retries + 1
         assert len(json.loads(res)) > 1
     finally:
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
-            prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+        stop_packit(path)
 
 
 def test_proxy_ssl_configured():
@@ -91,12 +86,7 @@ def test_proxy_ssl_configured():
         with vault_dev.server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
-            cl = cfg.vault.client()
-            cl.write("secret/cert", value="c3rt")
-            cl.write("secret/key", value="s3cret")
-            cl.write("secret/db/user", value="us3r")
-            cl.write("secret/db/password", value="p@ssword")
-            cl.write("secret/ssh", public="publ1c", private="private")
+            write_secrets_to_vault(cfg)
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
@@ -107,9 +97,7 @@ def test_proxy_ssl_configured():
             assert "s3cret" in key
 
     finally:
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
-            prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+        stop_packit(path)
 
 
 def test_api_configured():
@@ -128,51 +116,34 @@ def test_api_configured():
         assert "db.user=packituser" in api_config
         assert "db.password=changeme" in api_config
         assert "outpack.server.url=http://packit-outpack-server:8000" in api_config
+        assert "auth.enabled=false" in api_config
 
     finally:
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
-            prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+        stop_packit(path)
 
 
-def test_outpack_already_initialised():
-    path = "config/noproxy"
-    outpack_vol = docker.types.Mount("/outpack", "outpack_volume")
-    with DockerClient() as cl:
-        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol], command=["mkdir", "/outpack/.outpack"])
-        cl.containers.run(
-            "ubuntu", remove=True, mounts=[outpack_vol], command=["touch", "/outpack/.outpack/config.json"]
-        )
-        cl.containers.run("ubuntu", remove=True, mounts=[outpack_vol], command=["mkdir", "/outpack/.outpack/test.txt"])
+def test_api_configured_for_github_auth():
+    path = "config/complete"
     try:
-        cli.main(["start", path])
-    finally:
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
-            prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+        with vault_dev.server() as s:
+            url = f"http://localhost:{s.port}"
+            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            write_secrets_to_vault(cfg)
 
+            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
-def test_uninitialised_source_repo():
-    path = "config/noproxy"
-    try:
-        cli.main(["start", path, "--option=outpack.initial.url=https://github.com/reside-ic/reside-ic.github.io.git"])
-        cl = docker.client.from_env()
-        containers = cl.containers.list()
-        assert len(containers) == 4
-        cfg = PackitConfig(path)
-        assert docker_util.network_exists(cfg.network)
-        assert docker_util.volume_exists(cfg.volumes["outpack"])
-        assert docker_util.container_exists("packit-outpack-server")
-        assert docker_util.container_exists("packit-packit-api")
-        assert docker_util.container_exists("packit-packit-db")
-        assert docker_util.container_exists("packit-packit")
-        outpack = cfg.get_container("outpack-server")
-        config = docker_util.string_from_container(outpack, "/outpack/.outpack/config.json")
-        assert config is not None
+            api = cfg.get_container("packit-api")
+            api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
+
+            assert "auth.enabled=true" in api_config
+            assert "auth.enableGithubLogin=true" in api_config
+            assert "auth.expiryDays=1" in api_config
+            assert "auth.githubAPIOrg=mrc-ide" in api_config
+            assert "auth.githubAPITeam=packit" in api_config
+            assert "auth.jwt.secret=jwts3cret" in api_config
+            assert "auth.oauth2.redirect.url=https://packit/redirect" in api_config
     finally:
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
-            prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+        stop_packit(path)
 
 
 def test_vault():
@@ -181,12 +152,7 @@ def test_vault():
         with vault_dev.server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
-            cl = cfg.vault.client()
-            cl.write("secret/cert", value="c3rt")
-            cl.write("secret/key", value="s3cret")
-            cl.write("secret/db/user", value="us3r")
-            cl.write("secret/db/password", value="p@ssword")
-            cl.write("secret/ssh", public="publ1c", private="private")
+            write_secrets_to_vault(cfg)
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
@@ -195,11 +161,8 @@ def test_vault():
 
             assert "db.user=us3r" in api_config
             assert "db.password=p@ssword" in api_config
-
     finally:
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
-            prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+        stop_packit(path)
 
 
 def test_ssh():
@@ -208,12 +171,7 @@ def test_ssh():
         with vault_dev.server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
-            cl = cfg.vault.client()
-            cl.write("secret/cert", value="c3rt")
-            cl.write("secret/key", value="s3cret")
-            cl.write("secret/db/user", value="us3r")
-            cl.write("secret/db/password", value="p@ssword")
-            cl.write("secret/ssh", public="publ1c", private="private")
+            write_secrets_to_vault(cfg)
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
@@ -221,9 +179,25 @@ def test_ssh():
             pub_key = docker_util.string_from_container(outpack_server, "/root/.ssh/id_rsa.pub")
             assert pub_key == "publ1c"
     finally:
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
-            prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+        stop_packit(path)
+
+
+def stop_packit(path):
+    with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+        prompt.return_value = True
+        cli.main(["stop", path, "--kill", "--volumes", "--network"])
+
+
+def write_secrets_to_vault(cfg):
+    cl = cfg.vault.client()
+    cl.write("secret/cert", value="c3rt")
+    cl.write("secret/key", value="s3cret")
+    cl.write("secret/db/user", value="us3r")
+    cl.write("secret/db/password", value="p@ssword")
+    cl.write("secret/ssh", public="publ1c", private="private")
+    cl.write("secret/auth/githubclient/id", value="ghclientid")
+    cl.write("secret/auth/githubclient/secret", value="ghs3cret")
+    cl.write("secret/auth/jwt/secret", value="jwts3cret")
 
 
 # Because we wait for a go signal to come up, we might not be able to

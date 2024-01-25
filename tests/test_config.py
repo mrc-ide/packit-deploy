@@ -38,7 +38,7 @@ def test_config_proxy():
     assert cfg.proxy_enabled
     assert cfg.proxy_ssl_self_signed
     assert "proxy" in cfg.containers
-    assert str(cfg.images["proxy"]) == "mrcide/packit-proxy:mrc-4319"
+    assert str(cfg.images["proxy"]) == "mrcide/packit-proxy:main"
     assert cfg.proxy_hostname == "localhost"
     assert cfg.proxy_port_http == 80
     assert cfg.proxy_port_https == 443
@@ -66,3 +66,17 @@ def test_ssh():
 
     cfg = PackitConfig("config/basic")
     assert not cfg.ssh
+
+
+def test_github_auth():
+    cfg = PackitConfig("config/githubauth")
+    assert cfg.packit_auth_enabled is True
+    assert cfg.packit_auth_enable_github_login is True
+    assert cfg.packit_auth_expiry_days == 1
+    assert cfg.packit_auth_github_api_org == "mrc-ide"
+    assert cfg.packit_auth_github_api_team == "packit"
+    assert cfg.packit_auth_github_client_id == "VAULT:secret/packit/githubauth/auth/githubclient:id"
+    assert cfg.packit_auth_github_client_secret == "VAULT:secret/packit/githubauth/auth/githubclient:secret"
+    assert cfg.packit_auth_jwt_secret == "VAULT:secret/packit/githubauth/auth/jwt:secret"
+    assert cfg.packit_auth_oauth2_redirect_packit_api_root == "https://localhost/packit/api"
+    assert cfg.packit_auth_oauth2_redirect_url == "https://localhost/redirect"

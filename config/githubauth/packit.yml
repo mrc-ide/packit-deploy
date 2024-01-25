@@ -26,13 +26,6 @@ volumes:
   outpack: outpack_volume
   proxy_logs: packit_proxy_logs
 
-## Path to ssh key for interacting with git. You
-## might use a github deploy key here. For completeness both the
-## public and private parts of the keypair are listed.
-ssh:
-  public: VAULT:secret/ssh:public
-  private: VAULT:secret/ssh:private
-
 outpack:
   ## Initialise an outpack directory by cloning from github
   initial:
@@ -56,8 +49,8 @@ packit:
   db:
     name: packit-db
     tag: main
-    user: VAULT:secret/db/user:value
-    password: VAULT:secret/db/password:value
+    user: packituser
+    password: changeme
   auth:
     enabled: true
     enable_github_login: true
@@ -68,34 +61,23 @@ packit:
     # have the same root as the packit_api_root specified below, and should be of the form
     # {PACKIT_API_ROOT}/login/oauth2/code/github
     github_client:
-      id: VAULT:secret/auth/githubclient/id:value
-      secret: VAULT:secret/auth/githubclient/secret:value
+      id: VAULT:secret/packit/githubauth/auth/githubclient:id
+      secret: VAULT:secret/packit/githubauth/auth/githubclient:secret
     jwt:
       # Secret used to generate JWT tokens - this can be any string, the secret at this key in the vault is a random
       # 32 char string, and is probably fine to re-use
-      secret: VAULT:secret/auth/jwt/secret:value
+      secret: VAULT:secret/packit/githubauth/auth/jwt:secret
     oauth2:
       redirect:
-        # Root url which OAuth2 app will use to redirect back to packit api - must match OAuth2 app's registered url
-        packit_api_root: "https://packit/packit/api"
-        url: "https://packit/redirect"  # Url for redirecting back to the front end after successful authentication
+        # Root url which OAuth2 app will be requested to use to redirect back to packit api - must match root of OAuth2 app's registered url
+        packit_api_root: "https://localhost/packit/api"
+        url: "https://localhost/redirect" # Url for redirecting back to the front end after successful authentication
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker
 ## network
 proxy:
   enabled: true
-  ssl:
-    ## This section describes how to get the certificate in.  We
-    ## support two sources:
-    ##
-    ## 1. self signed certificates - just leave this section blank
-    ##
-    ## 2. certificates from strings - include the strings directly in
-    ##    the keys here, or more likely use a VAULT:<path>:<key>
-    ##    string to extract them from the vault.
-    certificate: "VAULT:secret/cert:value"
-    key: "VAULT:secret/key:value"
   hostname: localhost
   port_http: 80
   port_https: 443
@@ -106,7 +88,7 @@ proxy:
 vault:
   ## Address of the vault server.  This should be a string if it is
   ## present.
-  addr: ~
+  addr: https://vault.dide.ic.ac.uk:8200
   auth:
     ## Authentication type - must be either "token" or the name of a
     ## supported authentication method.  These seem to be poorly
@@ -117,4 +99,4 @@ vault:
     ## a list, which is currently
     ##
     ##     azure, github, gcp, kubernetes, ldap, mfa, okta
-    method: token
+    method: github
