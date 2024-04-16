@@ -108,7 +108,7 @@ def packit_api_container(cfg):
     env = {
         "DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
         "DB_USER": cfg.packit_db_user,
-        "DB_USER": cfg.packit_db_password,
+        "DB_PASSWORD": cfg.packit_db_password,
         "OUTPACK_SERVER_URL": f"http://{cfg.container_prefix}-{outpack}:8000",
         "AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
     }

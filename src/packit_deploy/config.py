@@ -69,7 +69,7 @@ class PackitConfig:
             "packit": self.packit_ref,
         }
 
-        if "proxy" in dat and dat["proxy"]:
+        if dat.get("proxy"):
             self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)
         else:
             self.proxy_enabled = False

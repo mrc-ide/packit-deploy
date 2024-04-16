@@ -134,7 +134,7 @@ def test_api_configured_for_github_auth():
 
             api = cfg.get_container("packit-api")
 
-            api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
+            # api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
 
             # assert env variables
             assert "GITHUB_CLIENT_ID=ghclientid" in api.attrs["Config"]["Env"]
