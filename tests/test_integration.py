@@ -111,14 +111,11 @@ def test_api_configured():
 
         api = cfg.get_container("packit-api")
 
-        assert (
-            getEnvFromContainer(api, "DB_URL")
-            == b"jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified\n"
-        )
-        assert getEnvFromContainer(api, "DB_USER") == b"packituser\n"
-        assert getEnvFromContainer(api, "DB_PASSWORD") == b"changeme\n"
-        assert getEnvFromContainer(api, "OUTPACK_SERVER_URL") == b"http://packit-outpack-server:8000\n"
-        assert getEnvFromContainer(api, "AUTH_ENABLED") == b"false\n"
+        assert get_env_var(api, "DB_URL") == b"jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified\n"
+        assert get_env_var(api, "DB_USER") == b"packituser\n"
+        assert get_env_var(api, "DB_PASSWORD") == b"changeme\n"
+        assert get_env_var(api, "OUTPACK_SERVER_URL") == b"http://packit-outpack-server:8000\n"
+        assert get_env_var(api, "AUTH_ENABLED") == b"false\n"
     finally:
         stop_packit(path)
 
@@ -136,13 +133,13 @@ def test_api_configured_for_github_auth():
             api = cfg.get_container("packit-api")
 
             # assert env variables
-            assert getEnvFromContainer(api, "AUTH_METHOD") == b"github\n"
-            assert getEnvFromContainer(api, "AUTH_ENABLED") == b"true\n"
-            assert getEnvFromContainer(api, "JWT_EXPIRY_DAYS") == b"1\n"
-            assert getEnvFromContainer(api, "AUTH_GITHUB_ORG") == b"mrc-ide\n"
-            assert getEnvFromContainer(api, "AUTH_GITHUB_TEAM") == b"packit\n"
-            assert getEnvFromContainer(api, "JWT_SECRET") == b"jwts3cret\n"
-            assert getEnvFromContainer(api, "AUTH_REDIRECT_URL") == b"https://packit/redirect\n"
+            assert get_env_var(api, "AUTH_METHOD") == b"github\n"
+            assert get_env_var(api, "AUTH_ENABLED") == b"true\n"
+            assert get_env_var(api, "JWT_EXPIRY_DAYS") == b"1\n"
+            assert get_env_var(api, "AUTH_GITHUB_ORG") == b"mrc-ide\n"
+            assert get_env_var(api, "AUTH_GITHUB_TEAM") == b"packit\n"
+            assert get_env_var(api, "JWT_SECRET") == b"jwts3cret\n"
+            assert get_env_var(api, "AUTH_REDIRECT_URL") == b"https://packit/redirect\n"
     finally:
         stop_packit(path)
 
@@ -218,5 +215,5 @@ def http_get(url, retries=5, poll=1):
     raise error
 
 
-def getEnvFromContainer(container, env):
+def get_env_var(container, env):
     return docker_util.exec_safely(container, ["sh", "-c", f"echo ${env}"]).output
