@@ -37,7 +37,7 @@ class PackitConfig:
 
         if "auth" in dat["packit"]:
             self.packit_auth_enabled = config.config_boolean(dat, ["packit", "auth", "enabled"])
-            self.packit_auth_enable_github_login = config.config_boolean(dat, ["packit", "auth", "enable_github_login"])
+            self.packit_auth_method = config.config_string(dat, ["packit", "auth", "auth_method"])
             self.packit_auth_expiry_days = config.config_integer(dat, ["packit", "auth", "expiry_days"])
             self.packit_auth_github_api_org = config.config_string(dat, ["packit", "auth", "github_api_org"])
             self.packit_auth_github_api_team = config.config_string(dat, ["packit", "auth", "github_api_team"])

@@ -103,24 +103,33 @@ def packit_db_configure(container, _):
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
-
-    env = {}
-    if cfg.packit_auth_enabled and cfg.packit_auth_enable_github_login:
+    outpack = cfg.containers["outpack-server"]
+    packit_db = cfg.containers["packit-db"]
+    env = {
+        "DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
+        "DB_USER": cfg.packit_db_user,
+        "DB_USER": cfg.packit_db_password,
+        "OUTPACK_SERVER_URL": f"http://{cfg.container_prefix}-{outpack}:8000",
+        "AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
+    }
+    if cfg.packit_auth_enabled:
         if cfg.vault and cfg.vault.url:
             # resolve secrets early so we can set these env vars from vault values
             vault.resolve_secrets(cfg, cfg.vault.client())
-
-        # These values are set in the packit api's application.properties file from env vars, rather than written
-        # to config.properties and copied into the container with the other config values
-        env = {
-            "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
-            "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
-            "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root,
-        }
-
-    packit_api = constellation.ConstellationContainer(
-        name, cfg.packit_api_ref, configure=packit_api_configure, environment=env
-    )
+        env.update(
+            {
+                "AUTH_METHOD": cfg.packit_auth_method,
+                "JWT_EXPIRY_DAYS": cfg.packit_auth_expiry_days,
+                "AUTH_GITHUB_ORG": cfg.packit_auth_github_api_org,
+                "AUTH_GITHUB_TEAM": cfg.packit_auth_github_api_team,
+                "JWT_SECRET": cfg.packit_auth_jwt_secret,
+                "AUTH_REDIRECT_URL": cfg.packit_auth_oauth2_redirect_url,
+                "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
+                "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
+                "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root,
+            }
+        )
+    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=env)
     return packit_api
 
 
