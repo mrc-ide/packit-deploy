@@ -133,29 +133,6 @@ def packit_api_container(cfg):
     return packit_api
 
 
-def packit_api_configure(container, cfg):
-    print("[packit-api] Configuring API container")
-    outpack = cfg.containers["outpack-server"]
-    packit_db = cfg.containers["packit-db"]
-    opts = {
-        "db.url": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
-        "db.user": cfg.packit_db_user,
-        "db.password": cfg.packit_db_password,
-        "outpack.server.url": f"http://{cfg.container_prefix}-{outpack}:8000",
-        "auth.enabled": "true" if cfg.packit_auth_enabled else "false",
-    }
-    if cfg.packit_auth_enabled:
-        opts["auth.enableGithubLogin"] = "true" if cfg.packit_auth_enable_github_login else "false"
-        opts["auth.expiryDays"] = cfg.packit_auth_expiry_days
-        opts["auth.githubAPIOrg"] = cfg.packit_auth_github_api_org
-        opts["auth.githubAPITeam"] = cfg.packit_auth_github_api_team
-        opts["auth.jwt.secret"] = cfg.packit_auth_jwt_secret
-        opts["auth.oauth2.redirect.url"] = cfg.packit_auth_oauth2_redirect_url
-
-    txt = "".join([f"{k}={v}\n" for k, v in opts.items()])
-    docker_util.string_into_container(txt, container, "/etc/packit/config.properties")
-
-
 def packit_container(cfg):
     name = cfg.containers["packit"]
     packit = constellation.ConstellationContainer(name, cfg.packit_ref)
