@@ -100,12 +100,20 @@ hatch publish
 ## Config
 
 The following example configurations are included under `/config`:
+
 - `basic`: does not use any vault values, but does include proxy (using self-signed cert) and demo data
 - `complete`: example of vault secrets required for a full configuration
 - `githubauth`: example with github auth enabled, includes proxy (using self-signed cert) and demo data
+- `basicauth`: example with basic auth enabled, includes proxy (using self-signed cert) and demo data
 - `nodemo`: does not include the demo data
 - `noproxy`: does not include proxy container
 
 These configurations should all be runnable for local testing, except for `complete`, which includes non-existent vault secrets.
 You will need access to the vault to run the `githubauth` configuration, which requires secrets for the github oauth2 client app
-details. 
+details.
+
+### Notes
+
+1. If running app in **basic auth** mode, a super admin user can be created by running
+`docker exec packit-db create-super-user --email $ADMIN_EMAIL --password $ADMIN_PASSWORD_ENCODED --uuid $ADMIN_UUID`.
+The fields can all be retrieved from vault at `secret/packit/basicauth`

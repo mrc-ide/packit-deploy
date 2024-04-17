@@ -155,10 +155,9 @@ def test_vault():
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
             api = cfg.get_container("packit-api")
-            api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
 
-            assert "db.user=us3r" in api_config
-            assert "db.password=p@ssword" in api_config
+            assert get_env_var(api, "DB_USER") == b"us3r\n"
+            assert get_env_var(api, "DB_PASSWORD") == b"p@ssword\n"
     finally:
         stop_packit(path)
 

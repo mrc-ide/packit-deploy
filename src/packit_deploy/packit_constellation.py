@@ -93,44 +93,53 @@ def packit_db_container(cfg):
     return packit_db
 
 
-def packit_db_configure(container, _):
+def packit_db_configure(container, cfg):
     print("[packit-db] Configuring DB container")
     docker_util.exec_safely(container, ["wait-for-db"])
-    docker_util.exec_safely(
-        container, ["psql", "-U", "packituser", "-d", "packit", "-a", "-f", "/packit-schema/schema.sql"]
-    )
 
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
+    # resolve secrets early so we can set these env vars from vault values
+    if cfg.vault and cfg.vault.url:
+        vault.resolve_secrets(cfg, cfg.vault.client())
+
+    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=get_env(cfg))
+    return packit_api
+
+
+def get_env(cfg):
     outpack = cfg.containers["outpack-server"]
     packit_db = cfg.containers["packit-db"]
     env = {
-        "DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
-        "DB_USER": cfg.packit_db_user,
-        "DB_PASSWORD": cfg.packit_db_password,
-        "OUTPACK_SERVER_URL": f"http://{cfg.container_prefix}-{outpack}:8000",
-        "AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
+        "PACKIT_DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
+        "PACKIT_DB_USER": cfg.packit_db_user,
+        "PACKIT_DB_PASSWORD": cfg.packit_db_password,
+        "PACKIT_OUTPACK_SERVER_URL": f"http://{cfg.container_prefix}-{outpack}:8000",
+        "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
     }
     if cfg.packit_auth_enabled:
-        if cfg.vault and cfg.vault.url:
-            # resolve secrets early so we can set these env vars from vault values
-            vault.resolve_secrets(cfg, cfg.vault.client())
         env.update(
             {
-                "AUTH_METHOD": cfg.packit_auth_method,
-                "JWT_EXPIRY_DAYS": cfg.packit_auth_expiry_days,
-                "AUTH_GITHUB_ORG": cfg.packit_auth_github_api_org,
-                "AUTH_GITHUB_TEAM": cfg.packit_auth_github_api_team,
-                "JWT_SECRET": cfg.packit_auth_jwt_secret,
-                "AUTH_REDIRECT_URL": cfg.packit_auth_oauth2_redirect_url,
-                "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
-                "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
-                "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root,
+                "PACKIT_AUTH_METHOD": cfg.packit_auth_method,
+                "PACKIT_JWT_EXPIRY_DAYS": cfg.packit_auth_expiry_days,
+                "PACKIT_JWT_SECRET": cfg.packit_auth_jwt_secret,
             }
         )
-    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=env)
-    return packit_api
+        if cfg.packit_auth_method == "github":
+            env.update(
+                {
+                    "PACKIT_GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
+                    "PACKIT_GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
+                    "PACKIT_AUTH_REDIRECT_URL": cfg.packit_auth_oauth2_redirect_url,
+                    "PACKIT_GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
+                    "PACKIT_GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
+                    "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root,
+                    "PACKIT_AUTH_GITHUB_ORG": cfg.packit_auth_github_api_org,
+                    "PACKIT_AUTH_GITHUB_TEAM": cfg.packit_auth_github_api_team,
+                }
+            )
+    return env
 
 
 def packit_container(cfg):
