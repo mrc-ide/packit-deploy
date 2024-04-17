@@ -115,5 +115,5 @@ details.
 ### Notes
 
 1. If running app in **basic auth** mode, a super admin user can be created by running
-`docker exec packit-db create-super-user --email $ADMIN_EMAIL --password $ADMIN_PASSWORD_ENCODED --uuid $ADMIN_UUID`.
-The fields can all be retrieved from vault at `secret/packit/basicauth`
+`docker exec packit-packit-db create-super-user --email <ADMIN_EMAIL> --password <ADMIN_PASSWORD_ENCODED> --uuid <ADMIN_UUID>`.
+The *< >* fields can all be retrieved from vault at `secret/packit/basicauth`
