@@ -93,7 +93,7 @@ def packit_db_container(cfg):
     return packit_db
 
 
-def packit_db_configure(container, cfg):
+def packit_db_configure(container, _):
     print("[packit-db] Configuring DB container")
     docker_util.exec_safely(container, ["wait-for-db"])
 
@@ -132,8 +132,6 @@ def get_env(cfg):
                     "PACKIT_GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
                     "PACKIT_GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
                     "PACKIT_AUTH_REDIRECT_URL": cfg.packit_auth_oauth2_redirect_url,
-                    "PACKIT_GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
-                    "PACKIT_GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
                     "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root,
                     "PACKIT_AUTH_GITHUB_ORG": cfg.packit_auth_github_api_org,
                     "PACKIT_AUTH_GITHUB_TEAM": cfg.packit_auth_github_api_team,
