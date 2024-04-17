@@ -111,11 +111,14 @@ def test_api_configured():
 
         api = cfg.get_container("packit-api")
 
-        assert get_env_var(api, "DB_URL") == b"jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified\n"
-        assert get_env_var(api, "DB_USER") == b"packituser\n"
-        assert get_env_var(api, "DB_PASSWORD") == b"changeme\n"
-        assert get_env_var(api, "OUTPACK_SERVER_URL") == b"http://packit-outpack-server:8000\n"
-        assert get_env_var(api, "AUTH_ENABLED") == b"false\n"
+        assert (
+            get_env_var(api, "PACKIT_DB_URL")
+            == b"jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified\n"
+        )
+        assert get_env_var(api, "PACKIT_DB_USER") == b"packituser\n"
+        assert get_env_var(api, "PACKIT_DB_PASSWORD") == b"changeme\n"
+        assert get_env_var(api, "PACKIT_OUTPACK_SERVER_URL") == b"http://packit-outpack-server:8000\n"
+        assert get_env_var(api, "PACKIT_AUTH_ENABLED") == b"false\n"
     finally:
         stop_packit(path)
 
@@ -133,13 +136,13 @@ def test_api_configured_for_github_auth():
             api = cfg.get_container("packit-api")
 
             # assert env variables
-            assert get_env_var(api, "AUTH_METHOD") == b"github\n"
-            assert get_env_var(api, "AUTH_ENABLED") == b"true\n"
-            assert get_env_var(api, "JWT_EXPIRY_DAYS") == b"1\n"
-            assert get_env_var(api, "AUTH_GITHUB_ORG") == b"mrc-ide\n"
-            assert get_env_var(api, "AUTH_GITHUB_TEAM") == b"packit\n"
-            assert get_env_var(api, "JWT_SECRET") == b"jwts3cret\n"
-            assert get_env_var(api, "AUTH_REDIRECT_URL") == b"https://packit/redirect\n"
+            assert get_env_var(api, "PACKIT_AUTH_METHOD") == b"github\n"
+            assert get_env_var(api, "PACKIT_AUTH_ENABLED") == b"true\n"
+            assert get_env_var(api, "PACKIT_JWT_EXPIRY_DAYS") == b"1\n"
+            assert get_env_var(api, "PACKIT_AUTH_GITHUB_ORG") == b"mrc-ide\n"
+            assert get_env_var(api, "PACKIT_AUTH_GITHUB_TEAM") == b"packit\n"
+            assert get_env_var(api, "PACKIT_JWT_SECRET") == b"jwts3cret\n"
+            assert get_env_var(api, "PACKIT_AUTH_REDIRECT_URL") == b"https://packit/redirect\n"
     finally:
         stop_packit(path)
 
@@ -156,8 +159,8 @@ def test_vault():
 
             api = cfg.get_container("packit-api")
 
-            assert get_env_var(api, "DB_USER") == b"us3r\n"
-            assert get_env_var(api, "DB_PASSWORD") == b"p@ssword\n"
+            assert get_env_var(api, "PACKIT_DB_USER") == b"us3r\n"
+            assert get_env_var(api, "PACKIT_DB_PASSWORD") == b"p@ssword\n"
     finally:
         stop_packit(path)
 
