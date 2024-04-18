@@ -35,17 +35,17 @@ outpack:
   migrate:
     name: outpack.orderly
     tag: main
-
+# TODO: change to main basic auth stuff is merged
 packit:
   api:
     name: packit-api
-    tag: main
+    tag: mrc-5240-move-config
   app:
     name: packit
-    tag: main
+    tag: mrc-5240-move-config
   db:
     name: packit-db
-    tag: main
+    tag: mrc-5240-move-config
     user: packituser
     password: changeme
 
