@@ -101,7 +101,7 @@ hatch publish
 
 The following example configurations are included under `/config`:
 
-- `basic`: does not use any vault values, but does include proxy (using self-signed cert) and demo data
+- `novault`: does not use any vault values, but does include proxy (using self-signed cert) and demo data
 - `complete`: example of vault secrets required for a full configuration
 - `githubauth`: example with github auth enabled, includes proxy (using self-signed cert) and demo data
 - `basicauth`: example with basic auth enabled, includes proxy (using self-signed cert) and demo data
@@ -113,7 +113,4 @@ You will need access to the vault to run the `githubauth` configuration, which r
 details.
 
 ### Notes
-
-1. If running app in **basic auth** mode, a super admin user can be created by running
-`docker exec packit-packit-db create-super-user --email <ADMIN_EMAIL> --password <ADMIN_PASSWORD_ENCODED> --uuid <ADMIN_UUID>`.
-The *< >* fields can all be retrieved from vault at `secret/packit/basicauth`
+1. If running app in **basic auth** mode, a super admin user can be created by running `./scripts/create_superuser.sh` after the app is running.

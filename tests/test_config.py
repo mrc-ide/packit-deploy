@@ -29,12 +29,12 @@ def test_config_no_proxy():
 
 def test_config_proxy_disabled():
     options = {"proxy": {"enabled": False}}
-    cfg = PackitConfig("config/basic", options=options)
+    cfg = PackitConfig("config/novault", options=options)
     assert cfg.proxy_enabled is False
 
 
 def test_config_proxy():
-    cfg = PackitConfig("config/basic")
+    cfg = PackitConfig("config/novault")
     assert cfg.proxy_enabled
     assert cfg.proxy_ssl_self_signed
     assert "proxy" in cfg.containers
@@ -64,7 +64,7 @@ def test_ssh():
     assert cfg.ssh_private == "VAULT:secret/ssh:private"
     assert cfg.ssh
 
-    cfg = PackitConfig("config/basic")
+    cfg = PackitConfig("config/novault")
     assert not cfg.ssh
 
 

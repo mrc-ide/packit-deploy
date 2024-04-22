@@ -52,7 +52,7 @@ def test_status():
 
 
 def test_start_and_stop_proxy():
-    path = "config/basic"
+    path = "config/novault"
     try:
         res = cli.main(["start", path])
         assert res
