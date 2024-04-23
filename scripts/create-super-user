@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 set -e
 
-# OFR BASI AUTH ONLY!!! 
+# FOR BASIC AUTH ONLY!!! 
 ADMIN_EMAIL=$(vault read -field=superUserEmail secret/packit/basicauth)
 ADMIN_PASSWORD_ENCODED=$(vault read -field=superUserEncodedPassword secret/packit/basicauth)
 ADMIN_UUID=$(vault read -field=superAdminUUID secret/packit/basicauth)
