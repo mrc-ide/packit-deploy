@@ -42,13 +42,13 @@ outpack:
 packit:
   api:
     name: packit-api
-    tag: mrc-5240-move-config
+    tag: main
   app:
     name: packit
-    tag: mrc-5240-move-config
+    tag: main
   db:
     name: packit-db
-    tag: mrc-5240-move-config
+    tag: main
     user: packituser
     password: changeme
   auth:
