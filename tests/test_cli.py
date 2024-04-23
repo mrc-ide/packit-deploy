@@ -44,7 +44,6 @@ def test_parse_args():
     assert args.version is True
 
 
-
 def test_args_passed_to_start():
     with mock.patch("src.packit_deploy.cli.packit_start") as f:
         cli.main(["start", "config/noproxy"])
