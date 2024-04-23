@@ -29,12 +29,12 @@ def test_config_no_proxy():
 
 def test_config_proxy_disabled():
     options = {"proxy": {"enabled": False}}
-    cfg = PackitConfig("config/basic", options=options)
+    cfg = PackitConfig("config/novault", options=options)
     assert cfg.proxy_enabled is False
 
 
 def test_config_proxy():
-    cfg = PackitConfig("config/basic")
+    cfg = PackitConfig("config/novault")
     assert cfg.proxy_enabled
     assert cfg.proxy_ssl_self_signed
     assert "proxy" in cfg.containers
@@ -64,14 +64,14 @@ def test_ssh():
     assert cfg.ssh_private == "VAULT:secret/ssh:private"
     assert cfg.ssh
 
-    cfg = PackitConfig("config/basic")
+    cfg = PackitConfig("config/novault")
     assert not cfg.ssh
 
 
 def test_github_auth():
     cfg = PackitConfig("config/githubauth")
     assert cfg.packit_auth_enabled is True
-    assert cfg.packit_auth_enable_github_login is True
+    assert cfg.packit_auth_method == "github"
     assert cfg.packit_auth_expiry_days == 1
     assert cfg.packit_auth_github_api_org == "mrc-ide"
     assert cfg.packit_auth_github_api_team == "packit"

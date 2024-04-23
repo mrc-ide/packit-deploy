@@ -38,7 +38,7 @@ outpack:
   migrate:
     name: outpack.orderly
     tag: main
-
+# TODO: change to main basic auth stuff is merged
 packit:
   api:
     name: packit-api
@@ -53,25 +53,12 @@ packit:
     password: changeme
   auth:
     enabled: true
-    auth_method: github
+    auth_method: basic
     expiry_days: 1
-    github_api_org: mrc-ide
-    github_api_team: packit
-    # Details of your Github OAuth app, which should be kept in the vault. The app's Authorization callback url must
-    # have the same root as the packit_api_root specified below, and should be of the form
-    # {PACKIT_API_ROOT}/login/oauth2/code/github
-    github_client:
-      id: VAULT:secret/packit/githubauth/auth/githubclient:id
-      secret: VAULT:secret/packit/githubauth/auth/githubclient:secret
     jwt:
       # Secret used to generate JWT tokens - this can be any string, the secret at this key in the vault is a random
       # 32 char string, and is probably fine to re-use
       secret: VAULT:secret/packit/githubauth/auth/jwt:secret
-    oauth2:
-      redirect:
-        # Root url which OAuth2 app will be requested to use to redirect back to packit api - must match root of OAuth2 app's registered url
-        packit_api_root: "https://localhost/packit/api"
-        url: "https://localhost/redirect" # Url for redirecting back to the front end after successful authentication
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker

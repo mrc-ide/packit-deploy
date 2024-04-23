@@ -52,7 +52,7 @@ def test_status():
 
 
 def test_start_and_stop_proxy():
-    path = "config/basic"
+    path = "config/novault"
     try:
         res = cli.main(["start", path])
         assert res
@@ -110,14 +110,15 @@ def test_api_configured():
         cfg = PackitConfig(path)
 
         api = cfg.get_container("packit-api")
-        api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
 
-        assert "db.url=jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified" in api_config
-        assert "db.user=packituser" in api_config
-        assert "db.password=changeme" in api_config
-        assert "outpack.server.url=http://packit-outpack-server:8000" in api_config
-        assert "auth.enabled=false" in api_config
-
+        assert (
+            get_env_var(api, "PACKIT_DB_URL")
+            == b"jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified\n"
+        )
+        assert get_env_var(api, "PACKIT_DB_USER") == b"packituser\n"
+        assert get_env_var(api, "PACKIT_DB_PASSWORD") == b"changeme\n"
+        assert get_env_var(api, "PACKIT_OUTPACK_SERVER_URL") == b"http://packit-outpack-server:8000\n"
+        assert get_env_var(api, "PACKIT_AUTH_ENABLED") == b"false\n"
     finally:
         stop_packit(path)
 
@@ -133,15 +134,15 @@ def test_api_configured_for_github_auth():
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
             api = cfg.get_container("packit-api")
-            api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
 
-            assert "auth.enabled=true" in api_config
-            assert "auth.enableGithubLogin=true" in api_config
-            assert "auth.expiryDays=1" in api_config
-            assert "auth.githubAPIOrg=mrc-ide" in api_config
-            assert "auth.githubAPITeam=packit" in api_config
-            assert "auth.jwt.secret=jwts3cret" in api_config
-            assert "auth.oauth2.redirect.url=https://packit/redirect" in api_config
+            # assert env variables
+            assert get_env_var(api, "PACKIT_AUTH_METHOD") == b"github\n"
+            assert get_env_var(api, "PACKIT_AUTH_ENABLED") == b"true\n"
+            assert get_env_var(api, "PACKIT_JWT_EXPIRY_DAYS") == b"1\n"
+            assert get_env_var(api, "PACKIT_AUTH_GITHUB_ORG") == b"mrc-ide\n"
+            assert get_env_var(api, "PACKIT_AUTH_GITHUB_TEAM") == b"packit\n"
+            assert get_env_var(api, "PACKIT_JWT_SECRET") == b"jwts3cret\n"
+            assert get_env_var(api, "PACKIT_AUTH_REDIRECT_URL") == b"https://packit/redirect\n"
     finally:
         stop_packit(path)
 
@@ -157,10 +158,9 @@ def test_vault():
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
             api = cfg.get_container("packit-api")
-            api_config = docker_util.string_from_container(api, "/etc/packit/config.properties").split("\n")
 
-            assert "db.user=us3r" in api_config
-            assert "db.password=p@ssword" in api_config
+            assert get_env_var(api, "PACKIT_DB_USER") == b"us3r\n"
+            assert get_env_var(api, "PACKIT_DB_PASSWORD") == b"p@ssword\n"
     finally:
         stop_packit(path)
 
@@ -215,3 +215,7 @@ def http_get(url, retries=5, poll=1):
             time.sleep(poll)
             error = e
     raise error
+
+
+def get_env_var(container, env):
+    return docker_util.exec_safely(container, ["sh", "-c", f"echo ${env}"]).output

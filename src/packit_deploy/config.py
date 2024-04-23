@@ -37,21 +37,22 @@ class PackitConfig:
 
         if "auth" in dat["packit"]:
             self.packit_auth_enabled = config.config_boolean(dat, ["packit", "auth", "enabled"])
-            self.packit_auth_enable_github_login = config.config_boolean(dat, ["packit", "auth", "enable_github_login"])
+            self.packit_auth_method = config.config_string(dat, ["packit", "auth", "auth_method"])
             self.packit_auth_expiry_days = config.config_integer(dat, ["packit", "auth", "expiry_days"])
-            self.packit_auth_github_api_org = config.config_string(dat, ["packit", "auth", "github_api_org"])
-            self.packit_auth_github_api_team = config.config_string(dat, ["packit", "auth", "github_api_team"])
-            self.packit_auth_github_client_id = config.config_string(dat, ["packit", "auth", "github_client", "id"])
-            self.packit_auth_github_client_secret = config.config_string(
-                dat, ["packit", "auth", "github_client", "secret"]
-            )
             self.packit_auth_jwt_secret = config.config_string(dat, ["packit", "auth", "jwt", "secret"])
-            self.packit_auth_oauth2_redirect_packit_api_root = config.config_string(
-                dat, ["packit", "auth", "oauth2", "redirect", "packit_api_root"]
-            )
-            self.packit_auth_oauth2_redirect_url = config.config_string(
-                dat, ["packit", "auth", "oauth2", "redirect", "url"]
-            )
+            if self.packit_auth_method == "github":
+                self.packit_auth_github_api_org = config.config_string(dat, ["packit", "auth", "github_api_org"])
+                self.packit_auth_github_api_team = config.config_string(dat, ["packit", "auth", "github_api_team"])
+                self.packit_auth_github_client_id = config.config_string(dat, ["packit", "auth", "github_client", "id"])
+                self.packit_auth_github_client_secret = config.config_string(
+                    dat, ["packit", "auth", "github_client", "secret"]
+                )
+                self.packit_auth_oauth2_redirect_packit_api_root = config.config_string(
+                    dat, ["packit", "auth", "oauth2", "redirect", "packit_api_root"]
+                )
+                self.packit_auth_oauth2_redirect_url = config.config_string(
+                    dat, ["packit", "auth", "oauth2", "redirect", "url"]
+                )
         else:
             self.packit_auth_enabled = False
 
@@ -69,7 +70,7 @@ class PackitConfig:
             "packit": self.packit_ref,
         }
 
-        if "proxy" in dat and dat["proxy"]:
+        if dat.get("proxy"):
             self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)
         else:
             self.proxy_enabled = False

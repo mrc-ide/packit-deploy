@@ -96,55 +96,48 @@ def packit_db_container(cfg):
 def packit_db_configure(container, _):
     print("[packit-db] Configuring DB container")
     docker_util.exec_safely(container, ["wait-for-db"])
-    docker_util.exec_safely(
-        container, ["psql", "-U", "packituser", "-d", "packit", "-a", "-f", "/packit-schema/schema.sql"]
-    )
 
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
+    # resolve secrets early so we can set these env vars from vault values
+    if cfg.vault and cfg.vault.url:
+        vault.resolve_secrets(cfg, cfg.vault.client())
 
-    env = {}
-    if cfg.packit_auth_enabled and cfg.packit_auth_enable_github_login:
-        if cfg.vault and cfg.vault.url:
-            # resolve secrets early so we can set these env vars from vault values
-            vault.resolve_secrets(cfg, cfg.vault.client())
-
-        # These values are set in the packit api's application.properties file from env vars, rather than written
-        # to config.properties and copied into the container with the other config values
-        env = {
-            "GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
-            "GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
-            "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root,
-        }
-
-    packit_api = constellation.ConstellationContainer(
-        name, cfg.packit_api_ref, configure=packit_api_configure, environment=env
-    )
+    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=get_env(cfg))
     return packit_api
 
 
-def packit_api_configure(container, cfg):
-    print("[packit-api] Configuring API container")
+def get_env(cfg):
     outpack = cfg.containers["outpack-server"]
     packit_db = cfg.containers["packit-db"]
-    opts = {
-        "db.url": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
-        "db.user": cfg.packit_db_user,
-        "db.password": cfg.packit_db_password,
-        "outpack.server.url": f"http://{cfg.container_prefix}-{outpack}:8000",
-        "auth.enabled": "true" if cfg.packit_auth_enabled else "false",
+    env = {
+        "PACKIT_DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
+        "PACKIT_DB_USER": cfg.packit_db_user,
+        "PACKIT_DB_PASSWORD": cfg.packit_db_password,
+        "PACKIT_OUTPACK_SERVER_URL": f"http://{cfg.container_prefix}-{outpack}:8000",
+        "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
     }
     if cfg.packit_auth_enabled:
-        opts["auth.enableGithubLogin"] = "true" if cfg.packit_auth_enable_github_login else "false"
-        opts["auth.expiryDays"] = cfg.packit_auth_expiry_days
-        opts["auth.githubAPIOrg"] = cfg.packit_auth_github_api_org
-        opts["auth.githubAPITeam"] = cfg.packit_auth_github_api_team
-        opts["auth.jwt.secret"] = cfg.packit_auth_jwt_secret
-        opts["auth.oauth2.redirect.url"] = cfg.packit_auth_oauth2_redirect_url
-
-    txt = "".join([f"{k}={v}\n" for k, v in opts.items()])
-    docker_util.string_into_container(txt, container, "/etc/packit/config.properties")
+        env.update(
+            {
+                "PACKIT_AUTH_METHOD": cfg.packit_auth_method,
+                "PACKIT_JWT_EXPIRY_DAYS": cfg.packit_auth_expiry_days,
+                "PACKIT_JWT_SECRET": cfg.packit_auth_jwt_secret,
+            }
+        )
+        if cfg.packit_auth_method == "github":
+            env.update(
+                {
+                    "PACKIT_GITHUB_CLIENT_ID": cfg.packit_auth_github_client_id,
+                    "PACKIT_GITHUB_CLIENT_SECRET": cfg.packit_auth_github_client_secret,
+                    "PACKIT_AUTH_REDIRECT_URL": cfg.packit_auth_oauth2_redirect_url,
+                    "PACKIT_API_ROOT": cfg.packit_auth_oauth2_redirect_packit_api_root,
+                    "PACKIT_AUTH_GITHUB_ORG": cfg.packit_auth_github_api_org,
+                    "PACKIT_AUTH_GITHUB_TEAM": cfg.packit_auth_github_api_team,
+                }
+            )
+    return env
 
 
 def packit_container(cfg):

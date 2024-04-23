@@ -35,7 +35,7 @@ outpack:
   migrate:
     name: outpack.orderly
     tag: main
-
+# TODO: change to main basic auth stuff is merged
 packit:
   api:
     name: packit-api
