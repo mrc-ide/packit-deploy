@@ -1,5 +1,8 @@
+import os
 from src.packit_deploy.config import PackitConfig
+import unittest
 
+packit_deploy_project_root_dir = os.path.dirname(os.path.dirname(__file__))
 
 def test_config_no_proxy():
     cfg = PackitConfig("config/noproxy")
@@ -80,3 +83,62 @@ def test_github_auth():
     assert cfg.packit_auth_jwt_secret == "VAULT:secret/packit/githubauth/auth/jwt:secret"
     assert cfg.packit_auth_oauth2_redirect_packit_api_root == "https://localhost/api"
     assert cfg.packit_auth_oauth2_redirect_url == "https://localhost/redirect"
+
+
+def test_custom_branding_without_optional_branding_config():
+    options = {
+        "brand": {
+            "logo_link": None,
+            "logo_alt_text": None,
+            "favicon_path": None,
+        }
+    }
+    cfg = PackitConfig("config/basicauthcustombrand", options=options)
+
+    assert cfg.branding_enabled is True
+    assert cfg.brand_name == "Reporting Portal"
+    assert cfg.brand_logo_path == os.path.abspath(
+        os.path.join(packit_deploy_project_root_dir, "config/basicauthcustombrand/VIMC landscape logo 600dpi.png")
+    )
+    assert cfg.brand_logo_name == "VIMC landscape logo 600dpi.png"
+    with unittest.TestCase().assertRaises(AttributeError):
+        _ = cfg.brand_logo_link
+    with unittest.TestCase().assertRaises(AttributeError):
+        _ = cfg.brand_logo_alt_text
+    with unittest.TestCase().assertRaises(AttributeError):
+        _ = cfg.brand_favicon_path
+    with unittest.TestCase().assertRaises(AttributeError):
+        _ = cfg.brand_favicon_name
+
+
+def test_custom_branding_with_optional_branding_config():
+    cfg = PackitConfig("config/basicauthcustombrand")
+
+    assert cfg.branding_enabled is True
+    assert cfg.brand_logo_alt_text == "VIMC logo"
+    assert cfg.brand_logo_link == "https://montagu.vaccineimpact.org/"
+    assert cfg.brand_favicon_path == os.path.abspath(
+        os.path.join(packit_deploy_project_root_dir, "config/basicauthcustombrand/favicon.ico")
+    )
+    assert cfg.brand_favicon_name == "favicon.ico"
+
+
+def test_custom_branding_requires_proxy():
+    options = {"proxy": {"enabled": False}}
+    cfg = PackitConfig("config/basicauthcustombrand", options=options)
+
+    assert cfg.branding_enabled is False
+
+
+def test_custom_branding_requires_brand_name():
+    options = {"brand": {"name": None}}
+    cfg = PackitConfig("config/basicauthcustombrand", options=options)
+
+    assert cfg.branding_enabled is False
+
+
+def test_custom_branding_requires_logo():
+    options = {"brand": {"logo_path": None}}
+    cfg = PackitConfig("config/basicauthcustombrand", options=options)
+
+    assert cfg.branding_enabled is False

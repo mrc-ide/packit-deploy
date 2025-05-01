@@ -1,3 +1,5 @@
+import os
+
 import constellation
 from constellation import config
 
@@ -74,6 +76,26 @@ class PackitConfig:
             self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)
         else:
             self.proxy_enabled = False
+
+        self.branding_enabled = bool(
+            self.proxy_enabled and dat.get("brand", {}).get("name") and dat.get("brand", {}).get("logo_path")
+        )
+
+        if self.branding_enabled:
+            self.brand_name = config.config_string(dat, ["brand", "name"])
+            logo_path = config.config_string(dat, ["brand", "logo_path"])
+            self.brand_logo_path = os.path.abspath(os.path.join(path, logo_path))
+            self.brand_logo_name = os.path.basename(self.brand_logo_path)
+
+            # Optional branding configuration
+            if dat.get("brand").get("logo_link"):
+                self.brand_logo_link = config.config_string(dat, ["brand", "logo_link"])
+            if dat.get("brand").get("logo_alt_text"):
+                self.brand_logo_alt_text = config.config_string(dat, ["brand", "logo_alt_text"])
+            if dat.get("brand").get("favicon_path"):
+                favicon_path = config.config_string(dat, ["brand", "favicon_path"])
+                self.brand_favicon_path = os.path.abspath(os.path.join(path, favicon_path))
+                self.brand_favicon_name = os.path.basename(self.brand_favicon_path)
 
         if self.proxy_enabled:
             self.proxy_hostname = config.config_string(dat, ["proxy", "hostname"])

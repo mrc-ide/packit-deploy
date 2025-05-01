@@ -147,6 +147,52 @@ def test_api_configured_for_github_auth():
         stop_packit(path)
 
 
+def test_api_configured_with_custom_branding():
+    path = "config/complete"
+    try:
+        with vault_dev.server() as s:
+            url = f"http://localhost:{s.port}"
+            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            write_secrets_to_vault(cfg)
+
+            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+
+            api = cfg.get_container("packit-api")
+
+            # assert env variables
+            assert get_env_var(api, "PACKIT_BRAND_LOGO_ALT_TEXT") == b"My logo\n"
+            assert get_env_var(api, "PACKIT_BRAND_LOGO_NAME") == b"examplelogo.webp\n"
+            assert get_env_var(api, "PACKIT_BRAND_NAME") == b"https://www.google.com/\n"
+            assert get_env_var(api, "PACKIT_BRAND_LOGO_LINK") == b"mrc-ide\n"
+    finally:
+        stop_packit(path)
+
+
+def test_custom_branding_end_to_end():
+    path = "config/complete"
+    try:
+        with vault_dev.server() as s:
+            url = f"http://localhost:{s.port}"
+            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
+            write_secrets_to_vault(cfg)
+
+            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+
+            api = cfg.get_container("packit")
+            index_html = docker_util.string_from_container(api, "/usr/share/nginx/html/index.html")
+            assert "<title>My Packit Instance</title>" in index_html
+            logo = docker_util.bytes_from_container(api, "/usr/share/nginx/html/examplelogo.webp")
+            assert logo is not None and len(logo) > 0
+            favicon = docker_util.bytes_from_container(api, "/usr/share/nginx/html/favicon.ico")
+            assert favicon is not None and len(favicon) > 0
+
+            # Ensure that we have a 200 response from the server (implies index.html file has correct permissions)
+            res = http_get("http://localhost")
+            assert res == "OK"
+    finally:
+        stop_packit(path)
+
+
 def test_vault():
     path = "config/complete"
     try:

@@ -87,6 +87,7 @@ The following example configurations are included under `/config`:
 - `complete`: example of vault secrets required for a full configuration
 - `githubauth`: example with github auth enabled, includes proxy (using self-signed cert) and demo data
 - `basicauth`: example with basic auth enabled, includes proxy (using self-signed cert) and demo data
+- `basicauthcustombrand`: same as basicauth, but with custom front-end branding.
 - `nodemo`: does not include the demo data
 - `noproxy`: does not include proxy container
 

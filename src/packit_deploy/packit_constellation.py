@@ -1,9 +1,9 @@
 import constellation
 import docker
 from constellation import docker_util, vault
+import re
 
 from packit_deploy.docker_helpers import DockerClient
-
 
 class PackitConstellation:
     def __init__(self, cfg):
@@ -40,7 +40,7 @@ def outpack_is_initialised(container):
 
 def outpack_server_container(cfg):
     name = cfg.containers["outpack-server"]
-    mounts = [constellation.ConstellationMount("outpack", "/outpack")]
+    mounts = [constellation.ConstellationVolumeMount("outpack", "/outpack")]
     outpack_server = constellation.ConstellationContainer(
         name, cfg.outpack_ref, mounts=mounts, configure=outpack_server_configure
     )
@@ -104,11 +104,11 @@ def packit_api_container(cfg):
     if cfg.vault and cfg.vault.url:
         vault.resolve_secrets(cfg, cfg.vault.client())
 
-    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=get_env(cfg))
+    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=packit_api_get_env(cfg))
     return packit_api
 
 
-def get_env(cfg):
+def packit_api_get_env(cfg):
     outpack = cfg.containers["outpack-server"]
     packit_db = cfg.containers["packit-db"]
     env = {
@@ -118,6 +118,21 @@ def get_env(cfg):
         "PACKIT_OUTPACK_SERVER_URL": f"http://{cfg.container_prefix}-{outpack}:8000",
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
     }
+    if cfg.branding_enabled:
+        env.update(
+            {
+                "PACKIT_BRAND_LOGO_NAME": cfg.brand_logo_name,
+                "PACKIT_BRAND_NAME": cfg.brand_name,
+            }
+        )
+        try:
+            env.update({"PACKIT_BRAND_LOGO_LINK": cfg.brand_logo_link})
+        except AttributeError:
+            print("[packit-api] No brand logo link provided (optional)")
+        try:
+            env.update({"PACKIT_BRAND_LOGO_ALT_TEXT": cfg.brand_logo_alt_text})
+        except AttributeError:
+            print("[packit-api] No brand logo alt text provided (optional)")
     if cfg.packit_auth_enabled:
         env.update(
             {
@@ -139,11 +154,49 @@ def get_env(cfg):
             )
     return env
 
-
 def packit_container(cfg):
-    name = cfg.containers["packit"]
-    packit = constellation.ConstellationContainer(name, cfg.packit_ref)
+    mounts = []
+    if cfg.branding_enabled:
+        cfg.nginx_root = "/usr/share/nginx/html"  # from proxy/nginx.conf
+
+        logo_in_container = f"{cfg.nginx_root}/img/{cfg.brand_logo_name}"
+        mounts.append(constellation.ConstellationBindMount(cfg.brand_logo_path, logo_in_container, read_only=True))
+
+        favicon_in_container = f"{cfg.nginx_root}/favicon.ico"
+        mounts.append(constellation.ConstellationBindMount(cfg.brand_favicon_path, favicon_in_container, read_only=True))
+
+    packit = constellation.ConstellationContainer(cfg.containers["packit"], cfg.packit_ref, mounts=mounts, configure=packit_configure)
     return packit
+
+
+def packit_configure(container, cfg):
+    print("[packit] Configuring Packit container")
+    if cfg.branding_enabled:
+        cfg.index_html_path_in_container = f"{cfg.nginx_root}/index.html"
+        cfg.index_html_backup_location = f"{cfg.index_html_path_in_container}.bak"
+        # We configure the title tag of the index.html file here, rather than updating it dynamically with JS,
+        # since using JS results in the page title visibly changing a number of seconds after the initial page load.
+        substitute_index_html_content(container, cfg, r"(?<=<title>).*?(?=</title>)", cfg.brand_name)
+        substitute_index_html_content(container, cfg, r"favicon\.ico", cfg.brand_favicon_name)
+
+
+def substitute_index_html_content(container, cfg, pattern, replacement):
+    docker_util.exec_safely(container, ["mv", cfg.index_html_path_in_container, cfg.index_html_backup_location])
+
+    prev_index_html_content = docker_util.string_from_container(container, cfg.index_html_backup_location)
+    new_index_html_content = re.sub(pattern, replacement, prev_index_html_content)
+    docker_util.string_into_container(new_index_html_content, container, cfg.index_html_path_in_container)
+
+    # Clone permissions from the original file's backup to the new one
+    docker_util.exec_safely(
+        container, ["chown", "--reference", cfg.index_html_backup_location, cfg.index_html_path_in_container]
+    )
+    docker_util.exec_safely(
+        container, ["chmod", "--reference", cfg.index_html_backup_location, cfg.index_html_path_in_container]
+    )
+
+    # Remove the backup file
+    docker_util.exec_safely(container, ["rm", cfg.index_html_backup_location])
 
 
 def proxy_container(cfg, packit_api=None, packit=None):
@@ -151,7 +204,7 @@ def proxy_container(cfg, packit_api=None, packit=None):
     packit_api_addr = f"{packit_api.name_external(cfg.container_prefix)}:8080"
     packit_addr = packit.name_external(cfg.container_prefix)
     proxy_args = [cfg.proxy_hostname, str(cfg.proxy_port_http), str(cfg.proxy_port_https), packit_api_addr, packit_addr]
-    proxy_mounts = [constellation.ConstellationMount("proxy_logs", "/var/log/nginx")]
+    proxy_mounts = [constellation.ConstellationVolumeMount("proxy_logs", "/var/log/nginx")]
     proxy_ports = [cfg.proxy_port_http, cfg.proxy_port_https]
     proxy = constellation.ConstellationContainer(
         proxy_name, cfg.proxy_ref, ports=proxy_ports, args=proxy_args, mounts=proxy_mounts, configure=proxy_configure
