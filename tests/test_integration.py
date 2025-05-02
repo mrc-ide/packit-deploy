@@ -150,7 +150,7 @@ def test_api_configured_for_github_auth():
 def test_api_configured_with_custom_branding():
     path = "config/complete"
     try:
-        with vault_dev.server() as s:
+        with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             write_secrets_to_vault(cfg)
@@ -162,8 +162,8 @@ def test_api_configured_with_custom_branding():
             # assert env variables
             assert get_env_var(api, "PACKIT_BRAND_LOGO_ALT_TEXT") == b"My logo\n"
             assert get_env_var(api, "PACKIT_BRAND_LOGO_NAME") == b"examplelogo.webp\n"
-            assert get_env_var(api, "PACKIT_BRAND_NAME") == b"https://www.google.com/\n"
-            assert get_env_var(api, "PACKIT_BRAND_LOGO_LINK") == b"mrc-ide\n"
+            assert get_env_var(api, "PACKIT_BRAND_NAME") == b"My Packit Instance\n"
+            assert get_env_var(api, "PACKIT_BRAND_LOGO_LINK") == b"https://www.google.com/\n"
     finally:
         stop_packit(path)
 
@@ -171,7 +171,7 @@ def test_api_configured_with_custom_branding():
 def test_custom_branding_end_to_end():
     path = "config/complete"
     try:
-        with vault_dev.server() as s:
+        with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             write_secrets_to_vault(cfg)
@@ -181,7 +181,7 @@ def test_custom_branding_end_to_end():
             api = cfg.get_container("packit")
             index_html = docker_util.string_from_container(api, "/usr/share/nginx/html/index.html")
             assert "<title>My Packit Instance</title>" in index_html
-            logo = docker_util.bytes_from_container(api, "/usr/share/nginx/html/examplelogo.webp")
+            logo = docker_util.bytes_from_container(api, "/usr/share/nginx/html/img/examplelogo.webp")
             assert logo is not None and len(logo) > 0
             favicon = docker_util.bytes_from_container(api, "/usr/share/nginx/html/favicon.ico")
             assert favicon is not None and len(favicon) > 0
