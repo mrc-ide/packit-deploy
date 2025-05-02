@@ -95,14 +95,14 @@ def test_custom_branding_without_optional_branding_config():
             "favicon_path": None,
         }
     }
-    cfg = PackitConfig("config/basicauthcustombrand", options=options)
+    cfg = PackitConfig("config/complete", options=options)
 
     assert cfg.branding_enabled is True
-    assert cfg.brand_name == "Reporting Portal"
+    assert cfg.brand_name == "My Packit Instance"
     assert cfg.brand_logo_path == os.path.abspath(
-        os.path.join(packit_deploy_project_root_dir, "config/basicauthcustombrand/VIMC landscape logo 600dpi.png")
+        os.path.join(packit_deploy_project_root_dir, "config/complete/examplelogo.webp")
     )
-    assert cfg.brand_logo_name == "VIMC landscape logo 600dpi.png"
+    assert cfg.brand_logo_name == "examplelogo.webp"
     with unittest.TestCase().assertRaises(AttributeError):
         _ = cfg.brand_logo_link
     with unittest.TestCase().assertRaises(AttributeError):
@@ -114,33 +114,33 @@ def test_custom_branding_without_optional_branding_config():
 
 
 def test_custom_branding_with_optional_branding_config():
-    cfg = PackitConfig("config/basicauthcustombrand")
+    cfg = PackitConfig("config/complete")
 
     assert cfg.branding_enabled is True
-    assert cfg.brand_logo_alt_text == "VIMC logo"
-    assert cfg.brand_logo_link == "https://montagu.vaccineimpact.org/"
+    assert cfg.brand_logo_alt_text == "My logo"
+    assert cfg.brand_logo_link == "https://www.google.com/"
     assert cfg.brand_favicon_path == os.path.abspath(
-        os.path.join(packit_deploy_project_root_dir, "config/basicauthcustombrand/favicon.ico")
+        os.path.join(packit_deploy_project_root_dir, "config/complete/favicon.ico")
     )
     assert cfg.brand_favicon_name == "favicon.ico"
 
 
 def test_custom_branding_requires_proxy():
     options = {"proxy": {"enabled": False}}
-    cfg = PackitConfig("config/basicauthcustombrand", options=options)
+    cfg = PackitConfig("config/complete", options=options)
 
     assert cfg.branding_enabled is False
 
 
 def test_custom_branding_requires_brand_name():
     options = {"brand": {"name": None}}
-    cfg = PackitConfig("config/basicauthcustombrand", options=options)
+    cfg = PackitConfig("config/complete", options=options)
 
     assert cfg.branding_enabled is False
 
 
 def test_custom_branding_requires_logo():
     options = {"brand": {"logo_path": None}}
-    cfg = PackitConfig("config/basicauthcustombrand", options=options)
+    cfg = PackitConfig("config/complete", options=options)
 
     assert cfg.branding_enabled is False
