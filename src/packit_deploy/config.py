@@ -78,7 +78,7 @@ class PackitConfig:
             self.proxy_enabled = False
 
         self.branding_enabled = bool(
-            self.proxy_enabled and dat.get("brand", {}).get("name") and dat.get("brand", {}).get("logo_path")
+            dat.get("brand", {}).get("name") and dat.get("brand", {}).get("logo_path")
         )
 
         if self.branding_enabled:

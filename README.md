@@ -124,9 +124,7 @@ If you have anything else running on port 80 or 443, nothing will work as expect
 
 ### Custom branding config
 
-All custom branding is disabled unless:
-- the proxy is enabled (since our expectations of where to find certain filepaths depend on the proxy)
-- and both a logo and brand name are configured, since we don't want to display an incorrect combination of brand name and logo.
+Custom branding is disabled unless both a logo and brand name are configured, since we don't want to display an incorrect combination of brand name and logo/favicon.
 
 #### Logo (required)
 

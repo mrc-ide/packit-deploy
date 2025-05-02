@@ -125,16 +125,6 @@ def test_custom_branding_with_optional_branding_config():
     assert cfg.brand_favicon_name == "examplefavicon.ico"
 
 
-def test_custom_branding_requires_proxy():
-    options = {"proxy": {"enabled": False}}
-    cfg = PackitConfig("config/complete", options=options)
-
-    assert cfg.branding_enabled is False
-    # Optional branding config should also be disabled by this
-    with unittest.TestCase().assertRaises(AttributeError):
-        _ = cfg.brand_favicon_path
-
-
 def test_custom_branding_requires_brand_name():
     options = {"brand": {"name": None}}
     cfg = PackitConfig("config/complete", options=options)

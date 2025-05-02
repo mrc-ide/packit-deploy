@@ -160,12 +160,12 @@ def packit_api_get_env(cfg):
 def packit_container(cfg):
     mounts = []
     if cfg.branding_enabled:
-        cfg.nginx_root = "/usr/share/nginx/html"  # from proxy/nginx.conf
+        cfg.app_html_root = "/usr/share/nginx/html" # from Packit app Dockerfile
 
-        logo_in_container = f"{cfg.nginx_root}/img/{cfg.brand_logo_name}"
+        logo_in_container = f"{cfg.app_html_root}/img/{cfg.brand_logo_name}"
         mounts.append(constellation.ConstellationBindMount(cfg.brand_logo_path, logo_in_container, read_only=True))
 
-        favicon_in_container = f"{cfg.nginx_root}/{cfg.brand_favicon_name}"
+        favicon_in_container = f"{cfg.app_html_root}/{cfg.brand_favicon_name}"
         mounts.append(
             constellation.ConstellationBindMount(cfg.brand_favicon_path, favicon_in_container, read_only=True)
         )
@@ -179,7 +179,7 @@ def packit_container(cfg):
 def packit_configure(container, cfg):
     print("[packit] Configuring Packit container")
     if cfg.branding_enabled:
-        cfg.index_html_path_in_container = f"{cfg.nginx_root}/index.html"
+        cfg.index_html_path_in_container = f"{cfg.app_html_root}/index.html"
         cfg.index_html_backup_location = f"{cfg.index_html_path_in_container}.bak"
         # We configure the title tag of the index.html file here, rather than updating it dynamically with JS,
         # since using JS results in the page title visibly changing a number of seconds after the initial page load.
