@@ -5,6 +5,7 @@ import re
 
 from packit_deploy.docker_helpers import DockerClient
 
+
 class PackitConstellation:
     def __init__(self, cfg):
         outpack = outpack_server_container(cfg)
@@ -154,6 +155,7 @@ def packit_api_get_env(cfg):
             )
     return env
 
+
 def packit_container(cfg):
     mounts = []
     if cfg.branding_enabled:
@@ -163,9 +165,13 @@ def packit_container(cfg):
         mounts.append(constellation.ConstellationBindMount(cfg.brand_logo_path, logo_in_container, read_only=True))
 
         favicon_in_container = f"{cfg.nginx_root}/favicon.ico"
-        mounts.append(constellation.ConstellationBindMount(cfg.brand_favicon_path, favicon_in_container, read_only=True))
+        mounts.append(
+            constellation.ConstellationBindMount(cfg.brand_favicon_path, favicon_in_container, read_only=True)
+        )
 
-    packit = constellation.ConstellationContainer(cfg.containers["packit"], cfg.packit_ref, mounts=mounts, configure=packit_configure)
+    packit = constellation.ConstellationContainer(
+        cfg.containers["packit"], cfg.packit_ref, mounts=mounts, configure=packit_configure
+    )
     return packit
 
 

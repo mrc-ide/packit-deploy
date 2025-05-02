@@ -4,6 +4,7 @@ import unittest
 
 packit_deploy_project_root_dir = os.path.dirname(os.path.dirname(__file__))
 
+
 def test_config_no_proxy():
     cfg = PackitConfig("config/noproxy")
     assert cfg.network == "packit-network"
