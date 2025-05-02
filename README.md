@@ -45,13 +45,16 @@ Here `<path>` is the path to a directory that contains a configuration file `pac
 1. [Python3](https://www.python.org/downloads/) (>= 3.7)
 2. [Hatch](https://hatch.pypa.io/latest/install/)
 
-## Test and lint
+## Test
 
 1. `hatch run test`
-2. `hatch run lint:fmt`
 
 To get coverage reported locally in the console, use `hatch run cov`. 
 On CI, use `hatch run cov-ci` to generate an xml report.
+
+## Lint and format
+
+1. `hatch run lint:fmt`
 
 ## Build
 
@@ -103,7 +106,7 @@ hatch env run -- packit start --pull config/basicauth
 ./scripts/create-super-user
 ```
 
-The `--` allows `--pull` to make it through to the deploy (and not be swallowed by `hatch`).  Alternatively you can run `packit start --pull config/basicauth` after running `hatch shell`.  The `create-super-user` script sets up a user that you can log in with and prints the login details to stdout.  After this, packit will be running at `https://localhost` though with a self-signed certificate so you will need to tell your browser that it's ok to connect.
+The `--` allows `--pull` to make it through to the deploy (and not be swallowed by `hatch`).  Alternatively you can run `packit start --pull config/basicauth` after running `hatch shell`.  The `create-super-user` script sets up a user that you can log in with via basic auth and prints the login details to stdout.  After this, packit will be running at `https://localhost` though with a self-signed certificate so you will need to tell your browser that it's ok to connect.
 
 To bring things down, run
 
@@ -118,3 +121,29 @@ docker exec -it packit-packit-db psql -U packituser -d packit
 ```
 
 If you have anything else running on port 80 or 443, nothing will work as expected; either stop that service or change the proxy port in the configuration that you are using.
+
+### Custom branding config
+
+All custom branding is disabled unless:
+- the proxy is enabled (since our expectations of where to find certain filepaths depend on the proxy)
+- and both a logo and brand name are configured, since we don't want to display an incorrect combination of brand name and logo.
+
+#### Logo (required)
+
+The logo file is bind-mounted into the front-end container, in a public folder, and the packit api has an env var set for the filename of the logo, so that it can tell the front end where to look for the file. Your logo file should be in the same directory as the config file.
+
+#### Logo alt text (optional)
+
+This is set as an env var in the packit api, which passes it on to the front end.
+
+#### Logo link (optional)
+
+This is to allow a configurable link destination for when the user clicks the logo. In VIMC's case this would be a link back to Montagu. This is set as an env var in the packit api, which passes it on to the front end.
+
+#### Brand name (required)
+
+The 'brand name' (e.g. 'Reporting Portal') is used in two ways: firstly an env var is set in the packit api, which can be sent on the front-end. Secondly, it's used to directly overwrite part of the front end's public index.html file, replacing any pre-existing title tag.
+
+#### Favicon (optional)
+
+The favicon file is bind-mounted into the front-end container, in a public folder. Then we overwrite part of the front end's public index.html file, replacing any pre-existing reference to 'favicon.ico' with the filename of the configured favicon. Your favicon file should be in the same directory as the config file.
