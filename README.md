@@ -113,4 +113,5 @@ You will need access to the vault to run the `githubauth` configuration, which r
 details.
 
 ### Notes
-1. If running app in **basic auth** mode, a super admin user can be created by running `./scripts/create-super-user.sh` after the app is running.
+
+If developing in **basic auth** mode, a super admin user can be created by running `./scripts/create-super-user.sh` after the app is running.
