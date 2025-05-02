@@ -181,9 +181,10 @@ def test_custom_branding_end_to_end():
             api = cfg.get_container("packit")
             index_html = docker_util.string_from_container(api, "/usr/share/nginx/html/index.html")
             assert "<title>My Packit Instance</title>" in index_html
+            assert "examplefavicon.ico" in index_html
             logo = docker_util.bytes_from_container(api, "/usr/share/nginx/html/img/examplelogo.webp")
             assert logo is not None and len(logo) > 0
-            favicon = docker_util.bytes_from_container(api, "/usr/share/nginx/html/favicon.ico")
+            favicon = docker_util.bytes_from_container(api, "/usr/share/nginx/html/examplefavicon.ico")
             assert favicon is not None and len(favicon) > 0
 
             # Test that the index.html file is served correctly

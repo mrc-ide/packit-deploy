@@ -120,9 +120,9 @@ def test_custom_branding_with_optional_branding_config():
     assert cfg.brand_logo_alt_text == "My logo"
     assert cfg.brand_logo_link == "https://www.google.com/"
     assert cfg.brand_favicon_path == os.path.abspath(
-        os.path.join(packit_deploy_project_root_dir, "config/complete/favicon.ico")
+        os.path.join(packit_deploy_project_root_dir, "config/complete/examplefavicon.ico")
     )
-    assert cfg.brand_favicon_name == "favicon.ico"
+    assert cfg.brand_favicon_name == "examplefavicon.ico"
 
 
 def test_custom_branding_requires_proxy():
