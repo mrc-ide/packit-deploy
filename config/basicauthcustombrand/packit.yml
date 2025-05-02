@@ -1,0 +1,98 @@
+## The name of the docker network that containers will be attached to.
+## If you want to proxy Packit to the host, you will need to
+## arrange a proxy on this network, or use dev_mode in the web section
+## below.
+## Prefix for container names; we'll use {container_prefix}-(container_name)
+container_prefix: packit
+
+## Set this flag to true to prevent use of --volumes in the cli to remove
+## volumes on stop
+protect_data: false
+
+## Docker org for images
+repo: mrcide
+
+## The name of the docker network that containers will be attached to.
+## If you want to proxy Packit to the host, you will need to
+## arrange a proxy on this network
+network: packit-network
+
+## Names of the docker volumes to use:
+##
+## outpack: stores the outpack metadata
+## proxy_logs: stores logs from the reverse proxy (only used if proxy is given)
+## (More volumes are anticipated as the tool develops)
+volumes:
+  outpack: outpack_volume
+  proxy_logs: packit_proxy_logs
+
+outpack:
+  ## Initialise an outpack directory by cloning from github
+  initial:
+    ##  If using a private repo, then use an ssh url and provide ssh keys in the
+    ## "ssh" section above.
+    url: https://github.com/reside-ic/orderly3-example.git
+  server:
+    name: outpack_server
+    tag: main
+  migrate:
+    name: outpack.orderly
+    tag: main
+
+packit:
+  api:
+    name: packit-api
+    tag: main
+  app:
+    name: packit
+    tag: main
+  db:
+    name: packit-db
+    tag: main
+    user: packituser
+    password: changeme
+  auth:
+    enabled: true
+    auth_method: basic
+    expiry_days: 1
+    jwt:
+      # Secret used to generate JWT tokens - this can be any string, the secret at this key in the vault is a random
+      # 32 char string, and is probably fine to re-use
+      secret: VAULT:secret/packit/githubauth/auth/jwt:secret
+
+## If running a proxy directly, fill this section in.  Otherwise you
+## are responsible for proxying the application out of the docker
+## network
+proxy:
+  enabled: true
+  hostname: localhost
+  port_http: 80
+  port_https: 443
+  image:
+    name: packit-proxy
+    tag: main
+
+vault:
+  ## Address of the vault server.  This should be a string if it is
+  ## present.
+  addr: https://vault.dide.ic.ac.uk:8200
+  auth:
+    ## Authentication type - must be either "token" or the name of a
+    ## supported authentication method.  These seem to be poorly
+    ## documented in the hvac, but include "github" for github
+    ## authentication.
+    ##
+    ## On a vault client object, see auth.implemented_class_names for
+    ## a list, which is currently
+    ##
+    ##     azure, github, gcp, kubernetes, ldap, mfa, okta
+    method: github
+
+## Branding configuration
+## If only one of 'name' or 'logo_path' is set, both will be ignored.
+brand:
+  favicon_path: favicon.ico # Optional custom favicon (any format). Should be in the same dir as this config file.
+  logo_alt_text: VIMC logo # Alt text for logo (optional - fallback configured in Packit)
+  logo_link: https://montagu.vaccineimpact.org/ # Optional. Absolute navigation destination for clicking on logo.
+  logo_path: VIMC landscape logo 600dpi.png # Custom logo image (any format). Should be in the same dir as this config file.
+  name: Reporting Portal # Affects header text and page title
