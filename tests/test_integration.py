@@ -186,9 +186,9 @@ def test_custom_branding_end_to_end():
             favicon = docker_util.bytes_from_container(api, "/usr/share/nginx/html/favicon.ico")
             assert favicon is not None and len(favicon) > 0
 
-            # Ensure that we have a 200 response from the server (implies index.html file has correct permissions)
-            res = http_get("http://localhost")
-            assert res == "OK"
+            # Test that the index.html file is served correctly
+            response = http_get(f"http://localhost:{s.port}/")
+            assert response == index_html
     finally:
         stop_packit(path)
 

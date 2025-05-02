@@ -130,6 +130,9 @@ def test_custom_branding_requires_proxy():
     cfg = PackitConfig("config/complete", options=options)
 
     assert cfg.branding_enabled is False
+    # Optional branding config should also be disabled by this
+    with unittest.TestCase().assertRaises(AttributeError):
+        _ = cfg.brand_favicon_path
 
 
 def test_custom_branding_requires_brand_name():
@@ -137,6 +140,9 @@ def test_custom_branding_requires_brand_name():
     cfg = PackitConfig("config/complete", options=options)
 
     assert cfg.branding_enabled is False
+    # Optional branding config should also be disabled by this
+    with unittest.TestCase().assertRaises(AttributeError):
+        _ = cfg.brand_favicon_path
 
 
 def test_custom_branding_requires_logo():
@@ -144,3 +150,6 @@ def test_custom_branding_requires_logo():
     cfg = PackitConfig("config/complete", options=options)
 
     assert cfg.branding_enabled is False
+    # Optional branding config should also be disabled by this
+    with unittest.TestCase().assertRaises(AttributeError):
+        _ = cfg.brand_favicon_path
