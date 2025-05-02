@@ -1,7 +1,8 @@
+import re
+
 import constellation
 import docker
 from constellation import docker_util, vault
-import re
 
 from packit_deploy.docker_helpers import DockerClient
 

@@ -90,7 +90,7 @@ style = [
 fmt = [
     "black {args:.}",
     "ruff check --fix {args:.}",
-    "ruff format --fix {args:.}",
+    "ruff format {args:.}",
     "style",
 ]
 all = [
