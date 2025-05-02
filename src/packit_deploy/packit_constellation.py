@@ -165,7 +165,7 @@ def packit_container(cfg):
         logo_in_container = f"{cfg.nginx_root}/img/{cfg.brand_logo_name}"
         mounts.append(constellation.ConstellationBindMount(cfg.brand_logo_path, logo_in_container, read_only=True))
 
-        favicon_in_container = f"{cfg.nginx_root}/favicon.ico"
+        favicon_in_container = f"{cfg.nginx_root}/{cfg.brand_favicon_name}"
         mounts.append(
             constellation.ConstellationBindMount(cfg.brand_favicon_path, favicon_in_container, read_only=True)
         )
