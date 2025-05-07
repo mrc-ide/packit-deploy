@@ -74,7 +74,6 @@ def outpack_ssh_configure(container, cfg):
 
 def outpack_init_clone(container, cfg):
     print("[orderly] Initialising orderly by cloning")
-    # TODO: revert this branch pin to:
     args = ["git", "clone", cfg.outpack_source_url, "/outpack"]
 
     docker_util.exec_safely(container, args)
