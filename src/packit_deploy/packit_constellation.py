@@ -159,7 +159,7 @@ def packit_api_get_env(cfg):
 def packit_container(cfg):
     mounts = []
     if cfg.branding_enabled:
-        cfg.app_html_root = "/usr/share/nginx/html" # from Packit app Dockerfile
+        cfg.app_html_root = "/usr/share/nginx/html"  # from Packit app Dockerfile
 
         logo_in_container = f"{cfg.app_html_root}/img/{cfg.brand_logo_name}"
         mounts.append(constellation.ConstellationBindMount(cfg.brand_logo_path, logo_in_container, read_only=True))
