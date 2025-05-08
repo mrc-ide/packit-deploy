@@ -180,7 +180,9 @@ def packit_configure(container, cfg):
     if cfg.branding_enabled:
         # We configure the title tag of the index.html file here, rather than updating it dynamically with JS,
         # since using JS results in the page title visibly changing a number of seconds after the initial page load.
-        substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"(?<=<title>).*?(?=</title>)", cfg.brand_name)
+        substitute_file_content(
+            container, f"{cfg.app_html_root}/index.html", r"(?<=<title>).*?(?=</title>)", cfg.brand_name
+        )
         substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand_favicon_name)
         new_css = (
             ":root{\n"
@@ -192,11 +194,12 @@ def packit_configure(container, cfg):
             f"  --custom-accent-foreground: {cfg.brand_accent_foreground_dark};\n"
             "}\n"
         )
+        substitute_file_content(container, f"{cfg.app_html_root}/css/custom.css", r".*", new_css, flags=re.DOTALL)
 
 
-def substitute_file_content(container, path, pattern, replacement):
+def substitute_file_content(container, path, pattern, replacement, flags=0):
     prev_file_content = docker_util.string_from_container(container, path)
-    new_content = re.sub(pattern, replacement, prev_file_content, flags=re.DOTALL)
+    new_content = re.sub(pattern, replacement, prev_file_content, flags=flags)
 
     backup = f"{path}.bak"
     docker_util.exec_safely(container, ["mv", path, backup])
