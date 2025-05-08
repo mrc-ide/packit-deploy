@@ -145,3 +145,7 @@ The 'brand name' (e.g. 'Reporting Portal') is used in two ways: firstly an env v
 #### Favicon (optional)
 
 The favicon file is bind-mounted into the front-end container, in a public folder. Then we overwrite part of the front end's public index.html file, replacing any pre-existing reference to 'favicon.ico' with the filename of the configured favicon. Your favicon file should be in the same directory as the config file.
+
+#### Brand colors (optional)
+
+The brand colors are written as css variables into the public custom.css file. If no colors are provided for the dark theme, the light theme colors are reused.
