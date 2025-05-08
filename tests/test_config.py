@@ -93,6 +93,7 @@ def test_custom_branding_without_optional_branding_config():
             "logo_link": None,
             "logo_alt_text": None,
             "favicon_path": None,
+            "css": None,
         }
     }
     cfg = PackitConfig("config/complete", options=options)
@@ -103,14 +104,33 @@ def test_custom_branding_without_optional_branding_config():
         os.path.join(packit_deploy_project_root_dir, "config/complete/examplelogo.webp")
     )
     assert cfg.brand_logo_name == "examplelogo.webp"
-    with unittest.TestCase().assertRaises(AttributeError):
-        _ = cfg.brand_logo_link
-    with unittest.TestCase().assertRaises(AttributeError):
-        _ = cfg.brand_logo_alt_text
-    with unittest.TestCase().assertRaises(AttributeError):
-        _ = cfg.brand_favicon_path
-    with unittest.TestCase().assertRaises(AttributeError):
-        _ = cfg.brand_favicon_name
+    undefined_attributes = [
+        "brand_logo_link",
+        "brand_logo_alt_text",
+        "brand_favicon_path",
+        "brand_accent_light",
+        "brand_accent_foreground_light",
+        "brand_accent_dark",
+        "brand_accent_foreground_dark",
+    ]
+    for attr in undefined_attributes:
+        with unittest.TestCase().assertRaises(AttributeError):
+            _ = getattr(cfg, attr)
+
+
+def test_custom_branding_css_dark_mode_fallback():
+    options = {
+        "brand": {
+            "css": {"dark": None},
+        }
+    }
+    cfg = PackitConfig("config/complete", options=options)
+
+    assert cfg.branding_enabled is True
+    assert cfg.brand_accent_light == "hsl(0 100% 50%)"
+    assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
+    assert cfg.brand_accent_dark == cfg.brand_accent_light
+    assert cfg.brand_accent_foreground_dark == cfg.brand_accent_foreground_light
 
 
 def test_custom_branding_with_optional_branding_config():
@@ -123,6 +143,10 @@ def test_custom_branding_with_optional_branding_config():
         os.path.join(packit_deploy_project_root_dir, "config/complete/examplefavicon.ico")
     )
     assert cfg.brand_favicon_name == "examplefavicon.ico"
+    assert cfg.brand_accent_light == "hsl(0 100% 50%)"
+    assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
+    assert cfg.brand_accent_dark == "hsl(30 100% 50%)"
+    assert cfg.brand_accent_foreground_dark == "hsl(322, 50%, 87%)"
 
 
 def test_custom_branding_requires_brand_name():

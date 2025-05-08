@@ -178,31 +178,37 @@ def packit_container(cfg):
 def packit_configure(container, cfg):
     print("[packit] Configuring Packit container")
     if cfg.branding_enabled:
-        cfg.index_html_path_in_container = f"{cfg.app_html_root}/index.html"
-        cfg.index_html_backup_location = f"{cfg.index_html_path_in_container}.bak"
         # We configure the title tag of the index.html file here, rather than updating it dynamically with JS,
         # since using JS results in the page title visibly changing a number of seconds after the initial page load.
-        substitute_index_html_content(container, cfg, r"(?<=<title>).*?(?=</title>)", cfg.brand_name)
-        substitute_index_html_content(container, cfg, r"favicon\.ico", cfg.brand_favicon_name)
+        substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"(?<=<title>).*?(?=</title>)", cfg.brand_name)
+        substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand_favicon_name)
+        new_css = (
+            ":root{\n"
+            f"  --custom-accent: {cfg.brand_accent_light};\n"
+            f"  --custom-accent-foreground: {cfg.brand_accent_foreground_light};\n"
+            "}\n"
+            ".dark {\n"
+            f"  --custom-accent: {cfg.brand_accent_dark};\n"
+            f"  --custom-accent-foreground: {cfg.brand_accent_foreground_dark};\n"
+            "}\n"
+        )
 
 
-def substitute_index_html_content(container, cfg, pattern, replacement):
-    docker_util.exec_safely(container, ["mv", cfg.index_html_path_in_container, cfg.index_html_backup_location])
+def substitute_file_content(container, path, pattern, replacement):
+    prev_file_content = docker_util.string_from_container(container, path)
+    new_content = re.sub(pattern, replacement, prev_file_content, flags=re.DOTALL)
 
-    prev_index_html_content = docker_util.string_from_container(container, cfg.index_html_backup_location)
-    new_index_html_content = re.sub(pattern, replacement, prev_index_html_content)
-    docker_util.string_into_container(new_index_html_content, container, cfg.index_html_path_in_container)
+    backup = f"{path}.bak"
+    docker_util.exec_safely(container, ["mv", path, backup])
+
+    docker_util.string_into_container(new_content, container, path)
 
     # Clone permissions from the original file's backup to the new one
-    docker_util.exec_safely(
-        container, ["chown", "--reference", cfg.index_html_backup_location, cfg.index_html_path_in_container]
-    )
-    docker_util.exec_safely(
-        container, ["chmod", "--reference", cfg.index_html_backup_location, cfg.index_html_path_in_container]
-    )
+    docker_util.exec_safely(container, ["chown", "--reference", backup, path])
+    docker_util.exec_safely(container, ["chmod", "--reference", backup, path])
 
     # Remove the backup file
-    docker_util.exec_safely(container, ["rm", cfg.index_html_backup_location])
+    docker_util.exec_safely(container, ["rm", backup])
 
 
 def proxy_container(cfg, packit_api=None, packit=None):

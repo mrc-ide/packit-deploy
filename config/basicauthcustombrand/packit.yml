@@ -96,3 +96,10 @@ brand:
   logo_link: https://montagu.vaccineimpact.org/ # Optional. Absolute navigation destination for clicking on logo.
   logo_path: VIMC landscape logo 600dpi.png # Custom logo image (any format). Should be in the same dir as this config file.
   name: Reporting Portal # Affects header text and page title
+  css: # Optional custom CSS variables. If dark variants are not provided, light variants will be used in dark mode.
+    light:
+      accent: "hsl(0 100% 50%)"
+      accent_foreground: "hsl(123 100% 50%)"
+    dark:
+      accent: "hsl(0 100% 50%)"
+      accent_foreground: "hsl(322, 50%, 87%)"

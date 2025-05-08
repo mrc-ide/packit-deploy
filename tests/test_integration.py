@@ -179,16 +179,26 @@ def test_custom_branding_end_to_end():
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
             api = cfg.get_container("packit")
+
             index_html = docker_util.string_from_container(api, "/usr/share/nginx/html/index.html")
             assert "<title>My Packit Instance</title>" in index_html
             assert "examplefavicon.ico" in index_html
+
+            custom_css = docker_util.string_from_container(api, "/usr/share/nginx/html/css/custom.css")
+            assert "--custom-accent: hsl(0 100% 50%);" in custom_css
+            assert "--custom-accent-foreground: hsl(123 100% 50%);" in custom_css
+
             logo = docker_util.bytes_from_container(api, "/usr/share/nginx/html/img/examplelogo.webp")
             assert logo is not None and len(logo) > 0
+
             favicon = docker_util.bytes_from_container(api, "/usr/share/nginx/html/examplefavicon.ico")
             assert favicon is not None and len(favicon) > 0
 
-            # Test that the index.html file is served correctly, implying it has correct file permissions
+            # Test that the index.html file is served without error, implying it has correct file permissions
             http_get(f"http://localhost:{s.port}/")
+
+            # Test that the custom.css file is served without error, implying it has correct file permissions
+            http_get(f"http://localhost:{s.port}/css/custom.css")
     finally:
         stop_packit(path)
 
