@@ -90,6 +90,8 @@ class PackitConfig:
                 self.brand_logo_link = config.config_string(dat, ["brand", "logo_link"])
             if dat.get("brand").get("logo_alt_text"):
                 self.brand_logo_alt_text = config.config_string(dat, ["brand", "logo_alt_text"])
+            else:
+                self.brand_logo_alt_text = f"{self.brand_name} logo"
             if dat.get("brand").get("favicon_path"):
                 favicon_path = config.config_string(dat, ["brand", "favicon_path"])
                 self.brand_favicon_path = os.path.abspath(os.path.join(path, favicon_path))

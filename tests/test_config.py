@@ -100,13 +100,13 @@ def test_custom_branding_without_optional_branding_config():
 
     assert cfg.branding_enabled is True
     assert cfg.brand_name == "My Packit Instance"
+    assert cfg.brand_logo_alt_text == "My Packit Instance logo"
     assert cfg.brand_logo_path == os.path.abspath(
         os.path.join(packit_deploy_project_root_dir, "config/complete/examplelogo.webp")
     )
     assert cfg.brand_logo_name == "examplelogo.webp"
     undefined_attributes = [
         "brand_logo_link",
-        "brand_logo_alt_text",
         "brand_favicon_path",
         "brand_accent_light",
         "brand_accent_foreground_light",

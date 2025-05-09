@@ -120,20 +120,12 @@ def packit_api_get_env(cfg):
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
     }
     if cfg.branding_enabled:
-        env.update(
-            {
-                "PACKIT_BRAND_LOGO_NAME": cfg.brand_logo_name,
-                "PACKIT_BRAND_NAME": cfg.brand_name,
-            }
-        )
+        env.update({"PACKIT_BRAND_LOGO_NAME": cfg.brand_logo_name})
+        env.update({"PACKIT_BRAND_LOGO_ALT_TEXT": cfg.brand_logo_alt_text})
         try:
             env.update({"PACKIT_BRAND_LOGO_LINK": cfg.brand_logo_link})
         except AttributeError:
-            print("[packit-api] No brand logo link provided (optional)")
-        try:
-            env.update({"PACKIT_BRAND_LOGO_ALT_TEXT": cfg.brand_logo_alt_text})
-        except AttributeError:
-            print("[packit-api] No brand logo alt text provided (optional)")
+            print("[packit-api] A brand logo link was not provided (optional)")
     if cfg.packit_auth_enabled:
         env.update(
             {
