@@ -80,6 +80,12 @@ packit:
         packit_api_root: "https://packit/api"
         url: "https://packit/redirect"  # Url for redirecting back to the front end after successful authentication
 
+orderly-runner:
+  image:
+    name: orderly.runner
+    tag: main
+  workers: 1
+
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker
 ## network
