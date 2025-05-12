@@ -58,6 +58,13 @@ class PackitConfig:
         else:
             self.packit_auth_enabled = False
 
+        if dat.get("orderly-runner"):
+            self.runner_ref = self.build_ref(dat, "orderly-runner", "image")
+            self.runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
+            self.runner_enabled = True
+        else:
+            self.runner_enabled = False
+
         self.containers = {
             "outpack-server": "outpack-server",
             "packit-db": "packit-db",
@@ -71,6 +78,9 @@ class PackitConfig:
             "packit-api": self.packit_api_ref,
             "packit": self.packit_ref,
         }
+        if self.runner_enabled:
+            self.images["orderly-runner"] = self.runner_ref
+            self.images["redis"] = constellation.ImageReference("library", "redis", "8.0")
 
         if dat.get("proxy"):
             self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)
@@ -126,6 +136,7 @@ class PackitConfig:
             self.volumes["proxy_logs"] = config.config_string(dat, ["volumes", "proxy_logs"])
 
     def build_ref(self, dat, section, subsection):
+        repo = config.config_string(dat, [section, subsection, "repo"], is_optional=True, default=self.repo)
         name = config.config_string(dat, [section, subsection, "name"])
         tag = config.config_string(dat, [section, subsection, "tag"])
         return constellation.ImageReference(self.repo, name, tag)
