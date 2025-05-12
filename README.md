@@ -140,7 +140,7 @@ This is to allow a configurable link destination for when the user clicks the lo
 
 #### Brand name (required)
 
-The 'brand name' (e.g. 'Reporting Portal') is used in two ways: firstly an env var is set in the packit api, which can be sent on the front-end. Secondly, it's used to directly overwrite part of the front end's public index.html file, replacing any pre-existing title tag.
+The 'brand name' (e.g. 'Reporting Portal') is used to directly overwrite part of the front end's public index.html file, replacing any pre-existing title tag. (The front-end reads this from the index.html in order to re-use the name elsewhere.)
 
 #### Favicon (optional)
 
@@ -148,4 +148,4 @@ The favicon file is bind-mounted into the front-end container, in a public folde
 
 #### Brand colors (optional)
 
-The brand colors are written as css variables into the public custom.css file. If no colors are provided for the dark theme, the light theme colors are reused.
+The brand colors are written as css variables into the public custom.css file, which override default variables in the front-end. If no colors are provided for the dark theme, the light theme colors are reused.
