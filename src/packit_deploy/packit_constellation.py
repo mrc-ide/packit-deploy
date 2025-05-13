@@ -142,8 +142,7 @@ def get_env(cfg):
 
 def packit_container(cfg):
     name = cfg.containers["packit"]
-    ports = [80] if cfg.packit_expose and not cfg.proxy_enabled else None
-    packit = constellation.ConstellationContainer(name, cfg.packit_ref, ports=ports)
+    packit = constellation.ConstellationContainer(name, cfg.packit_ref)
     return packit
 
 
