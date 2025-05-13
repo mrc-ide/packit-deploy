@@ -112,13 +112,20 @@ These configurations should all be runnable for local testing, except for `compl
 You will need access to the vault to run the `githubauth` configuration, which requires secrets for the github oauth2 client app
 details.
 
-For example:
+For example, to bring up the `basicauth` configuration, you can run:
 
 ```console
-hatch env run packit start config/basicauth
+hatch env run -- packit start --pull config/basicauth
+./scripts/create-super-user
 ```
 
-After which packit will be running at `http://localhost`
+The `--` allows `--pull` to make it through to the deploy (and not be swallowed by `hatch`).  Alternatively you can run `packit start --pull config/basicauth` after running `hatch shell`.  The `create-super-user` script sets up a user that you can log in with and prints the login details to stdout.  After this, packit will be running at `https://localhost` though with a self-signed certificate so you will need to tell your browser that it's ok to connect.
+
+To bring things down, run
+
+```console
+hatch env run -- packit stop --kill config/basicauth
+```
 
 ### Notes
 
