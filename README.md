@@ -112,6 +112,8 @@ These configurations should all be runnable for local testing, except for `compl
 You will need access to the vault to run the `githubauth` configuration, which requires secrets for the github oauth2 client app
 details.
 
+## Running locally
+
 For example, to bring up the `basicauth` configuration, you can run:
 
 ```console
@@ -126,10 +128,6 @@ To bring things down, run
 ```console
 hatch env run -- packit stop --kill config/basicauth
 ```
-
-### Notes
-
-If developing in **basic auth** mode, a super admin user can be created by running `./scripts/create-super-user` after the app is running.
 
 If you need to see what lurks in the database, connect with
 
