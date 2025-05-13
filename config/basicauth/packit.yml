@@ -44,7 +44,7 @@ packit:
     tag: main
   app:
     name: packit
-    tag: add-build-args
+    tag: main
   db:
     name: packit-db
     tag: main
