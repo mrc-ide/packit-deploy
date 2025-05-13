@@ -115,11 +115,17 @@ details.
 For example:
 
 ```console
-hatch env run packit start config/noproxy
+hatch env run packit start config/basicauth
 ```
 
 After which packit will be running at `http://localhost`
 
 ### Notes
 
-If developing in **basic auth** mode, a super admin user can be created by running `./scripts/create-super-user.sh` after the app is running.
+If developing in **basic auth** mode, a super admin user can be created by running `./scripts/create-super-user` after the app is running.
+
+If you need to see what lurks in the database, connect with
+
+```console
+docker exec -it packit-packit-db psql -U packituser -d packit
+```
