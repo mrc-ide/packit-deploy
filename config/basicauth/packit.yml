@@ -38,14 +38,13 @@ outpack:
   migrate:
     name: outpack.orderly
     tag: main
-# TODO: change to main basic auth stuff is merged
 packit:
   api:
     name: packit-api
     tag: main
   app:
     name: packit
-    tag: main
+    tag: add-build-args
   db:
     name: packit-db
     tag: main
