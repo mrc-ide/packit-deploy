@@ -112,6 +112,14 @@ These configurations should all be runnable for local testing, except for `compl
 You will need access to the vault to run the `githubauth` configuration, which requires secrets for the github oauth2 client app
 details.
 
+For example:
+
+```console
+hatch env run packit start config/noproxy
+```
+
+After which packit will be running at `http://localhost`
+
 ### Notes
 
 If developing in **basic auth** mode, a super admin user can be created by running `./scripts/create-super-user.sh` after the app is running.

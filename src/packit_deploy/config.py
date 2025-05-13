@@ -35,6 +35,8 @@ class PackitConfig:
         self.packit_db_user = config.config_string(dat, ["packit", "db", "user"])
         self.packit_db_password = config.config_string(dat, ["packit", "db", "password"])
 
+        self.packit_expose = config.config_boolean(dat, ["packit", "app", "expose"], is_optional=True, default=False)
+
         if "auth" in dat["packit"]:
             self.packit_auth_enabled = config.config_boolean(dat, ["packit", "auth", "enabled"])
             self.packit_auth_method = config.config_string(dat, ["packit", "auth", "auth_method"])

@@ -39,6 +39,7 @@ packit:
   app:
     name: packit
     tag: main
+    expose: true
   db:
     name: packit-db
     tag: main
