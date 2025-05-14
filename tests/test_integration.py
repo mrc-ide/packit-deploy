@@ -83,7 +83,7 @@ def test_start_and_stop_proxy():
 def test_proxy_ssl_configured():
     path = "config/complete"
     try:
-        with vault_dev.server() as s:
+        with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             write_secrets_to_vault(cfg)
@@ -126,7 +126,7 @@ def test_api_configured():
 def test_api_configured_for_github_auth():
     path = "config/complete"
     try:
-        with vault_dev.server() as s:
+        with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             write_secrets_to_vault(cfg)
@@ -150,7 +150,7 @@ def test_api_configured_for_github_auth():
 def test_vault():
     path = "config/complete"
     try:
-        with vault_dev.server() as s:
+        with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             write_secrets_to_vault(cfg)
@@ -168,7 +168,7 @@ def test_vault():
 def test_ssh():
     path = "config/complete"
     try:
-        with vault_dev.server() as s:
+        with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             write_secrets_to_vault(cfg)
