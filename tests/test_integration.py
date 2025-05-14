@@ -54,7 +54,7 @@ def test_status():
 def test_start_and_stop_proxy():
     path = "config/novault"
     try:
-        res = cli.main(["start", path])
+        res = cli.main(["start", "--pull", path])
         assert res
 
         cl = docker.client.from_env()
@@ -68,11 +68,11 @@ def test_start_and_stop_proxy():
         ports = proxy.attrs["HostConfig"]["PortBindings"]
         assert set(ports.keys()) == {"443/tcp", "80/tcp"}
         http_get("http://localhost")
-        res = http_get("http://localhost/packit/api/packets", poll=3)
+        res = http_get("http://localhost/api/packets", poll=3)
         # might take some seconds for packets to appear
         retries = 1
         while len(json.loads(res)) < 1 and retries < 5:
-            res = http_get("http://localhost/packit/api/packets")
+            res = http_get("http://localhost/api/packets")
             time.sleep(5)
             retries = retries + 1
         assert len(json.loads(res)) > 1
@@ -83,7 +83,7 @@ def test_start_and_stop_proxy():
 def test_proxy_ssl_configured():
     path = "config/complete"
     try:
-        with vault_dev.server() as s:
+        with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             write_secrets_to_vault(cfg)
@@ -126,7 +126,7 @@ def test_api_configured():
 def test_api_configured_for_github_auth():
     path = "config/complete"
     try:
-        with vault_dev.server() as s:
+        with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             write_secrets_to_vault(cfg)
@@ -150,7 +150,7 @@ def test_api_configured_for_github_auth():
 def test_vault():
     path = "config/complete"
     try:
-        with vault_dev.server() as s:
+        with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             write_secrets_to_vault(cfg)
@@ -168,7 +168,7 @@ def test_vault():
 def test_ssh():
     path = "config/complete"
     try:
-        with vault_dev.server() as s:
+        with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
             cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
             write_secrets_to_vault(cfg)
