@@ -59,45 +59,27 @@ On CI, use `hatch run cov-ci` to generate an xml report.
 hatch build
 ```
 
+## Publishing to PyPI
+
+Automatically publish to [PyPI](https://pypi.org/project/packit-deploy).  Assuming a version number `0.1.2`:
+
+* Create a [release on github](https://github.com/reside-ic/packit-deploy/releases/new)
+* Choose a tag -> Create a new tag: `v0.1.2`
+* Use this version as the description
+* Optionally describe the release
+* Click "Publish release"
+* This triggers the release workflow and the package will be available on PyPI in a few minutes
+
+Settings are configured [here on PyPI](https://pypi.org/manage/project/packit-deploy/settings/publishing)
+
 ## Install from local sources
+
+You should not need to do this very often, but if you really want to:
 
 1. `hatch build`
 2. `pip install dist/packit_deploy-{version}.tar.gz`
 
-## Publish to PyPi
-
-Ensure you have built a new version of the package:
-1. `hatch clean`
-2. `hatch build`
-
-Then publish to the test server:
-
-```console
-hatch publish -r test
-```
-
-You will be prompted to enter your [test.pypi.org](https://test.pypi.org/legacy/) username and password.
-To test the installation, first run Python in a container:
-
-```
-docker run --rm -it --entrypoint bash python
-```
-
-Then:
-
-```
-pip install --index-url https://test.pypi.org/simple packit-deploy --extra-index-url https://pypi.org/simple
-```
-
-Now you should be able to run `packit` from the command line and see the usage instructions.
-
-If it is working, you can publish to the real PyPi:
-
-```console
-hatch publish
-```
-
-## Config
+## Example configurations
 
 The following example configurations are included under `/config`:
 
@@ -108,10 +90,30 @@ The following example configurations are included under `/config`:
 - `nodemo`: does not include the demo data
 - `noproxy`: does not include proxy container
 
-These configurations should all be runnable for local testing, except for `complete`, which includes non-existent vault secrets.
-You will need access to the vault to run the `githubauth` configuration, which requires secrets for the github oauth2 client app
+## Running locally
+
+You can bring up most of the configurations above for local testing (except for `complete` which includes non-existant vault secrets and `noproxy` which will not actually expose anything to interact with).  You will need access to the vault to run the `githubauth` configuration, which requires secrets for the github oauth2 client app
 details.
 
-### Notes
+For example, to bring up the `basicauth` configuration, you can run:
 
-If developing in **basic auth** mode, a super admin user can be created by running `./scripts/create-super-user.sh` after the app is running.
+```console
+hatch env run -- packit start --pull config/basicauth
+./scripts/create-super-user
+```
+
+The `--` allows `--pull` to make it through to the deploy (and not be swallowed by `hatch`).  Alternatively you can run `packit start --pull config/basicauth` after running `hatch shell`.  The `create-super-user` script sets up a user that you can log in with and prints the login details to stdout.  After this, packit will be running at `https://localhost` though with a self-signed certificate so you will need to tell your browser that it's ok to connect.
+
+To bring things down, run
+
+```console
+hatch env run -- packit stop --kill config/basicauth
+```
+
+If you need to see what lurks in the database, connect with
+
+```console
+docker exec -it packit-packit-db psql -U packituser -d packit
+```
+
+If you have anything else running on port 80 or 443, nothing will work as expected; either stop that service or change the proxy port in the configuration that you are using.

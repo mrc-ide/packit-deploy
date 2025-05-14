@@ -38,7 +38,6 @@ outpack:
   migrate:
     name: outpack.orderly
     tag: main
-# TODO: change to main basic auth stuff is merged
 packit:
   api:
     name: packit-api
@@ -56,9 +55,7 @@ packit:
     auth_method: basic
     expiry_days: 1
     jwt:
-      # Secret used to generate JWT tokens - this can be any string, the secret at this key in the vault is a random
-      # 32 char string, and is probably fine to re-use
-      secret: VAULT:secret/packit/githubauth/auth/jwt:secret
+      secret: "0b4g4f8z4mdsrhoxfde2mam8f00vmt0f"
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker
@@ -71,19 +68,3 @@ proxy:
   image:
     name: packit-proxy
     tag: main
-
-vault:
-  ## Address of the vault server.  This should be a string if it is
-  ## present.
-  addr: https://vault.dide.ic.ac.uk:8200
-  auth:
-    ## Authentication type - must be either "token" or the name of a
-    ## supported authentication method.  These seem to be poorly
-    ## documented in the hvac, but include "github" for github
-    ## authentication.
-    ##
-    ## On a vault client object, see auth.implemented_class_names for
-    ## a list, which is currently
-    ##
-    ##     azure, github, gcp, kubernetes, ldap, mfa, okta
-    method: github
