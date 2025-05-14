@@ -68,11 +68,11 @@ def test_start_and_stop_proxy():
         ports = proxy.attrs["HostConfig"]["PortBindings"]
         assert set(ports.keys()) == {"443/tcp", "80/tcp"}
         http_get("http://localhost")
-        res = http_get("http://localhost/packit/api/packets", poll=3)
+        res = http_get("http://localhost/api/packets", poll=3)
         # might take some seconds for packets to appear
         retries = 1
         while len(json.loads(res)) < 1 and retries < 5:
-            res = http_get("http://localhost/packit/api/packets")
+            res = http_get("http://localhost/api/packets")
             time.sleep(5)
             retries = retries + 1
         assert len(json.loads(res)) > 1
