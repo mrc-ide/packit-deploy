@@ -54,7 +54,7 @@ def test_status():
 def test_start_and_stop_proxy():
     path = "config/novault"
     try:
-        res = cli.main(["start", path])
+        res = cli.main(["start", "--pull", path])
         assert res
 
         cl = docker.client.from_env()
