@@ -70,7 +70,7 @@ packit:
     oauth2:
       redirect:
         # Root url which OAuth2 app will be requested to use to redirect back to packit api - must match root of OAuth2 app's registered url
-        packit_api_root: "https://localhost/packit/api"
+        packit_api_root: "https://localhost/api"
         url: "https://localhost/redirect" # Url for redirecting back to the front end after successful authentication
 
 ## If running a proxy directly, fill this section in.  Otherwise you

@@ -78,5 +78,5 @@ def test_github_auth():
     assert cfg.packit_auth_github_client_id == "VAULT:secret/packit/githubauth/auth/githubclient:id"
     assert cfg.packit_auth_github_client_secret == "VAULT:secret/packit/githubauth/auth/githubclient:secret"
     assert cfg.packit_auth_jwt_secret == "VAULT:secret/packit/githubauth/auth/jwt:secret"
-    assert cfg.packit_auth_oauth2_redirect_packit_api_root == "https://localhost/packit/api"
+    assert cfg.packit_auth_oauth2_redirect_packit_api_root == "https://localhost/api"
     assert cfg.packit_auth_oauth2_redirect_url == "https://localhost/redirect"
