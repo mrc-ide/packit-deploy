@@ -42,10 +42,10 @@ outpack:
 packit:
   api:
     name: packit-api
-    tag: main
+    tag: mrc-6035-custom-branding # revert to main after mrc-6035-custom-branding is merged
   app:
     name: packit
-    tag: main
+    tag: mrc-6035-custom-branding # revert to main after mrc-6035-custom-branding is merged
   db:
     name: packit-db
     tag: main
@@ -82,8 +82,5 @@ brand:
   name: Reporting Portal # Affects header text and page title
   css: # Optional custom CSS variables. If dark variants are not provided, light variants will be used in dark mode.
     light:
-      accent: "hsl(0 100% 50%)"
-      accent_foreground: "hsl(123 100% 50%)"
-    dark:
-      accent: "hsl(0 100% 50%)"
-      accent_foreground: "hsl(322, 50%, 87%)"
+      accent: "#0077C2"
+      accent_foreground: "#ffffff"
