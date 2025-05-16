@@ -122,30 +122,30 @@ docker exec -it packit-packit-db psql -U packituser -d packit
 
 If you have anything else running on port 80 or 443, nothing will work as expected; either stop that service or change the proxy port in the configuration that you are using.
 
-### Custom branding config
+## Custom branding config
 
 Custom branding is disabled unless both a logo and brand name are configured, since we don't want to display an incorrect combination of brand name and logo/favicon.
 
-#### Logo (required)
+### Logo (required)
 
 The logo file is bind-mounted into the front-end container, in a public folder, and the packit api has an env var set for the filename of the logo, so that it can tell the front end where to look for the file. Your logo file should be in the same directory as the config file.
 
-#### Logo alt text (optional)
+### Logo alt text (optional)
 
 This is set as an env var in the packit api, which passes it on to the front end.
 
-#### Logo link (optional)
+### Logo link (optional)
 
 This is to allow a configurable link destination for when the user clicks the logo. In VIMC's case this would be a link back to Montagu. This is set as an env var in the packit api, which passes it on to the front end.
 
-#### Brand name (required)
+### Brand name (required)
 
 The 'brand name' (e.g. 'Reporting Portal') is used to directly overwrite part of the front end's public index.html file, replacing any pre-existing title tag. (The front-end reads this from the index.html in order to re-use the name elsewhere.)
 
-#### Favicon (optional)
+### Favicon (optional)
 
 The favicon file is bind-mounted into the front-end container, in a public folder. Then we overwrite part of the front end's public index.html file, replacing any pre-existing reference to 'favicon.ico' with the filename of the configured favicon. Your favicon file should be in the same directory as the config file.
 
-#### Brand colors (optional)
+### Brand colors (optional)
 
 The brand colors are written as css variables into the public custom.css file, which override default variables in the front-end. If no colors are provided for the dark theme, the light theme colors are reused.
