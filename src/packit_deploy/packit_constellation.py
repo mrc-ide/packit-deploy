@@ -77,9 +77,7 @@ def outpack_ssh_configure(container, cfg):
 
 def outpack_init_clone(container, cfg):
     print("[orderly] Initialising orderly by cloning")
-    args = ["git", "clone",
-            "-b", "update-orderly2", "--single-branch",
-            cfg.outpack_source_url, "/outpack"]
+    args = ["git", "clone", "-b", "update-orderly2", "--single-branch", cfg.outpack_source_url, "/outpack"]
 
     docker_util.exec_safely(container, args)
     # usually cloning a source repo will not ensure outpack is initialised
@@ -115,7 +113,6 @@ def packit_api_container(cfg):
 
 
 def packit_env(cfg):
-    outpack = cfg.containers["outpack-server"]
     packit_db = cfg.containers["packit-db"]
     env = {
         "PACKIT_DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
@@ -188,15 +185,12 @@ def proxy_configure(container, cfg):
 def redis_container(cfg):
     name = cfg.containers["redis"]
     image = str(cfg.images["redis"])
-    return constellation.ConstellationContainer(
-        name, image, configure=redis_configure
-    )
+    return constellation.ConstellationContainer(name, image, configure=redis_configure)
 
 
-def redis_configure(container, cfg):
+def redis_configure(container, _cfg):
     print("[redis] Waiting for redis to come up")
-    docker_util.string_into_container(
-        WAIT_FOR_REDIS, container, "/wait_for_redis")
+    docker_util.string_into_container(WAIT_FOR_REDIS, container, "/wait_for_redis")
     docker_util.exec_safely(container, ["bash", "/wait_for_redis"])
 
 
@@ -210,7 +204,11 @@ def orderly_runner_api_container(cfg):
     entrypoint = "/usr/local/bin/orderly.runner.server"
     args = ["/data"]
     return constellation.ConstellationContainer(
-        name, image, environment=env, entrypoint=entrypoint, args=args,
+        name,
+        image,
+        environment=env,
+        entrypoint=entrypoint,
+        args=args,
     )
 
 
@@ -226,7 +224,12 @@ def orderly_runner_worker_container(cfg):
     entrypoint = "/usr/local/bin/orderly.runner.worker"
     args = ["/data"]
     return constellation.ConstellationService(
-        name, image, count, environment=env, entrypoint=entrypoint, args=args,
+        name,
+        image,
+        count,
+        environment=env,
+        entrypoint=entrypoint,
+        args=args,
     )
 
 
