@@ -73,7 +73,6 @@ class PackitConfig:
             "packit": self.packit_ref,
         }
 
-
         self.orderly_runner_enabled = "orderly-runner" in dat
         if self.orderly_runner_enabled:
             self.orderly_runner_ref = self.build_ref(dat, "orderly-runner", "image")
@@ -147,7 +146,6 @@ class PackitConfig:
             self.volumes["proxy_logs"] = config.config_string(dat, ["volumes", "proxy_logs"])
 
     def build_ref(self, dat, section, subsection):
-        repo = config.config_string(dat, [section, subsection, "repo"], is_optional=True, default=self.repo)
         name = config.config_string(dat, [section, subsection, "name"])
         tag = config.config_string(dat, [section, subsection, "tag"])
         return constellation.ImageReference(self.repo, name, tag)
