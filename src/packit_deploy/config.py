@@ -1,3 +1,5 @@
+import os
+
 import constellation
 from constellation import config
 
@@ -74,6 +76,39 @@ class PackitConfig:
             self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)
         else:
             self.proxy_enabled = False
+
+        self.branding_enabled = bool(dat.get("brand", {}).get("name") and dat.get("brand", {}).get("logo_path"))
+
+        if self.branding_enabled:
+            self.brand_name = config.config_string(dat, ["brand", "name"])
+            logo_path = config.config_string(dat, ["brand", "logo_path"])
+            self.brand_logo_path = os.path.abspath(os.path.join(path, logo_path))
+            self.brand_logo_name = os.path.basename(self.brand_logo_path)
+
+            # Optional branding configuration
+            if dat.get("brand").get("logo_link"):
+                self.brand_logo_link = config.config_string(dat, ["brand", "logo_link"])
+            if dat.get("brand").get("logo_alt_text"):
+                self.brand_logo_alt_text = config.config_string(dat, ["brand", "logo_alt_text"])
+            else:
+                self.brand_logo_alt_text = f"{self.brand_name} logo"
+            if dat.get("brand").get("favicon_path"):
+                favicon_path = config.config_string(dat, ["brand", "favicon_path"])
+                self.brand_favicon_path = os.path.abspath(os.path.join(path, favicon_path))
+                self.brand_favicon_name = os.path.basename(self.brand_favicon_path)
+            if dat.get("brand").get("css"):
+                self.brand_accent_light = config.config_string(dat, ["brand", "css", "light", "accent"])
+                self.brand_accent_foreground_light = config.config_string(
+                    dat, ["brand", "css", "light", "accent_foreground"]
+                )
+                if dat.get("brand").get("css").get("dark"):
+                    self.brand_accent_dark = config.config_string(dat, ["brand", "css", "dark", "accent"])
+                    self.brand_accent_foreground_dark = config.config_string(
+                        dat, ["brand", "css", "dark", "accent_foreground"]
+                    )
+                else:
+                    self.brand_accent_dark = self.brand_accent_light
+                    self.brand_accent_foreground_dark = self.brand_accent_foreground_light
 
         if self.proxy_enabled:
             self.proxy_hostname = config.config_string(dat, ["proxy", "hostname"])
