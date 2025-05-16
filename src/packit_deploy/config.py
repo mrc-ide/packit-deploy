@@ -25,6 +25,7 @@ class PackitConfig:
         else:
             self.ssh = False
 
+        # Outpack!
         if "initial" in dat["outpack"]:
             self.outpack_source_url = config.config_string(dat, ["outpack", "initial", "url"])
         else:
@@ -58,13 +59,6 @@ class PackitConfig:
         else:
             self.packit_auth_enabled = False
 
-        if dat.get("orderly-runner"):
-            self.runner_ref = self.build_ref(dat, "orderly-runner", "image")
-            self.runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
-            self.runner_enabled = True
-        else:
-            self.runner_enabled = False
-
         self.containers = {
             "outpack-server": "outpack-server",
             "packit-db": "packit-db",
@@ -78,9 +72,26 @@ class PackitConfig:
             "packit-api": self.packit_api_ref,
             "packit": self.packit_ref,
         }
-        if self.runner_enabled:
-            self.images["orderly-runner"] = self.runner_ref
+
+
+        self.orderly_runner_enabled = "orderly-runner" in dat
+        if self.orderly_runner_enabled:
+            self.orderly_runner_ref = self.build_ref(dat, "orderly-runner", "image")
+            self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
+            self.orderly_runner_api_url = f"http://{self.container_prefix}-orderly-runner-api:8001"
+            self.orderly_runner_git_url = config.config_string(dat, ["orderly-runner", "git", "url"])
+            self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
+
+            self.containers["redis"] = "redis"
+            self.containers["orderly-runner-api"] = "orderly-runner-api"
+            self.containers["orderly-runner-worker"] = "orderly-runner-worker"
+
+            self.images["orderly-runner"] = self.orderly_runner_ref
             self.images["redis"] = constellation.ImageReference("library", "redis", "8.0")
+
+            self.redis_url = "redis://redis:6379"
+
+        self.outpack_server_url = f"http://{self.container_prefix}-{self.containers['outpack-server']}:8000"
 
         if dat.get("proxy"):
             self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)

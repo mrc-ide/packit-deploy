@@ -34,11 +34,6 @@ ssh:
   private: VAULT:secret/ssh:private
 
 outpack:
-  ## Initialise an outpack directory by cloning from github
-  initial:
-    ##  If using a private repo, then use an ssh url and provide ssh keys in the
-    ## "ssh" section above.
-    url: https://github.com/reside-ic/orderly3-example.git
   server:
     name: outpack_server
     tag: main
@@ -81,10 +76,21 @@ packit:
         url: "https://packit/redirect"  # Url for redirecting back to the front end after successful authentication
 
 orderly-runner:
+  # The image for the runner; this is going to be a trick because the
+  # image needs to contain at least the runner itself (a container
+  # that we create that contains the packages required to actually run
+  # the queue) and the packages that the user needs to run their
+  # reports.  The latter we might change to use a volume later, which
+  # has the advantage of all runners definitely seeing the same data,
+  # even in the case where we update/change/install packages without
+  # redeploying.
   image:
     name: orderly.runner
     tag: main
+  git:
+    url: https://github.com/reside-ic/orderly3-example.git
   workers: 1
+
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker
