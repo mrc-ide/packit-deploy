@@ -20,8 +20,10 @@ def test_config_no_proxy():
 
     assert len(cfg.images) == 4
     assert str(cfg.images["outpack-server"]) == "mrcide/outpack_server:main"
-    assert str(cfg.images["packit"]) == "mrcide/packit:mrc-6035-custom-branding" # revert to main after mrc-6035-custom-branding is merged
+    # revert to main after mrc-6035-custom-branding is merged
+    assert str(cfg.images["packit"]) == "mrcide/packit:mrc-6035-custom-branding"
     assert str(cfg.images["packit-db"]) == "mrcide/packit-db:main"
+    # revert to main after mrc-6035-custom-branding is merged
     assert str(cfg.images["packit-api"]) == "mrcide/packit-api:mrc-6035-custom-branding"
 
     assert cfg.outpack_source_url is not None
