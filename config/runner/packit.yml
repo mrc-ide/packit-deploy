@@ -1,0 +1,86 @@
+## The name of the docker network that containers will be attached to.
+## If you want to proxy Packit to the host, you will need to
+## arrange a proxy on this network, or use dev_mode in the web section
+## below.
+## Prefix for container names; we'll use {container_prefix}-(container_name)
+container_prefix: packit
+
+## Set this flag to true to prevent use of --volumes in the cli to remove
+## volumes on stop
+protect_data: false
+
+## Docker org for images
+repo: mrcide
+
+## The name of the docker network that containers will be attached to.
+## If you want to proxy Packit to the host, you will need to
+## arrange a proxy on this network
+network: packit-network
+
+## Names of the docker volumes to use:
+##
+## outpack: stores the outpack metadata
+## proxy_logs: stores logs from the reverse proxy (only used if proxy is given)
+## (More volumes are anticipated as the tool develops)
+volumes:
+  outpack: outpack_volume
+  proxy_logs: packit_proxy_logs
+
+outpack:
+  ## Initialise an outpack directory by cloning from github
+  initial:
+    ##  If using a private repo, then use an ssh url and provide ssh keys in the
+    ## "ssh" section above.
+    url: https://github.com/reside-ic/orderly3-example.git
+  server:
+    name: outpack_server
+    tag: main
+  migrate:
+    name: outpack.orderly
+    tag: main
+packit:
+  api:
+    name: packit-api
+    tag: main
+  app:
+    name: packit
+    tag: main
+  db:
+    name: packit-db
+    tag: main
+    user: packituser
+    password: changeme
+  auth:
+    enabled: true
+    auth_method: basic
+    expiry_days: 1
+    jwt:
+      secret: "0b4g4f8z4mdsrhoxfde2mam8f00vmt0f"
+
+orderly-runner:
+  # The image for the runner; this is going to be a trick because the
+  # image needs to contain at least the runner itself (a container
+  # that we create that contains the packages required to actually run
+  # the queue) and the packages that the user needs to run their
+  # reports.  The latter we might change to use a volume later, which
+  # has the advantage of all runners definitely seeing the same data,
+  # even in the case where we update/change/install packages without
+  # redeploying.
+  image:
+    name: orderly.runner
+    tag: main
+  git:
+    url: https://github.com/reside-ic/orderly3-example.git
+  workers: 2
+
+## If running a proxy directly, fill this section in.  Otherwise you
+## are responsible for proxying the application out of the docker
+## network
+proxy:
+  enabled: true
+  hostname: localhost
+  port_http: 80
+  port_https: 443
+  image:
+    name: packit-proxy
+    tag: main
