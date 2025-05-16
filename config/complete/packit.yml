@@ -34,6 +34,11 @@ ssh:
   private: VAULT:secret/ssh:private
 
 outpack:
+  ## Initialise an outpack directory by cloning from github
+  initial:
+    ##  If using a private repo, then use an ssh url and provide ssh keys in the
+    ## "ssh" section above.
+    url: https://github.com/reside-ic/orderly3-example.git
   server:
     name: outpack_server
     tag: main

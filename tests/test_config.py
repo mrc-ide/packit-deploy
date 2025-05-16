@@ -152,11 +152,11 @@ def test_workers_can_be_enabled():
     cfg = PackitConfig("config/complete")
     assert cfg.images
 
-    assert cfg.runner_enabled
-    assert cfg.runner_ref.repo == "mrcide"
-    assert cfg.runner_ref.name == "orderly.runner"
-    assert cfg.runner_ref.tag == "main"
-    assert cfg.runner_workers == 1
+    assert cfg.orderly_runner_enabled
+    assert cfg.orderly_runner_ref.repo == "mrcide"
+    assert cfg.orderly_runner_ref.name == "orderly.runner"
+    assert cfg.orderly_runner_ref.tag == "main"
+    assert cfg.orderly_runner_workers == 1
 
     assert len(cfg.images) == 7
     assert str(cfg.images["orderly-runner"]) == "mrcide/orderly.runner:main"
@@ -165,4 +165,4 @@ def test_workers_can_be_enabled():
 
 def test_workers_can_be_omitted():
     cfg = PackitConfig("config/noproxy")
-    assert not cfg.runner_enabled
+    assert not cfg.orderly_runner_enabled

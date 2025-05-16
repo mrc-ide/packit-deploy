@@ -25,7 +25,6 @@ class PackitConfig:
         else:
             self.ssh = False
 
-        # Outpack!
         if "initial" in dat["outpack"]:
             self.outpack_source_url = config.config_string(dat, ["outpack", "initial", "url"])
         else:
