@@ -49,10 +49,10 @@ outpack:
 packit:
   api:
     name: packit-api
-    tag: main
+    tag: mrc-6035-custom-branding # revert to main after mrc-6035-custom-branding is merged
   app:
     name: packit
-    tag: main
+    tag: mrc-6035-custom-branding # revert to main after mrc-6035-custom-branding is merged
   db:
     name: packit-db
     tag: main
