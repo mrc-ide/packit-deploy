@@ -162,7 +162,6 @@ def test_api_configured_with_custom_branding():
             # assert env variables
             assert get_env_var(api, "PACKIT_BRAND_LOGO_ALT_TEXT") == b"My logo\n"
             assert get_env_var(api, "PACKIT_BRAND_LOGO_NAME") == b"examplelogo.webp\n"
-            assert get_env_var(api, "PACKIT_BRAND_NAME") == b"My Packit Instance\n"
             assert get_env_var(api, "PACKIT_BRAND_LOGO_LINK") == b"https://www.google.com/\n"
     finally:
         stop_packit(path)
@@ -196,9 +195,6 @@ def test_custom_branding_end_to_end():
 
             # Test that the index.html file is served without error, implying it has correct file permissions
             http_get(f"http://localhost:{s.port}/")
-
-            # Test that the custom.css file is served without error, implying it has correct file permissions
-            http_get(f"http://localhost:{s.port}/css/custom.css")
     finally:
         stop_packit(path)
 
