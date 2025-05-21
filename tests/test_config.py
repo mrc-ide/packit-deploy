@@ -59,7 +59,7 @@ def test_config_proxy():
 
 def test_outpack_initial_source():
     cfg = PackitConfig("config/complete")
-    assert cfg.outpack_source_url == "https://github.com/reside-ic/orderly3-example.git"
+    assert cfg.outpack_source_url == "https://github.com/reside-ic/orderly2-example.git"
 
     cfg = PackitConfig("config/nodemo")
     assert cfg.outpack_source_url is None

@@ -31,7 +31,7 @@ outpack:
   initial:
     ##  If using a private repo, then use an ssh url and provide ssh keys in the
     ## "ssh" section above.
-    url: https://github.com/reside-ic/orderly3-example.git
+    url: https://github.com/reside-ic/orderly2-example.git
   server:
     name: outpack_server
     tag: main
@@ -70,7 +70,7 @@ orderly-runner:
     name: orderly.runner
     tag: main
   git:
-    url: https://github.com/reside-ic/orderly3-example.git
+    url: https://github.com/reside-ic/orderly2-example.git
   workers: 2
 
 ## If running a proxy directly, fill this section in.  Otherwise you
