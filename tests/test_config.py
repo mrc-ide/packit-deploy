@@ -52,7 +52,7 @@ def test_config_proxy():
 
 def test_outpack_initial_source():
     cfg = PackitConfig("config/complete")
-    assert cfg.outpack_source_url == "https://github.com/reside-ic/orderly3-example.git"
+    assert cfg.outpack_source_url == "https://github.com/reside-ic/orderly2-example.git"
 
     cfg = PackitConfig("config/nodemo")
     assert cfg.outpack_source_url is None
@@ -80,3 +80,23 @@ def test_github_auth():
     assert cfg.packit_auth_jwt_secret == "VAULT:secret/packit/githubauth/auth/jwt:secret"
     assert cfg.packit_auth_oauth2_redirect_packit_api_root == "https://localhost/api"
     assert cfg.packit_auth_oauth2_redirect_url == "https://localhost/redirect"
+
+
+def test_workers_can_be_enabled():
+    cfg = PackitConfig("config/complete")
+    assert cfg.images
+
+    assert cfg.orderly_runner_enabled
+    assert cfg.orderly_runner_ref.repo == "mrcide"
+    assert cfg.orderly_runner_ref.name == "orderly.runner"
+    assert cfg.orderly_runner_ref.tag == "main"
+    assert cfg.orderly_runner_workers == 1
+
+    assert len(cfg.images) == 7
+    assert str(cfg.images["orderly-runner"]) == "mrcide/orderly.runner:main"
+    assert str(cfg.images["redis"]) == "library/redis:8.0"
+
+
+def test_workers_can_be_omitted():
+    cfg = PackitConfig("config/noproxy")
+    assert not cfg.orderly_runner_enabled
