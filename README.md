@@ -130,7 +130,7 @@ All settings are optional.
 
 ### Logo
 
-The logo file is bind-mounted into the front-end container, in a public folder, and the packit api has an env var set for the filename of the logo, so that it can tell the front end where to look for the file. Your logo file should be in the same directory as the config file.
+The logo file is bind-mounted into the front-end container, in a public folder, and the packit api has an env var set for the filename of the logo, so that it can tell the front end where to look for the file. Your logo file should be in the same directory as the config file. With regards to size/dimensions, the logo will be constrained to the height of the header, and the proportions between height and width are maintained.
 
 ### Logo alt text
 
@@ -151,3 +151,12 @@ The favicon file is bind-mounted into the front-end container, in a public folde
 ### Brand colors
 
 The brand colors are written as css variables into the public custom.css file, which override default variables in the front-end. If no colors are provided for the dark theme, the light theme colors are reused.
+
+When choosing colors, consider contrast carefully, as described below. Do not rely solely on hue for contrast as this will create problems for users with certain types of colour blindness.
+
+The configurable colours are:
+
+* Accent-colour. This may be used as the background for buttons or borders, and is expected to contrast in lightness with white (the background colour of the app in light mode), and with the accent-foreground colour (next bullet point). As such it should be middlingly dark or darker.
+* Accent-foreground. This will be used as the text color for anything whose background is the accent-colour, and as such is expected to contrast in lightness with the accent-colour (so it should be rather light, or simply white).
+* Dark accent-colour. If configured, this plays the role of the accent-colour as above when the app is used in dark mode. As such it is expected to contrast in lightness with black (the background colour of the app in dark mode) and with the dark accent-foreground colour. It should thus be somewhat lighter than black.
+* Dark accent-foreground. If configured, this plays the role of the accent-foreground as above when the app is used in dark mode. As such it should contrast in lightness with the dark accent-colour.
