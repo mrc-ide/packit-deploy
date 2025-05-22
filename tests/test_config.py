@@ -89,7 +89,7 @@ def test_github_auth():
     assert cfg.packit_auth_oauth2_redirect_url == "https://localhost/redirect"
 
 
-def test_custom_branding_without_optional_branding_config():
+def test_custom_branding_with_partial_branding_config():
     options = {
         "brand": {
             "logo_link": None,
@@ -100,7 +100,6 @@ def test_custom_branding_without_optional_branding_config():
     }
     cfg = PackitConfig("config/complete", options=options)
 
-    assert cfg.branding_enabled is True
     assert cfg.brand_name == "My Packit Instance"
     assert cfg.brand_logo_alt_text == "My Packit Instance logo"
     assert cfg.brand_logo_path == os.path.abspath(
@@ -120,7 +119,7 @@ def test_custom_branding_without_optional_branding_config():
             _ = getattr(cfg, attr)
 
 
-def test_custom_branding_css_dark_mode_fallback():
+def test_custom_branding_unprovided_dark_colors_fall_back_to_light_colors():
     options = {
         "brand": {
             "css": {"dark": None},
@@ -128,17 +127,15 @@ def test_custom_branding_css_dark_mode_fallback():
     }
     cfg = PackitConfig("config/complete", options=options)
 
-    assert cfg.branding_enabled is True
     assert cfg.brand_accent_light == "hsl(0 100% 50%)"
     assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
     assert cfg.brand_accent_dark == cfg.brand_accent_light
     assert cfg.brand_accent_foreground_dark == cfg.brand_accent_foreground_light
 
 
-def test_custom_branding_with_optional_branding_config():
+def test_custom_branding_with_complete_branding_config():
     cfg = PackitConfig("config/complete")
 
-    assert cfg.branding_enabled is True
     assert cfg.brand_logo_alt_text == "My logo"
     assert cfg.brand_logo_link == "https://www.google.com/"
     assert cfg.brand_favicon_path == os.path.abspath(
@@ -149,23 +146,3 @@ def test_custom_branding_with_optional_branding_config():
     assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
     assert cfg.brand_accent_dark == "hsl(30 100% 50%)"
     assert cfg.brand_accent_foreground_dark == "hsl(322, 50%, 87%)"
-
-
-def test_custom_branding_requires_brand_name():
-    options = {"brand": {"name": None}}
-    cfg = PackitConfig("config/complete", options=options)
-
-    assert cfg.branding_enabled is False
-    # Optional branding config should also be disabled by this
-    with unittest.TestCase().assertRaises(AttributeError):
-        _ = cfg.brand_favicon_path
-
-
-def test_custom_branding_requires_logo():
-    options = {"brand": {"logo_path": None}}
-    cfg = PackitConfig("config/complete", options=options)
-
-    assert cfg.branding_enabled is False
-    # Optional branding config should also be disabled by this
-    with unittest.TestCase().assertRaises(AttributeError):
-        _ = cfg.brand_favicon_path

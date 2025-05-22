@@ -130,8 +130,8 @@ brand:
   name: My Packit Instance # Affects header text and page title
   css: # Optional custom CSS variables. If dark variants are not provided, light variants will be used in dark mode.
     light:
-      accent: "hsl(0 100% 50%)"
-      accent_foreground: "hsl(123 100% 50%)"
+      accent: "hsl(0 100% 50%)" # bright red
+      accent_foreground: "hsl(123 100% 50%)" # bright green
     dark:
-      accent: "hsl(30 100% 50%)"
-      accent_foreground: "hsl(322, 50%, 87%)"
+      accent: "hsl(30 100% 50%)" # bright orange
+      accent_foreground: "hsl(322, 50%, 87%)" # lilac

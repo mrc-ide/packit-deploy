@@ -119,13 +119,12 @@ def packit_api_get_env(cfg):
         "PACKIT_OUTPACK_SERVER_URL": f"http://{cfg.container_prefix}-{outpack}:8000",
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
     }
-    if cfg.branding_enabled:
-        env.update({"PACKIT_BRAND_LOGO_NAME": cfg.brand_logo_name})
-        env.update({"PACKIT_BRAND_LOGO_ALT_TEXT": cfg.brand_logo_alt_text})
-        try:
-            env.update({"PACKIT_BRAND_LOGO_LINK": cfg.brand_logo_link})
-        except AttributeError:
-            print("[packit-api] A brand logo link was not provided (optional)")
+    if cfg.brand_logo_name:
+        env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name
+    if cfg.brand_logo_alt_text:
+        env["PACKIT_BRAND_LOGO_ALT_TEXT"] = cfg.brand_logo_alt_text
+    if cfg.brand_logo_link:
+        env["PACKIT_BRAND_LOGO_LINK"] = cfg.brand_logo_link
     if cfg.packit_auth_enabled:
         env.update(
             {
@@ -150,12 +149,13 @@ def packit_api_get_env(cfg):
 
 def packit_container(cfg):
     mounts = []
-    if cfg.branding_enabled:
-        cfg.app_html_root = "/usr/share/nginx/html"  # from Packit app Dockerfile
+    cfg.app_html_root = "/usr/share/nginx/html"  # from Packit app Dockerfile
 
+    if cfg.brand_logo_name and cfg.brand_logo_path:
         logo_in_container = f"{cfg.app_html_root}/img/{cfg.brand_logo_name}"
         mounts.append(constellation.ConstellationBindMount(cfg.brand_logo_path, logo_in_container, read_only=True))
 
+    if cfg.brand_favicon_name and cfg.brand_favicon_path:
         favicon_in_container = f"{cfg.app_html_root}/{cfg.brand_favicon_name}"
         mounts.append(
             constellation.ConstellationBindMount(cfg.brand_favicon_path, favicon_in_container, read_only=True)
@@ -169,13 +169,15 @@ def packit_container(cfg):
 
 def packit_configure(container, cfg):
     print("[packit] Configuring Packit container")
-    if cfg.branding_enabled:
+    if cfg.brand_name:
         # We configure the title tag of the index.html file here, rather than updating it dynamically with JS,
         # since using JS results in the page title visibly changing a number of seconds after the initial page load.
         substitute_file_content(
             container, f"{cfg.app_html_root}/index.html", r"(?<=<title>).*?(?=</title>)", cfg.brand_name
         )
+    if cfg.brand_favicon_name:
         substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand_favicon_name)
+    if cfg.brand_accent_light:
         new_css = (
             ":root{\n"
             f"  --custom-accent: {cfg.brand_accent_light};\n"
