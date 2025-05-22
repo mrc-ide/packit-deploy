@@ -1,4 +1,9 @@
+import os
+import unittest
+
 from src.packit_deploy.config import PackitConfig
+
+packit_deploy_project_root_dir = os.path.dirname(os.path.dirname(__file__))
 
 
 def test_config_no_proxy():
@@ -15,9 +20,11 @@ def test_config_no_proxy():
 
     assert len(cfg.images) == 4
     assert str(cfg.images["outpack-server"]) == "mrcide/outpack_server:main"
-    assert str(cfg.images["packit"]) == "mrcide/packit:main"
+    # revert to main after mrc-6035-custom-branding is merged
+    assert str(cfg.images["packit"]) == "mrcide/packit:mrc-6035-custom-branding"
     assert str(cfg.images["packit-db"]) == "mrcide/packit-db:main"
-    assert str(cfg.images["packit-api"]) == "mrcide/packit-api:main"
+    # revert to main after mrc-6035-custom-branding is merged
+    assert str(cfg.images["packit-api"]) == "mrcide/packit-api:mrc-6035-custom-branding"
 
     assert cfg.outpack_source_url is not None
     assert cfg.proxy_enabled is False
@@ -80,3 +87,62 @@ def test_github_auth():
     assert cfg.packit_auth_jwt_secret == "VAULT:secret/packit/githubauth/auth/jwt:secret"
     assert cfg.packit_auth_oauth2_redirect_packit_api_root == "https://localhost/api"
     assert cfg.packit_auth_oauth2_redirect_url == "https://localhost/redirect"
+
+
+def test_custom_branding_with_partial_branding_config():
+    options = {
+        "brand": {
+            "logo_link": None,
+            "logo_alt_text": None,
+            "favicon_path": None,
+            "css": None,
+        }
+    }
+    cfg = PackitConfig("config/complete", options=options)
+
+    assert cfg.brand_name == "My Packit Instance"
+    assert cfg.brand_logo_alt_text == "My Packit Instance logo"
+    assert cfg.brand_logo_path == os.path.abspath(
+        os.path.join(packit_deploy_project_root_dir, "config/complete/examplelogo.webp")
+    )
+    assert cfg.brand_logo_name == "examplelogo.webp"
+    undefined_attributes = [
+        "brand_logo_link",
+        "brand_favicon_path",
+        "brand_accent_light",
+        "brand_accent_foreground_light",
+        "brand_accent_dark",
+        "brand_accent_foreground_dark",
+    ]
+    for attr in undefined_attributes:
+        with unittest.TestCase().assertRaises(AttributeError):
+            _ = getattr(cfg, attr)
+
+
+def test_custom_branding_unprovided_dark_colors_fall_back_to_light_colors():
+    options = {
+        "brand": {
+            "css": {"dark": None},
+        }
+    }
+    cfg = PackitConfig("config/complete", options=options)
+
+    assert cfg.brand_accent_light == "hsl(0 100% 50%)"
+    assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
+    assert cfg.brand_accent_dark == cfg.brand_accent_light
+    assert cfg.brand_accent_foreground_dark == cfg.brand_accent_foreground_light
+
+
+def test_custom_branding_with_complete_branding_config():
+    cfg = PackitConfig("config/complete")
+
+    assert cfg.brand_logo_alt_text == "My logo"
+    assert cfg.brand_logo_link == "https://www.google.com/"
+    assert cfg.brand_favicon_path == os.path.abspath(
+        os.path.join(packit_deploy_project_root_dir, "config/complete/examplefavicon.ico")
+    )
+    assert cfg.brand_favicon_name == "examplefavicon.ico"
+    assert cfg.brand_accent_light == "hsl(0 100% 50%)"
+    assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
+    assert cfg.brand_accent_dark == "hsl(30 100% 50%)"
+    assert cfg.brand_accent_foreground_dark == "hsl(322, 50%, 87%)"
