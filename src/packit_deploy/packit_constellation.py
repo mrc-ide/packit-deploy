@@ -271,12 +271,17 @@ def orderly_runner_api_container(cfg):
     }
     entrypoint = "/usr/local/bin/orderly.runner.server"
     args = ["/data"]
+    mounts = [
+        constellation.ConstellationMount("orderly_library", "/library"),
+        constellation.ConstellationMount("orderly_logs", "/logs")
+    ]
     return constellation.ConstellationContainer(
         name,
         image,
         environment=env,
         entrypoint=entrypoint,
         args=args,
+        mounts=mounts,
     )
 
 
@@ -291,6 +296,10 @@ def orderly_runner_worker_container(cfg):
     }
     entrypoint = "/usr/local/bin/orderly.runner.worker"
     args = ["/data"]
+    mounts = [
+        constellation.ConstellationMount("orderly_library", "/library"),
+        constellation.ConstellationMount("orderly_logs", "/logs")
+    ]
     return constellation.ConstellationService(
         name,
         image,
@@ -298,6 +307,7 @@ def orderly_runner_worker_container(cfg):
         environment=env,
         entrypoint=entrypoint,
         args=args,
+        mounts=mounts,
     )
 
 

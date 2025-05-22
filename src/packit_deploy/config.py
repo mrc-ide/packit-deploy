@@ -84,6 +84,9 @@ class PackitConfig:
             self.containers["orderly-runner-api"] = "orderly-runner-api"
             self.containers["orderly-runner-worker"] = "orderly-runner-worker"
 
+            self.volumes["orderly_library"] = config.config_string(dat, ["volumes", "orderly_library"])
+            self.volumes["orderly_logs"] = config.config_string(dat, ["volumes", "orderly_logs"])
+
             self.images["orderly-runner"] = self.orderly_runner_ref
             self.images["redis"] = constellation.ImageReference("library", "redis", "8.0")
 

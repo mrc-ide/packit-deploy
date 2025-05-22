@@ -25,6 +25,8 @@ network: packit-network
 volumes:
   outpack: outpack_volume
   proxy_logs: packit_proxy_logs
+  orderly_library: orderly_library
+  orderly_logs: orderly_logs
 
 outpack:
   ## Initialise an outpack directory by cloning from github
