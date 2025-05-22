@@ -188,7 +188,11 @@ def packit_configure(container, cfg):
             f"  --custom-accent-foreground: {cfg.brand_accent_foreground_dark};\n"
             "}\n"
         )
-        substitute_file_content(container, f"{cfg.app_html_root}/css/custom.css", r".*", new_css, flags=re.DOTALL)
+        overwrite_file(container, f"{cfg.app_html_root}/css/custom.css", new_css)
+
+
+def overwrite_file(container, path, content):
+    substitute_file_content(container, path, r".*", content, flags=re.DOTALL)
 
 
 def substitute_file_content(container, path, pattern, replacement, flags=0):
