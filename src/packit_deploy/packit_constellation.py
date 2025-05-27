@@ -115,7 +115,6 @@ def packit_api_container(cfg):
 
 
 def packit_api_get_env(cfg):
-    outpack = cfg.containers["outpack-server"]
     packit_db = cfg.containers["packit-db"]
     env = {
         "PACKIT_DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
@@ -273,7 +272,7 @@ def orderly_runner_api_container(cfg):
     args = ["/data"]
     mounts = [
         constellation.ConstellationMount("orderly_library", "/library"),
-        constellation.ConstellationMount("orderly_logs", "/logs")
+        constellation.ConstellationMount("orderly_logs", "/logs"),
     ]
     return constellation.ConstellationContainer(
         name,
@@ -298,7 +297,7 @@ def orderly_runner_worker_container(cfg):
     args = ["/data"]
     mounts = [
         constellation.ConstellationMount("orderly_library", "/library"),
-        constellation.ConstellationMount("orderly_logs", "/logs")
+        constellation.ConstellationMount("orderly_logs", "/logs"),
     ]
     return constellation.ConstellationService(
         name,
