@@ -29,15 +29,6 @@ jobs:
         uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
-      - name: Pull containers
-        run: |
-          docker pull redis:8.0
-          docker pull mrcide/outpack.orderly:main
-          docker pull mrcide/outpack_server:main
-          docker pull mrcide/packit-db:main
-          docker pull mrcide/packit-api:main
-          docker pull mrcide/packit:main
-          docker pull mrcide/packit-proxy:main
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
