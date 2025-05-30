@@ -25,6 +25,8 @@ network: packit-network
 volumes:
   outpack: outpack_volume
   proxy_logs: packit_proxy_logs
+  orderly_library: orderly_library
+  orderly_logs: orderly_logs
 
 ## Path to ssh key for interacting with git. You
 ## might use a github deploy key here. For completeness both the
