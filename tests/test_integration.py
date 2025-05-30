@@ -199,6 +199,36 @@ def test_custom_branding_end_to_end():
         stop_packit(path)
 
 
+# Very basic test for now, just checking that everything appears:
+def test_deploy_with_runner_support():
+    path = "config/runner"
+    try:
+        cli.main(["start", path])
+        cl = docker.client.from_env()
+        containers = cl.containers.list()
+
+        prefix = "packit-orderly-runner-worker"
+        assert sum(x.name.startswith(prefix) for x in containers) == 2
+
+        cfg = PackitConfig(path)
+        api = cfg.get_container("packit-api")
+
+        assert (
+            get_env_var(api, "PACKIT_ORDERLY_RUNNER_URL") ==
+            b"http://packit-orderly-runner-api:8001\n"
+        )
+        assert (
+            get_env_var(api, "PACKIT_ORDERLY_RUNNER_REPOSITORY_URL") ==
+            b"https://github.com/reside-ic/orderly2-example.git\n"
+        )
+        assert (
+            get_env_var(api, "PACKIT_ORDERLY_RUNNER_LOCATION_URL") ==
+            get_env_var(api, "PACKIT_OUTPACK_SERVER_URL")
+        )
+    finally:
+        stop_packit(path)
+
+
 def test_vault():
     path = "config/complete"
     try:

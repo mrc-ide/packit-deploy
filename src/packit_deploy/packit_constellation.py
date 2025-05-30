@@ -150,11 +150,10 @@ def packit_api_get_env(cfg):
             )
     if cfg.orderly_runner_enabled:
         env["PACKIT_ORDERLY_RUNNER_URL"] = cfg.orderly_runner_api_url
-        # Why does packit need to know this?
         env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] = cfg.orderly_runner_git_url
-        # Is there a case where we would ever want this different to
-        # PACKIT_OUTPACK_SERVER_URL? Why does packit treat this
-        # differently?
+        # Mantra is going to tidy this up; it should always be the
+        # same as PACKIT_OUTPACK_SERVER_URL but differs because of
+        # automatic variable creation in the Kotlin framework.
         env["PACKIT_ORDERLY_RUNNER_LOCATION_URL"] = cfg.outpack_server_url
 
     return env
