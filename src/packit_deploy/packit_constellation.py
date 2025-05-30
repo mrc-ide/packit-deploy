@@ -20,6 +20,11 @@ class PackitConstellation:
             proxy = proxy_container(cfg, packit_api, packit)
             containers.append(proxy)
 
+        if cfg.orderly_runner_enabled:
+            containers.append(redis_container(cfg))
+            containers.append(orderly_runner_api_container(cfg))
+            containers.append(orderly_runner_worker_container(cfg))
+
         self.cfg = cfg
         self.obj = constellation.Constellation(
             "packit", cfg.container_prefix, containers, cfg.network, cfg.volumes, data=cfg, vault_config=cfg.vault
@@ -110,13 +115,12 @@ def packit_api_container(cfg):
 
 
 def packit_api_get_env(cfg):
-    outpack = cfg.containers["outpack-server"]
     packit_db = cfg.containers["packit-db"]
     env = {
         "PACKIT_DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
         "PACKIT_DB_USER": cfg.packit_db_user,
         "PACKIT_DB_PASSWORD": cfg.packit_db_password,
-        "PACKIT_OUTPACK_SERVER_URL": f"http://{cfg.container_prefix}-{outpack}:8000",
+        "PACKIT_OUTPACK_SERVER_URL": cfg.outpack_server_url,
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
     }
     if hasattr(cfg, "brand_logo_name"):
@@ -144,6 +148,14 @@ def packit_api_get_env(cfg):
                     "PACKIT_AUTH_GITHUB_TEAM": cfg.packit_auth_github_api_team,
                 }
             )
+    if cfg.orderly_runner_enabled:
+        env["PACKIT_ORDERLY_RUNNER_URL"] = cfg.orderly_runner_api_url
+        env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] = cfg.orderly_runner_git_url
+        # Mantra is going to tidy this up; it should always be the
+        # same as PACKIT_OUTPACK_SERVER_URL but differs because of
+        # automatic variable creation in the Kotlin framework.
+        env["PACKIT_ORDERLY_RUNNER_LOCATION_URL"] = cfg.outpack_server_url
+
     return env
 
 
@@ -234,3 +246,95 @@ def proxy_configure(container, cfg):
         print("[proxy] Copying ssl certificate and key into proxy")
         docker_util.string_into_container(cfg.proxy_ssl_certificate, container, "/run/proxy/certificate.pem")
         docker_util.string_into_container(cfg.proxy_ssl_key, container, "/run/proxy/key.pem")
+
+
+def redis_container(cfg):
+    name = cfg.containers["redis"]
+    image = str(cfg.images["redis"])
+    return constellation.ConstellationContainer(name, image, configure=redis_configure)
+
+
+def redis_configure(container, _cfg):
+    print("[redis] Waiting for redis to come up")
+    docker_util.string_into_container(WAIT_FOR_REDIS, container, "/wait_for_redis")
+    docker_util.exec_safely(container, ["bash", "/wait_for_redis"])
+
+
+def orderly_runner_api_container(cfg):
+    name = cfg.containers["orderly-runner-api"]
+    image = str(cfg.images["orderly-runner"])
+    env = {
+        "REDIS_URL": cfg.redis_url,
+        "ORDERLY_RUNNER_QUEUE_ID": "orderly.runner.queue",
+    }
+    entrypoint = "/usr/local/bin/orderly.runner.server"
+    args = ["/data"]
+    mounts = [
+        constellation.ConstellationVolumeMount("orderly_library", "/library"),
+        constellation.ConstellationVolumeMount("orderly_logs", "/logs"),
+    ]
+    return constellation.ConstellationContainer(
+        name,
+        image,
+        environment=env,
+        entrypoint=entrypoint,
+        args=args,
+        mounts=mounts,
+    )
+
+
+def orderly_runner_worker_container(cfg):
+    name = cfg.containers["orderly-runner-worker"]
+    image = str(cfg.images["orderly-runner"])
+    count = cfg.orderly_runner_workers
+    env = {
+        "REDIS_URL": cfg.redis_url,
+        "ORDERLY_RUNNER_QUEUE_ID": "orderly.runner.queue",
+    }
+    entrypoint = "/usr/local/bin/orderly.runner.worker"
+    args = ["/data"]
+    mounts = [
+        constellation.ConstellationVolumeMount("orderly_library", "/library"),
+        constellation.ConstellationVolumeMount("orderly_logs", "/logs"),
+    ]
+    return constellation.ConstellationService(
+        name,
+        image,
+        count,
+        environment=env,
+        entrypoint=entrypoint,
+        args=args,
+        mounts=mounts,
+    )
+
+
+# Small script to wait for redis to come up
+WAIT_FOR_REDIS = """#!/usr/bin/env bash
+wait_for()
+{
+    echo "waiting up to $TIMEOUT seconds for redis"
+    start_ts=$(date +%s)
+    for i in $(seq $TIMEOUT); do
+        redis-cli -p 6379 ping | grep PONG
+        result=$?
+        if [[ $result -eq 0 ]]; then
+            end_ts=$(date +%s)
+            echo "redis is available after $((end_ts - start_ts)) seconds"
+            break
+        fi
+        sleep 1
+        echo "...still waiting"
+    done
+    return $result
+}
+
+# The variable expansion below is 20s by default, or the argument provided
+# to this script
+TIMEOUT="${1:-20}"
+wait_for
+RESULT=$?
+if [[ $RESULT -ne 0 ]]; then
+  echo "redis did not become available in time"
+fi
+exit $RESULT
+"""

@@ -72,6 +72,28 @@ class PackitConfig:
             "packit": self.packit_ref,
         }
 
+        self.orderly_runner_enabled = "orderly-runner" in dat
+        if self.orderly_runner_enabled:
+            self.orderly_runner_ref = self.build_ref(dat, "orderly-runner", "image")
+            self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
+            self.orderly_runner_api_url = f"http://{self.container_prefix}-orderly-runner-api:8001"
+            self.orderly_runner_git_url = config.config_string(dat, ["orderly-runner", "git", "url"])
+            self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
+
+            self.containers["redis"] = "redis"
+            self.containers["orderly-runner-api"] = "orderly-runner-api"
+            self.containers["orderly-runner-worker"] = "orderly-runner-worker"
+
+            self.volumes["orderly_library"] = config.config_string(dat, ["volumes", "orderly_library"])
+            self.volumes["orderly_logs"] = config.config_string(dat, ["volumes", "orderly_logs"])
+
+            self.images["orderly-runner"] = self.orderly_runner_ref
+            self.images["redis"] = constellation.ImageReference("library", "redis", "8.0")
+
+            self.redis_url = "redis://redis:6379"
+
+        self.outpack_server_url = f"http://{self.container_prefix}-{self.containers['outpack-server']}:8000"
+
         if dat.get("proxy"):
             self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)
         else:

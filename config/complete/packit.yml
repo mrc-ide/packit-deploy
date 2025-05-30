@@ -25,6 +25,8 @@ network: packit-network
 volumes:
   outpack: outpack_volume
   proxy_logs: packit_proxy_logs
+  orderly_library: orderly_library
+  orderly_logs: orderly_logs
 
 ## Path to ssh key for interacting with git. You
 ## might use a github deploy key here. For completeness both the
@@ -38,7 +40,7 @@ outpack:
   initial:
     ##  If using a private repo, then use an ssh url and provide ssh keys in the
     ## "ssh" section above.
-    url: https://github.com/reside-ic/orderly3-example.git
+    url: https://github.com/reside-ic/orderly2-example.git
   server:
     name: outpack_server
     tag: main
@@ -79,6 +81,15 @@ packit:
         # Root url which OAuth2 app will use to redirect back to packit api - must match OAuth2 app's registered url
         packit_api_root: "https://packit/api"
         url: "https://packit/redirect"  # Url for redirecting back to the front end after successful authentication
+
+orderly-runner:
+  image:
+    name: orderly.runner
+    tag: main
+  git:
+    url: https://github.com/reside-ic/orderly2-example.git
+  workers: 1
+
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker
