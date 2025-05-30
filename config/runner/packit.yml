@@ -60,14 +60,6 @@ packit:
       secret: "0b4g4f8z4mdsrhoxfde2mam8f00vmt0f"
 
 orderly-runner:
-  # The image for the runner; this is going to be a trick because the
-  # image needs to contain at least the runner itself (a container
-  # that we create that contains the packages required to actually run
-  # the queue) and the packages that the user needs to run their
-  # reports.  The latter we might change to use a volume later, which
-  # has the advantage of all runners definitely seeing the same data,
-  # even in the case where we update/change/install packages without
-  # redeploying.
   image:
     name: orderly.runner
     tag: main

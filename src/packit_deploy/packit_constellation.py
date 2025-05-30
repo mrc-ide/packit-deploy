@@ -79,7 +79,7 @@ def outpack_ssh_configure(container, cfg):
 
 def outpack_init_clone(container, cfg):
     print("[orderly] Initialising orderly by cloning")
-    args = ["git", "clone", "-b", "update-orderly2", "--single-branch", cfg.outpack_source_url, "/outpack"]
+    args = ["git", "clone", cfg.outpack_source_url, "/outpack"]
 
     docker_util.exec_safely(container, args)
     # usually cloning a source repo will not ensure outpack is initialised
@@ -283,7 +283,6 @@ def orderly_runner_api_container(cfg):
     )
 
 
-# check the definition of the service container in orderly-web-deploy here.
 def orderly_runner_worker_container(cfg):
     name = cfg.containers["orderly-runner-worker"]
     image = str(cfg.images["orderly-runner"])
