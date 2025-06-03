@@ -67,7 +67,10 @@ def outpack_server_configure(container, cfg):
 
 def packit_db_container(cfg):
     name = cfg.containers["packit-db"]
-    packit_db = constellation.ConstellationContainer(name, cfg.packit_db_ref, configure=packit_db_configure)
+    mounts = [constellation.ConstellationVolumeMount("packit_db", "/pgdata")]
+    packit_db = constellation.ConstellationContainer(
+        name, cfg.packit_db_ref, mounts=mounts, configure=packit_db_configure
+    )
     return packit_db
 
 
