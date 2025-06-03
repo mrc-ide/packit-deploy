@@ -18,18 +18,6 @@ class PackitConfig:
         self.container_prefix = config.config_string(dat, ["container_prefix"])
         self.repo = config.config_string(dat, ["repo"])
 
-        if "ssh" in dat:
-            self.ssh_public = config.config_string(dat, ["ssh", "public"])
-            self.ssh_private = config.config_string(dat, ["ssh", "private"])
-            self.ssh = True
-        else:
-            self.ssh = False
-
-        if "initial" in dat["outpack"]:
-            self.outpack_source_url = config.config_string(dat, ["outpack", "initial", "url"])
-        else:
-            self.outpack_source_url = None
-
         self.outpack_ref = self.build_ref(dat, "outpack", "server")
         self.packit_api_ref = self.build_ref(dat, "packit", "api")
         self.packit_ref = self.build_ref(dat, "packit", "app")

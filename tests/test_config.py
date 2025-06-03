@@ -24,7 +24,6 @@ def test_config_no_proxy():
     assert str(cfg.images["packit-db"]) == "mrcide/packit-db:main"
     assert str(cfg.images["packit-api"]) == "mrcide/packit-api:main"
 
-    assert cfg.outpack_source_url is not None
     assert cfg.proxy_enabled is False
     assert cfg.protect_data is False
 
@@ -53,24 +52,6 @@ def test_config_proxy():
     assert not cfg.proxy_ssl_self_signed
     assert cfg.proxy_ssl_certificate == "VAULT:secret/cert:value"
     assert cfg.proxy_ssl_key == "VAULT:secret/key:value"
-
-
-def test_outpack_initial_source():
-    cfg = PackitConfig("config/complete")
-    assert cfg.outpack_source_url == "https://github.com/reside-ic/orderly2-example.git"
-
-    cfg = PackitConfig("config/nodemo")
-    assert cfg.outpack_source_url is None
-
-
-def test_ssh():
-    cfg = PackitConfig("config/complete")
-    assert cfg.ssh_public == "VAULT:secret/ssh:public"
-    assert cfg.ssh_private == "VAULT:secret/ssh:private"
-    assert cfg.ssh
-
-    cfg = PackitConfig("config/novault")
-    assert not cfg.ssh
 
 
 def test_github_auth():

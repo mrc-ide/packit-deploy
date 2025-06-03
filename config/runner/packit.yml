@@ -29,11 +29,6 @@ volumes:
   orderly_logs: orderly_logs
 
 outpack:
-  ## Initialise an outpack directory by cloning from github
-  initial:
-    ##  If using a private repo, then use an ssh url and provide ssh keys in the
-    ## "ssh" section above.
-    url: https://github.com/reside-ic/orderly2-example.git
   server:
     name: outpack_server
     tag: main
