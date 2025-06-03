@@ -55,35 +55,7 @@ def outpack_server_container(cfg):
 
 
 def outpack_server_configure(container, cfg):
-    if cfg.ssh:
-        outpack_ssh_configure(container, cfg)
-    if cfg.outpack_source_url is not None:
-        if outpack_is_initialised(container):
-            print("[outpack] outpack volume already contains data - not initialising")
-        else:
-            outpack_init_clone(container, cfg)
-
-
-def outpack_ssh_configure(container, cfg):
-    print("[outpack] Configuring ssh")
-    path_private = "/root/.ssh/id_rsa"
-    path_public = "/root/.ssh/id_rsa.pub"
-    path_known_hosts = "/root/.ssh/known_hosts"
-    docker_util.exec_safely(container, ["mkdir", "-p", "/root/.ssh"])
-    docker_util.string_into_container(cfg.ssh_private, container, path_private)
-    docker_util.string_into_container(cfg.ssh_public, container, path_public)
-    docker_util.exec_safely(container, ["chmod", "600", path_private])
-    hosts = docker_util.exec_safely(container, ["ssh-keyscan", "github.com"])
-    docker_util.string_into_container(hosts[1].decode("UTF-8"), container, path_known_hosts)
-
-
-def outpack_init_clone(container, cfg):
-    print("[orderly] Initialising orderly by cloning")
-    args = ["git", "clone", cfg.outpack_source_url, "/outpack"]
-
-    docker_util.exec_safely(container, args)
-    # usually cloning a source repo will not ensure outpack is initialised
-    # so here, check that outpack config exists, and if not, initialise
+    print("[outpack] Initialising outpack repository")
     if not outpack_is_initialised(container):
         image = str(cfg.outpack_ref)
         mounts = [docker.types.Mount("/outpack", cfg.volumes["outpack"])]

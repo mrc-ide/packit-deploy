@@ -241,23 +241,6 @@ def test_vault():
         stop_packit(path)
 
 
-def test_ssh():
-    path = "config/complete"
-    try:
-        with vault_dev.Server() as s:
-            url = f"http://localhost:{s.port}"
-            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
-            write_secrets_to_vault(cfg)
-
-            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
-
-            outpack_server = cfg.get_container("outpack-server")
-            pub_key = docker_util.string_from_container(outpack_server, "/root/.ssh/id_rsa.pub")
-            assert pub_key == "publ1c"
-    finally:
-        stop_packit(path)
-
-
 def stop_packit(path):
     with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
         prompt.return_value = True
