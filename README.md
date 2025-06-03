@@ -150,7 +150,9 @@ The favicon file is bind-mounted into the front-end container, in a public folde
 
 ### Brand colours
 
-The brand colours are written as css variables into the public custom.css file, which override default variables in the front-end. If no colours are provided for the dark theme, the light theme colours are reused.
+The brand colours are written as css variables into the public custom.css file, which override default variables in the front-end.
+
+If no colours are provided for the dark theme, dark mode will be disabled. If no colours are provided for the light theme, light mode will be disabled. If no colours are provided for either theme, then both modes will be enabled, using default colours.
 
 When choosing colours, consider contrast carefully, as described below. Do not rely solely on hue for contrast as this will create problems for users with certain types of colour blindness.
 
