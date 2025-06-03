@@ -25,9 +25,14 @@ network: packit-network
 volumes:
   outpack: outpack_volume
   proxy_logs: packit_proxy_logs
+  orderly_library: orderly_library
+  orderly_logs: orderly_logs
 
 outpack:
+  ## Initialise an outpack directory by cloning from github
   initial:
+    ##  If using a private repo, then use an ssh url and provide ssh keys in the
+    ## "ssh" section above.
     url: https://github.com/reside-ic/orderly2-example.git
   server:
     name: outpack_server
@@ -35,19 +40,32 @@ outpack:
   migrate:
     name: outpack.orderly
     tag: main
-# TODO: change to main basic auth stuff is merged
 packit:
   api:
     name: packit-api
-    tag: mrc-6035-custom-branding # revert to main after mrc-6035-custom-branding is merged
+    tag: main
   app:
     name: packit
-    tag: mrc-6035-custom-branding # revert to main after mrc-6035-custom-branding is merged
+    tag: main
   db:
     name: packit-db
     tag: main
     user: packituser
     password: changeme
+  auth:
+    enabled: true
+    auth_method: basic
+    expiry_days: 1
+    jwt:
+      secret: "0b4g4f8z4mdsrhoxfde2mam8f00vmt0f"
+
+orderly-runner:
+  image:
+    name: orderly.runner
+    tag: main
+  git:
+    url: https://github.com/reside-ic/orderly2-example.git
+  workers: 2
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker

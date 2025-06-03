@@ -59,7 +59,7 @@ def test_config_proxy():
 
 def test_outpack_initial_source():
     cfg = PackitConfig("config/complete")
-    assert cfg.outpack_source_url == "https://github.com/reside-ic/orderly3-example.git"
+    assert cfg.outpack_source_url == "https://github.com/reside-ic/orderly2-example.git"
 
     cfg = PackitConfig("config/nodemo")
     assert cfg.outpack_source_url is None
@@ -146,3 +146,23 @@ def test_custom_branding_with_complete_branding_config():
     assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
     assert cfg.brand_accent_dark == "hsl(30 100% 50%)"
     assert cfg.brand_accent_foreground_dark == "hsl(322, 50%, 87%)"
+
+
+def test_workers_can_be_enabled():
+    cfg = PackitConfig("config/complete")
+    assert cfg.images
+
+    assert cfg.orderly_runner_enabled
+    assert cfg.orderly_runner_ref.repo == "mrcide"
+    assert cfg.orderly_runner_ref.name == "orderly.runner"
+    assert cfg.orderly_runner_ref.tag == "main"
+    assert cfg.orderly_runner_workers == 1
+
+    assert len(cfg.images) == 7
+    assert str(cfg.images["orderly-runner"]) == "mrcide/orderly.runner:main"
+    assert str(cfg.images["redis"]) == "library/redis:8.0"
+
+
+def test_workers_can_be_omitted():
+    cfg = PackitConfig("config/noproxy")
+    assert not cfg.orderly_runner_enabled
