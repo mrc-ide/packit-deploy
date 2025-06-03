@@ -179,13 +179,18 @@ def test_custom_branding_end_to_end():
 
             api = cfg.get_container("packit")
 
+            assert get_env_var(api, "PACKIT_DARK_MODE_ENABLED") == b"true\n"
+            assert get_env_var(api, "PACKIT_LIGHT_MODE_ENABLED") == b"true\n"
+
             index_html = docker_util.string_from_container(api, "/usr/share/nginx/html/index.html")
             assert "<title>My Packit Instance</title>" in index_html
             assert "examplefavicon.ico" in index_html
 
             custom_css = docker_util.string_from_container(api, "/usr/share/nginx/html/css/custom.css")
-            assert "--custom-accent: hsl(0 100% 50%);" in custom_css
+            assert "--custom-accent: hsl(0 100% 50%);" in custom_css # light theme
             assert "--custom-accent-foreground: hsl(123 100% 50%);" in custom_css
+            assert "--custom-accent: hsl(30 100% 50%);" in custom_css # dark theme
+            assert "--custom-accent-foreground: hsl(322 50% 87%);" in custom_css
 
             logo = docker_util.bytes_from_container(api, "/usr/share/nginx/html/img/examplelogo.webp")
             assert logo is not None and len(logo) > 0

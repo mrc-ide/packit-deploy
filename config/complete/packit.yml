@@ -147,4 +147,4 @@ brand:
       accent_foreground: "hsl(123 100% 50%)" # bright green
     dark:
       accent: "hsl(30 100% 50%)" # bright orange
-      accent_foreground: "hsl(322, 50%, 87%)" # lilac
+      accent_foreground: "hsl(322 50% 87%)" # lilac
