@@ -148,15 +148,15 @@ The 'brand name' (e.g. 'Reporting Portal') is used to directly overwrite part of
 
 The favicon file is bind-mounted into the front-end container, in a public folder. Then we overwrite part of the front end's public index.html file, replacing any pre-existing reference to 'favicon.ico' with the filename of the configured favicon. Your favicon file should be in the same directory as the config file.
 
-### Brand colors
+### Brand colours
 
-The brand colors are written as css variables into the public custom.css file, which override default variables in the front-end. If no colors are provided for the dark theme, the light theme colors are reused.
+The brand colours are written as css variables into the public custom.css file, which override default variables in the front-end. If no colours are provided for the dark theme, the light theme colours are reused.
 
-When choosing colors, consider contrast carefully, as described below. Do not rely solely on hue for contrast as this will create problems for users with certain types of colour blindness.
+When choosing colours, consider contrast carefully, as described below. Do not rely solely on hue for contrast as this will create problems for users with certain types of colour blindness.
 
 The configurable colours are:
 
 * Accent-colour. This may be used as the background for buttons or borders, and is expected to contrast in lightness with white (the background colour of the app in light mode), and with the accent-foreground colour (next bullet point). As such it should be middlingly dark or darker.
-* Accent-foreground. This will be used as the text color for anything whose background is the accent-colour, and as such is expected to contrast in lightness with the accent-colour (so it should be rather light, or simply white).
+* Accent-foreground. This will be used as the text colour for anything whose background is the accent-colour, and as such is expected to contrast in lightness with the accent-colour (so it should be rather light, or simply white).
 * Dark accent-colour. If configured, this plays the role of the accent-colour as above when the app is used in dark mode. As such it is expected to contrast in lightness with black (the background colour of the app in dark mode) and with the dark accent-foreground colour. It should thus be somewhat lighter than black.
 * Dark accent-foreground. If configured, this plays the role of the accent-foreground as above when the app is used in dark mode. As such it should contrast in lightness with the dark accent-colour.
