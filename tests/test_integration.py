@@ -1,10 +1,12 @@
 import json
 import ssl
+import subprocess
 import time
 import urllib
 from unittest import mock
 
 import docker
+import tenacity
 import vault_dev
 from constellation import docker_util
 
@@ -208,7 +210,7 @@ def test_deploy_with_runner_support():
         containers = cl.containers.list()
 
         prefix = "packit-orderly-runner-worker"
-        assert sum(x.name.startswith(prefix) for x in containers) == 2
+        assert sum(x.name.startswith(prefix) for x in containers) == 22
 
         cfg = PackitConfig(path)
         api = cfg.get_container("packit-api")
@@ -278,3 +280,43 @@ def http_get(url, retries=5, poll=1):
 
 def get_env_var(container, env):
     return docker_util.exec_safely(container, ["sh", "-c", f"echo ${env}"]).output
+
+
+def test_db_volume_is_persisted():
+    path = "config/noproxy"
+    try:
+        res = cli.main(["start", path])
+        assert res
+
+        # Create a real user
+        create_super_user()
+
+        cfg = PackitConfig(path)
+        sql = "SELECT username from public.user"
+        cmd = ["psql", "-t", "-A", "-U", "packituser", "-d", "packit", "-c", sql]
+
+        # Check that we have actually created our user:
+        db = cfg.get_container("packit-db")
+        users = docker_util.exec_safely(db, cmd).output.decode("UTF-8").splitlines()
+        assert set(users) == {"SERVICE", "resideUser@resideAdmin.ic.ac.uk"}
+
+        # Tear things down, but leave the volumes in place:
+        cli.main(["stop", path, "--kill", "--network"])
+
+        # Bring back up
+        res = cli.main(["start", path])
+        assert res
+
+        # Check that the users have survived
+        db = cfg.get_container("packit-db")
+        users = docker_util.exec_safely(db, cmd).output.decode("UTF-8").splitlines()
+        assert set(users) == {"SERVICE", "resideUser@resideAdmin.ic.ac.uk"}
+    finally:
+        stop_packit(path)
+
+
+@tenacity.retry(wait=tenacity.wait_fixed(1), stop=tenacity.stop_after_attempt(20))
+def create_super_user():
+    print("Trying to create superuser")
+    subprocess.run(["./scripts/create-super-user"], check=True)
+    print("...success")
