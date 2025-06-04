@@ -318,5 +318,5 @@ def test_db_volume_is_persisted():
 @tenacity.retry(wait=tenacity.wait_fixed(1), stop=tenacity.stop_after_attempt(20))
 def create_super_user():
     print("Trying to create superuser")
-    subprocess.run(["./scripts/create-super-user"], check=True)
+    subprocess.run(["./scripts/create-super-user"], check=True)  # noqa: S603
     print("...success")
