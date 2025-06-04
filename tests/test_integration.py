@@ -210,7 +210,7 @@ def test_deploy_with_runner_support():
         containers = cl.containers.list()
 
         prefix = "packit-orderly-runner-worker"
-        assert sum(x.name.startswith(prefix) for x in containers) == 22
+        assert sum(x.name.startswith(prefix) for x in containers) == 2
 
         cfg = PackitConfig(path)
         api = cfg.get_container("packit-api")
