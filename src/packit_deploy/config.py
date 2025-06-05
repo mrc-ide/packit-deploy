@@ -31,7 +31,7 @@ class PackitConfig:
         if "auth" in dat["packit"]:
             valid_auth_methods = {"github", "basic", "preauth"}
             self.packit_auth_enabled = config.config_boolean(dat, ["packit", "auth", "enabled"])
-            self.packit_auth_method = config.config_enum(dat, valid_auth_methods, ["packit", "auth", "auth_method"])
+            self.packit_auth_method = config.config_enum(dat, ["packit", "auth", "auth_method"], valid_auth_methods)
             self.packit_auth_expiry_days = config.config_integer(dat, ["packit", "auth", "expiry_days"])
             self.packit_auth_jwt_secret = config.config_string(dat, ["packit", "auth", "jwt", "secret"])
             if self.packit_auth_method == "github":
