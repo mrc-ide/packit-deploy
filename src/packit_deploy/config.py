@@ -28,6 +28,11 @@ class PackitConfig:
         self.packit_db_user = config.config_string(dat, ["packit", "db", "user"])
         self.packit_db_password = config.config_string(dat, ["packit", "db", "password"])
 
+        default_cors_allowed = "http://localhost*,https://localhost*"
+        self.packit_cors_allowed_origins = config.config_string(
+            dat, ["packit", "cors_allowed_origins"], is_optional=True, default=default_cors_allowed
+        )
+
         if "auth" in dat["packit"]:
             valid_auth_methods = {"github", "basic", "preauth"}
             self.packit_auth_enabled = config.config_boolean(dat, ["packit", "auth", "enabled"])

@@ -70,6 +70,7 @@ packit:
         # Root url which OAuth2 app will use to redirect back to packit api - must match OAuth2 app's registered url
         packit_api_root: "https://packit/api"
         url: "https://packit/redirect"  # Url for redirecting back to the front end after successful authentication
+  cors_allowed_origins: "https://packit.example.com"
 
 orderly-runner:
   image:

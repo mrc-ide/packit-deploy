@@ -97,6 +97,7 @@ def packit_api_get_env(cfg):
         "PACKIT_DB_PASSWORD": cfg.packit_db_password,
         "PACKIT_OUTPACK_SERVER_URL": cfg.outpack_server_url,
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
+        "PACKIT_CORS_ALLOWED_ORIGINS": cfg.packit_cors_allowed_origins,
     }
     if hasattr(cfg, "brand_logo_name"):
         env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name
