@@ -25,6 +25,7 @@ network: packit-network
 volumes:
   outpack: outpack_volume
   proxy_logs: packit_proxy_logs
+  packit_db: packit_db
 
 outpack:
   server:

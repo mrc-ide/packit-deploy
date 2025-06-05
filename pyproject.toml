@@ -48,6 +48,7 @@ dependencies = [
     "docker",
     "docopt",
     "pytest",
+    "tenacity",
     "vault_dev"
 ]
 [tool.hatch.envs.default.scripts]

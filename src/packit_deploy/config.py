@@ -13,7 +13,10 @@ class PackitConfig:
         self.vault = config.config_vault(dat, ["vault"])
         self.network = config.config_string(dat, ["network"])
         self.protect_data = config.config_boolean(dat, ["protect_data"])
-        self.volumes = {"outpack": config.config_string(dat, ["volumes", "outpack"])}
+        self.volumes = {
+            "outpack": config.config_string(dat, ["volumes", "outpack"]),
+            "packit_db": config.config_string(dat, ["volumes", "packit_db"]),
+        }
 
         self.container_prefix = config.config_string(dat, ["container_prefix"])
         self.repo = config.config_string(dat, ["repo"])
