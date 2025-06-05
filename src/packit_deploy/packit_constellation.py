@@ -126,6 +126,8 @@ def packit_api_get_env(cfg):
     if cfg.orderly_runner_enabled:
         env["PACKIT_ORDERLY_RUNNER_URL"] = cfg.orderly_runner_api_url
         env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] = cfg.orderly_runner_git_url
+        if cfg.orderly_runner_git_ssh_key:
+            env["PACKIT_ORDERLY_RUNNER_REPOSITORY_SSH_KEY"] = cfg.orderly_runner_git_ssh_key
         # Mantra is going to tidy this up; it should always be the
         # same as PACKIT_OUTPACK_SERVER_URL but differs because of
         # automatic variable creation in the Kotlin framework.
