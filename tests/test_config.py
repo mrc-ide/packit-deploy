@@ -145,3 +145,9 @@ def test_workers_can_be_enabled():
 def test_workers_can_be_omitted():
     cfg = PackitConfig("config/noproxy")
     assert not cfg.orderly_runner_enabled
+
+
+def test_can_use_private_urls_for_git():
+    cfg = PackitConfig("config/runner-private")
+    assert cfg.orderly_runner_git_url == "git@github.com:reside-ic/orderly2-example-private.git"
+    assert type(cfg.orderly_runner_git_ssh_key) is str

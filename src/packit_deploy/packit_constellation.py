@@ -97,6 +97,7 @@ def packit_api_get_env(cfg):
         "PACKIT_DB_PASSWORD": cfg.packit_db_password,
         "PACKIT_OUTPACK_SERVER_URL": cfg.outpack_server_url,
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
+        "PACKIT_CORS_ALLOWED_ORIGINS": cfg.packit_cors_allowed_origins,
     }
     if hasattr(cfg, "brand_logo_name"):
         env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name
@@ -126,6 +127,8 @@ def packit_api_get_env(cfg):
     if cfg.orderly_runner_enabled:
         env["PACKIT_ORDERLY_RUNNER_URL"] = cfg.orderly_runner_api_url
         env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] = cfg.orderly_runner_git_url
+        if cfg.orderly_runner_git_ssh_key:
+            env["PACKIT_ORDERLY_RUNNER_REPOSITORY_SSH_KEY"] = cfg.orderly_runner_git_ssh_key
         # Mantra is going to tidy this up; it should always be the
         # same as PACKIT_OUTPACK_SERVER_URL but differs because of
         # automatic variable creation in the Kotlin framework.

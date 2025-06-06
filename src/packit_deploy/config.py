@@ -28,9 +28,15 @@ class PackitConfig:
         self.packit_db_user = config.config_string(dat, ["packit", "db", "user"])
         self.packit_db_password = config.config_string(dat, ["packit", "db", "password"])
 
+        default_cors_allowed = "http://localhost*,https://localhost*"
+        self.packit_cors_allowed_origins = config.config_string(
+            dat, ["packit", "cors_allowed_origins"], is_optional=True, default=default_cors_allowed
+        )
+
         if "auth" in dat["packit"]:
+            valid_auth_methods = {"github", "basic", "preauth"}
             self.packit_auth_enabled = config.config_boolean(dat, ["packit", "auth", "enabled"])
-            self.packit_auth_method = config.config_string(dat, ["packit", "auth", "auth_method"])
+            self.packit_auth_method = config.config_enum(dat, ["packit", "auth", "auth_method"], valid_auth_methods)
             self.packit_auth_expiry_days = config.config_integer(dat, ["packit", "auth", "expiry_days"])
             self.packit_auth_jwt_secret = config.config_string(dat, ["packit", "auth", "jwt", "secret"])
             if self.packit_auth_method == "github":
@@ -69,6 +75,10 @@ class PackitConfig:
             self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
             self.orderly_runner_api_url = f"http://{self.container_prefix}-orderly-runner-api:8001"
             self.orderly_runner_git_url = config.config_string(dat, ["orderly-runner", "git", "url"])
+            if self.orderly_runner_git_url.startswith("git@"):
+                self.orderly_runner_git_ssh_key = config.config_string(dat, ["orderly-runner", "git", "ssh"])
+            else:
+                self.orderly_runner_git_ssh_key = None
             self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
 
             self.containers["redis"] = "redis"

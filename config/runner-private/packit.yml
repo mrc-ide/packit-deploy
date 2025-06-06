@@ -59,9 +59,10 @@ orderly-runner:
   image:
     name: orderly.runner
     tag: main
-  # Arguably this should move within the packit api now
+  # Move into packit api at some point
   git:
-    url: https://github.com/reside-ic/orderly2-example.git
+    url: git@github.com:reside-ic/orderly2-example-private.git
+    ssh: VAULT:secret/packit/testing/orderly2-example-private:private
   workers: 2
 
 ## If running a proxy directly, fill this section in.  Otherwise you
@@ -75,3 +76,8 @@ proxy:
   image:
     name: packit-proxy
     tag: main
+
+vault:
+  addr: https://vault.dide.ic.ac.uk:8200
+  auth:
+    method: github
