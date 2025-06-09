@@ -163,6 +163,8 @@ def test_api_configured_with_custom_branding():
             assert get_env_var(api, "PACKIT_BRAND_LOGO_ALT_TEXT") == b"My logo\n"
             assert get_env_var(api, "PACKIT_BRAND_LOGO_NAME") == b"examplelogo.webp\n"
             assert get_env_var(api, "PACKIT_BRAND_LOGO_LINK") == b"https://www.google.com/\n"
+            assert get_env_var(api, "PACKIT_BRAND_DARK_MODE_ENABLED") == b"true\n"
+            assert get_env_var(api, "PACKIT_BRAND_LIGHT_MODE_ENABLED") == b"true\n"
     finally:
         stop_packit(path)
 

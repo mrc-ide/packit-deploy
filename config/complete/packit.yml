@@ -132,16 +132,15 @@ vault:
 
 
 ## Branding configuration
-## If only one of 'name' or 'logo_path' is set, both will be ignored.
 brand:
-  favicon_path: examplefavicon.ico # Optional custom favicon (any format). Should be in the same dir as this config file.
-  logo_alt_text: My logo # Alt text for logo (optional - fallback configured in Packit)
-  logo_link: https://www.google.com/ # Optional. Absolute navigation destination for clicking on logo.
+  favicon_path: examplefavicon.ico # Custom favicon (any format). Should be in the same dir as this config file.
+  logo_alt_text: My logo # Alt text for logo (fallback configured in Packit)
+  logo_link: https://www.google.com/ # Absolute navigation destination for clicking on logo.
   # Custom logo image (any format). Should be in the same dir as this config file.
   # With regards to size/dimensions, the logo will be constrained to the height of the header, and the proportions between height and width are maintained.
   logo_path: examplelogo.webp
   name: My Packit Instance # Affects header text and page title
-  css: # Optional custom CSS variables. If dark variants are not provided, light variants will be used in dark mode.
+  css: # Custom CSS variables.
     light:
       accent: "hsl(0 100% 50%)" # bright red
       accent_foreground: "hsl(123 100% 50%)" # bright green

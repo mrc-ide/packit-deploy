@@ -122,8 +122,8 @@ def packit_api_get_env(cfg):
         "PACKIT_DB_PASSWORD": cfg.packit_db_password,
         "PACKIT_OUTPACK_SERVER_URL": cfg.outpack_server_url,
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
-        "PACKIT_DARK_MODE_ENABLED": "true" if cfg.brand_dark_mode_enabled else "false",
-        "PACKIT_LIGHT_MODE_ENABLED": "true" if cfg.brand_light_mode_enabled else "false",
+        "PACKIT_BRAND_DARK_MODE_ENABLED": "true" if cfg.brand_dark_mode_enabled else "false",
+        "PACKIT_BRAND_LIGHT_MODE_ENABLED": "true" if cfg.brand_light_mode_enabled else "false",
     }
     if hasattr(cfg, "brand_logo_name"):
         env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name
@@ -191,7 +191,7 @@ def packit_configure(container, cfg):
         )
     if hasattr(cfg, "brand_favicon_name"):
         substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand_favicon_name)
-    if hasattr(cfg, "brand_accent_light"):
+    if cfg.brand_light_mode_enabled or cfg.brand_dark_mode_enabled:
         new_css = ""
         if cfg.brand_light_mode_enabled:
             new_css += (
