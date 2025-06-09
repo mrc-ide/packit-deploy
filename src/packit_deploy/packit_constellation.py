@@ -169,7 +169,7 @@ def packit_configure(container, cfg):
         )
     if hasattr(cfg, "brand_favicon_name"):
         substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand_favicon_name)
-    if cfg.brand_light_mode_enabled or cfg.brand_dark_mode_enabled:
+    if hasattr(cfg, "brand_accent_light") or hasattr(cfg, "brand_accent_dark"):
         new_css = ""
         if cfg.brand_light_mode_enabled and hasattr(cfg, "brand_accent_light"):
             new_css += (
