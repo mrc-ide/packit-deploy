@@ -171,14 +171,14 @@ def packit_configure(container, cfg):
         substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand_favicon_name)
     if cfg.brand_light_mode_enabled or cfg.brand_dark_mode_enabled:
         new_css = ""
-        if cfg.brand_light_mode_enabled:
+        if cfg.brand_light_mode_enabled and hasattr(cfg, "brand_accent_light"):
             new_css += (
                 ":root {\n"
                 f"  --custom-accent: {cfg.brand_accent_light};\n"
                 f"  --custom-accent-foreground: {cfg.brand_accent_foreground_light};\n"
                 "}\n"
             )
-        if cfg.brand_dark_mode_enabled:
+        if cfg.brand_dark_mode_enabled and hasattr(cfg, "brand_accent_dark"):
             new_css += (
                 ".dark {\n"
                 f"  --custom-accent: {cfg.brand_accent_dark};\n"
