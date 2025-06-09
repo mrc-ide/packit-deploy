@@ -183,8 +183,8 @@ def test_custom_branding_end_to_end():
 
             api = cfg.get_container("packit")
 
-            assert get_env_var(api, "PACKIT_DARK_MODE_ENABLED") == b"true\n"
-            assert get_env_var(api, "PACKIT_LIGHT_MODE_ENABLED") == b"true\n"
+            assert get_env_var(api, "PACKIT_BRAND_DARK_MODE_ENABLED") == b"true\n"
+            assert get_env_var(api, "PACKIT_BRAND_LIGHT_MODE_ENABLED") == b"true\n"
 
             index_html = docker_util.string_from_container(api, "/usr/share/nginx/html/index.html")
             assert "<title>My Packit Instance</title>" in index_html
