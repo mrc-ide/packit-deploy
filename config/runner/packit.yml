@@ -25,15 +25,11 @@ network: packit-network
 volumes:
   outpack: outpack_volume
   proxy_logs: packit_proxy_logs
+  packit_db: packit_db
   orderly_library: orderly_library
   orderly_logs: orderly_logs
 
 outpack:
-  ## Initialise an outpack directory by cloning from github
-  initial:
-    ##  If using a private repo, then use an ssh url and provide ssh keys in the
-    ## "ssh" section above.
-    url: https://github.com/reside-ic/orderly2-example.git
   server:
     name: outpack_server
     tag: main
@@ -63,6 +59,7 @@ orderly-runner:
   image:
     name: orderly.runner
     tag: main
+  # Arguably this should move within the packit api now
   git:
     url: https://github.com/reside-ic/orderly2-example.git
   workers: 2

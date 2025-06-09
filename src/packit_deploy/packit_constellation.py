@@ -55,35 +55,7 @@ def outpack_server_container(cfg):
 
 
 def outpack_server_configure(container, cfg):
-    if cfg.ssh:
-        outpack_ssh_configure(container, cfg)
-    if cfg.outpack_source_url is not None:
-        if outpack_is_initialised(container):
-            print("[outpack] outpack volume already contains data - not initialising")
-        else:
-            outpack_init_clone(container, cfg)
-
-
-def outpack_ssh_configure(container, cfg):
-    print("[outpack] Configuring ssh")
-    path_private = "/root/.ssh/id_rsa"
-    path_public = "/root/.ssh/id_rsa.pub"
-    path_known_hosts = "/root/.ssh/known_hosts"
-    docker_util.exec_safely(container, ["mkdir", "-p", "/root/.ssh"])
-    docker_util.string_into_container(cfg.ssh_private, container, path_private)
-    docker_util.string_into_container(cfg.ssh_public, container, path_public)
-    docker_util.exec_safely(container, ["chmod", "600", path_private])
-    hosts = docker_util.exec_safely(container, ["ssh-keyscan", "github.com"])
-    docker_util.string_into_container(hosts[1].decode("UTF-8"), container, path_known_hosts)
-
-
-def outpack_init_clone(container, cfg):
-    print("[orderly] Initialising orderly by cloning")
-    args = ["git", "clone", cfg.outpack_source_url, "/outpack"]
-
-    docker_util.exec_safely(container, args)
-    # usually cloning a source repo will not ensure outpack is initialised
-    # so here, check that outpack config exists, and if not, initialise
+    print("[outpack] Initialising outpack repository")
     if not outpack_is_initialised(container):
         image = str(cfg.outpack_ref)
         mounts = [docker.types.Mount("/outpack", cfg.volumes["outpack"])]
@@ -95,7 +67,10 @@ def outpack_init_clone(container, cfg):
 
 def packit_db_container(cfg):
     name = cfg.containers["packit-db"]
-    packit_db = constellation.ConstellationContainer(name, cfg.packit_db_ref, configure=packit_db_configure)
+    mounts = [constellation.ConstellationVolumeMount("packit_db", "/pgdata")]
+    packit_db = constellation.ConstellationContainer(
+        name, cfg.packit_db_ref, mounts=mounts, configure=packit_db_configure
+    )
     return packit_db
 
 
@@ -124,6 +99,7 @@ def packit_api_get_env(cfg):
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
         "PACKIT_BRAND_DARK_MODE_ENABLED": "true" if cfg.brand_dark_mode_enabled else "false",
         "PACKIT_BRAND_LIGHT_MODE_ENABLED": "true" if cfg.brand_light_mode_enabled else "false",
+        "PACKIT_CORS_ALLOWED_ORIGINS": cfg.packit_cors_allowed_origins,
     }
     if hasattr(cfg, "brand_logo_name"):
         env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name
@@ -153,6 +129,8 @@ def packit_api_get_env(cfg):
     if cfg.orderly_runner_enabled:
         env["PACKIT_ORDERLY_RUNNER_URL"] = cfg.orderly_runner_api_url
         env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] = cfg.orderly_runner_git_url
+        if cfg.orderly_runner_git_ssh_key:
+            env["PACKIT_ORDERLY_RUNNER_REPOSITORY_SSH_KEY"] = cfg.orderly_runner_git_ssh_key
         # Mantra is going to tidy this up; it should always be the
         # same as PACKIT_OUTPACK_SERVER_URL but differs because of
         # automatic variable creation in the Kotlin framework.
