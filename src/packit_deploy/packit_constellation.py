@@ -183,7 +183,8 @@ def packit_configure(container, cfg):
                 ".dark {\n"
                 f"  --custom-accent: {cfg.brand_accent_dark};\n"
                 f"  --custom-accent-foreground: {cfg.brand_accent_foreground_dark};\n"
-                "}\n")
+                "}\n"
+            )
         overwrite_file(container, f"{cfg.app_html_root}/css/custom.css", new_css)
 
 

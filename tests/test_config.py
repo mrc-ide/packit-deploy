@@ -20,9 +20,9 @@ def test_config_no_proxy():
 
     assert len(cfg.images) == 4
     assert str(cfg.images["outpack-server"]) == "mrcide/outpack_server:main"
-    assert str(cfg.images["packit"]) == "mrcide/packit:main"
+    assert str(cfg.images["packit"]) == "mrcide/packit:mrc-6500-colour-themes"
     assert str(cfg.images["packit-db"]) == "mrcide/packit-db:main"
-    assert str(cfg.images["packit-api"]) == "mrcide/packit-api:main"
+    assert str(cfg.images["packit-api"]) == "mrcide/packit-api:mrc-6500-colour-themes"
 
     assert cfg.proxy_enabled is False
     assert cfg.protect_data is False
@@ -85,8 +85,8 @@ def test_custom_branding_with_partial_branding_config():
         os.path.join(packit_deploy_project_root_dir, "config/complete/examplelogo.webp")
     )
     assert cfg.brand_logo_name == "examplelogo.webp"
-    assert cfg.brand_dark_mode_enabled == True
-    assert cfg.brand_light_mode_enabled == True
+    assert cfg.brand_dark_mode_enabled
+    assert cfg.brand_light_mode_enabled
     undefined_attributes = [
         "brand_logo_link",
         "brand_favicon_path",
@@ -114,8 +114,8 @@ def test_custom_branding_without_dark_colors():
     for attr in undefined_attributes:
         with unittest.TestCase().assertRaises(AttributeError):
             _ = getattr(cfg, attr)
-    assert cfg.brand_dark_mode_enabled == False
-    assert cfg.brand_light_mode_enabled == True
+    assert not cfg.brand_dark_mode_enabled
+    assert cfg.brand_light_mode_enabled
 
 
 def test_custom_branding_without_light_colors():
@@ -132,8 +132,8 @@ def test_custom_branding_without_light_colors():
     for attr in undefined_attributes:
         with unittest.TestCase().assertRaises(AttributeError):
             _ = getattr(cfg, attr)
-    assert cfg.brand_dark_mode_enabled == True
-    assert cfg.brand_light_mode_enabled == False
+    assert cfg.brand_dark_mode_enabled
+    assert not cfg.brand_light_mode_enabled
 
 
 def test_custom_branding_with_complete_branding_config():
@@ -149,8 +149,8 @@ def test_custom_branding_with_complete_branding_config():
     assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
     assert cfg.brand_accent_dark == "hsl(30 100% 50%)"
     assert cfg.brand_accent_foreground_dark == "hsl(322 50% 87%)"
-    assert cfg.brand_dark_mode_enabled == True
-    assert cfg.brand_light_mode_enabled == True
+    assert cfg.brand_dark_mode_enabled
+    assert cfg.brand_light_mode_enabled
 
 
 def test_workers_can_be_enabled():

@@ -191,9 +191,9 @@ def test_custom_branding_end_to_end():
             assert "examplefavicon.ico" in index_html
 
             custom_css = docker_util.string_from_container(api, "/usr/share/nginx/html/css/custom.css")
-            assert "--custom-accent: hsl(0 100% 50%);" in custom_css # light theme
+            assert "--custom-accent: hsl(0 100% 50%);" in custom_css  # light theme
             assert "--custom-accent-foreground: hsl(123 100% 50%);" in custom_css
-            assert "--custom-accent: hsl(30 100% 50%);" in custom_css # dark theme
+            assert "--custom-accent: hsl(30 100% 50%);" in custom_css  # dark theme
             assert "--custom-accent-foreground: hsl(322 50% 87%);" in custom_css
 
             logo = docker_util.bytes_from_container(api, "/usr/share/nginx/html/img/examplelogo.webp")
