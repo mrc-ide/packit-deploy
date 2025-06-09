@@ -42,10 +42,10 @@ outpack:
 packit:
   api:
     name: packit-api
-    tag: main
+    tag: mrc-6500-colour-themes
   app:
     name: packit
-    tag: main
+    tag: mrc-6500-colour-themes
   db:
     name: packit-db
     tag: main
