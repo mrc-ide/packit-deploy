@@ -62,8 +62,8 @@ packit:
 proxy:
   enabled: true
   hostname: localhost
-  port_http: 9643
-  port_https: 9644
+  port_http: 80
+  port_https: 443
   image:
     name: packit-proxy
     tag: main
