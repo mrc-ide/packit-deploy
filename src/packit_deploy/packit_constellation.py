@@ -281,10 +281,7 @@ def orderly_runner_worker_container(cfg):
 
 
 def orderly_runner_env(cfg):
-    base = {
-        "REDIS_URL": cfg.redis_url,
-        "ORDERLY_RUNNER_QUEUE_ID": "orderly.runner.queue"
-    }
+    base = {"REDIS_URL": cfg.redis_url, "ORDERLY_RUNNER_QUEUE_ID": "orderly.runner.queue"}
     return {
         **base,
         **cfg.orderly_runner_env,
