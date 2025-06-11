@@ -75,6 +75,7 @@ class PackitConfig:
             self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
             self.orderly_runner_api_url = f"http://{self.container_prefix}-orderly-runner-api:8001"
             self.orderly_runner_git_url = config.config_string(dat, ["orderly-runner", "git", "url"])
+            self.orderly_runner_env = config.config_dict(dat, ["orderly-runner", "env"], is_optional=True, default={})
             if self.orderly_runner_git_url.startswith("git@"):
                 self.orderly_runner_git_ssh_key = config.config_string(dat, ["orderly-runner", "git", "ssh"])
             else:

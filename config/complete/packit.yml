@@ -79,7 +79,8 @@ orderly-runner:
   git:
     url: https://github.com/reside-ic/orderly2-example.git
   workers: 1
-
+  env:
+    FOO: bar
 
 ## If running a proxy directly, fill this section in.  Otherwise you
 ## are responsible for proxying the application out of the docker
