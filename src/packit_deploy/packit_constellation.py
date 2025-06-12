@@ -100,7 +100,7 @@ def packit_api_get_env(cfg):
         "PACKIT_CORS_ALLOWED_ORIGINS": cfg.packit_cors_allowed_origins,
         "PACKIT_BASE_URL": cfg.packit_base_url,
         "PACKIT_DEVICE_FLOW_EXPIRY_SECONDS": "300",
-        "PACKIT_AUTH_DEVICE_URL": f"{cfg.packit_base_url}/device",
+        "PACKIT_DEVICE_AUTH_URL": f"{cfg.packit_base_url}/device",
     }
     if hasattr(cfg, "brand_logo_name"):
         env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name
