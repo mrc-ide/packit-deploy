@@ -46,3 +46,9 @@ def test_can_set_auth_configuration():
     env = packit_api_get_env(cfg)
     assert env["PACKIT_DEVICE_FLOW_EXPIRY_SECONDS"] == "300"
     assert env["PACKIT_AUTH_DEVICE_URL"] == "https://example.com/packit/device"
+
+
+def test_can_set_base_url():
+    cfg = PackitConfig("config/noproxy")
+    env = packit_api_get_env(cfg)
+    assert env["PACKIT_BASE_URL"] == "https://example.com/packit"
