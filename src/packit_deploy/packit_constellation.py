@@ -98,6 +98,8 @@ def packit_api_get_env(cfg):
         "PACKIT_OUTPACK_SERVER_URL": cfg.outpack_server_url,
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
         "PACKIT_CORS_ALLOWED_ORIGINS": cfg.packit_cors_allowed_origins,
+        "PACKIT_DEVICE_FLOW_EXPIRY_SECONDS": "300",
+        "PACKIT_AUTH_DEVICE_URL": f"{cfg.packit_base_url}/device",
     }
     if hasattr(cfg, "brand_logo_name"):
         env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name

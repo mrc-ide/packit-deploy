@@ -36,8 +36,9 @@ outpack:
   migrate:
     name: outpack.orderly
     tag: main
-# TODO: change to main basic auth stuff is merged
+
 packit:
+  base_url: https://localhost
   api:
     name: packit-api
     tag: main

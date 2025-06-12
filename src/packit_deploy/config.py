@@ -27,6 +27,7 @@ class PackitConfig:
         self.packit_db_ref = self.build_ref(dat, "packit", "db")
         self.packit_db_user = config.config_string(dat, ["packit", "db", "user"])
         self.packit_db_password = config.config_string(dat, ["packit", "db", "password"])
+        self.packit_base_url = config.config_string(dat, ["packit", "base_url"])
 
         default_cors_allowed = "http://localhost*,https://localhost*"
         self.packit_cors_allowed_origins = config.config_string(
