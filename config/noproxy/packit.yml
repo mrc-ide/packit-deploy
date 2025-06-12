@@ -33,6 +33,7 @@ outpack:
     tag: main
 
 packit:
+  base_url: https://example.com/packit
   api:
     name: packit-api
     tag: main
