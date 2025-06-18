@@ -28,9 +28,9 @@ def test_start_and_stop_noproxy():
         assert docker_util.network_exists(cfg.network)
         assert docker_util.volume_exists(cfg.volumes["outpack"])
         assert docker_util.container_exists("packit-outpack-server")
-        assert docker_util.container_exists("packit-packit-api")
-        assert docker_util.container_exists("packit-packit-db")
-        assert docker_util.container_exists("packit-packit")
+        assert docker_util.container_exists("packit-api")
+        assert docker_util.container_exists("packit-db")
+        assert docker_util.container_exists("packit-app")
 
         # Stop
         with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
@@ -40,9 +40,9 @@ def test_start_and_stop_noproxy():
             assert len(containers) == 0
             assert not docker_util.network_exists(cfg.network)
             assert not docker_util.volume_exists(cfg.volumes["outpack"])
-            assert not docker_util.container_exists("packit-packit-api")
-            assert not docker_util.container_exists("packit-packit-db")
-            assert not docker_util.container_exists("packit-packit")
+            assert not docker_util.container_exists("packit-api")
+            assert not docker_util.container_exists("packit-db")
+            assert not docker_util.container_exists("packit-app")
             assert not docker_util.container_exists("packit-outpack-server")
     finally:
         stop_packit(path)
@@ -111,12 +111,9 @@ def test_api_configured():
         assert len(containers) == 4
         cfg = PackitConfig(path)
 
-        api = cfg.get_container("packit-api")
+        api = cfg.get_container("api")
 
-        assert (
-            get_env_var(api, "PACKIT_DB_URL")
-            == b"jdbc:postgresql://packit-packit-db:5432/packit?stringtype=unspecified\n"
-        )
+        assert get_env_var(api, "PACKIT_DB_URL") == b"jdbc:postgresql://packit-db:5432/packit?stringtype=unspecified\n"
         assert get_env_var(api, "PACKIT_DB_USER") == b"packituser\n"
         assert get_env_var(api, "PACKIT_DB_PASSWORD") == b"changeme\n"
         assert get_env_var(api, "PACKIT_OUTPACK_SERVER_URL") == b"http://packit-outpack-server:8000\n"
@@ -135,7 +132,7 @@ def test_api_configured_for_github_auth():
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
-            api = cfg.get_container("packit-api")
+            api = cfg.get_container("api")
 
             # assert env variables
             assert get_env_var(api, "PACKIT_AUTH_METHOD") == b"github\n"
@@ -159,7 +156,7 @@ def test_api_configured_with_custom_branding():
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
-            api = cfg.get_container("packit-api")
+            api = cfg.get_container("api")
 
             assert get_env_var(api, "PACKIT_BRAND_LOGO_ALT_TEXT") == b"My logo\n"
             assert get_env_var(api, "PACKIT_BRAND_LOGO_NAME") == b"examplelogo.webp\n"
@@ -216,7 +213,7 @@ def test_deploy_with_runner_support():
         assert sum(x.name.startswith(prefix) for x in containers) == 2
 
         cfg = PackitConfig(path)
-        api = cfg.get_container("packit-api")
+        api = cfg.get_container("api")
 
         assert get_env_var(api, "PACKIT_ORDERLY_RUNNER_URL") == b"http://packit-orderly-runner-api:8001\n"
         assert (
@@ -241,7 +238,7 @@ def test_vault():
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
-            api = cfg.get_container("packit-api")
+            api = cfg.get_container("api")
 
             assert get_env_var(api, "PACKIT_DB_USER") == b"us3r\n"
             assert get_env_var(api, "PACKIT_DB_PASSWORD") == b"p@ssword\n"
@@ -302,7 +299,7 @@ def test_db_volume_is_persisted():
         cmd = ["psql", "-t", "-A", "-U", "packituser", "-d", "packit", "-c", sql]
 
         # Check that we have actually created our user:
-        db = cfg.get_container("packit-db")
+        db = cfg.get_container("db")
         users = docker_util.exec_safely(db, cmd).output.decode("UTF-8").splitlines()
         assert set(users) == {"SERVICE", "resideUser@resideAdmin.ic.ac.uk"}
 
@@ -314,7 +311,7 @@ def test_db_volume_is_persisted():
         assert res
 
         # Check that the users have survived
-        db = cfg.get_container("packit-db")
+        db = cfg.get_container("db")
         users = docker_util.exec_safely(db, cmd).output.decode("UTF-8").splitlines()
         assert set(users) == {"SERVICE", "resideUser@resideAdmin.ic.ac.uk"}
     finally:
