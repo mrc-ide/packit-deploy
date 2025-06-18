@@ -85,6 +85,8 @@ def test_custom_branding_with_partial_branding_config():
         os.path.join(packit_deploy_project_root_dir, "config/complete/examplelogo.webp")
     )
     assert cfg.brand_logo_name == "examplelogo.webp"
+    assert cfg.brand_dark_mode_enabled
+    assert cfg.brand_light_mode_enabled
     undefined_attributes = [
         "brand_logo_link",
         "brand_favicon_path",
@@ -98,7 +100,7 @@ def test_custom_branding_with_partial_branding_config():
             _ = getattr(cfg, attr)
 
 
-def test_custom_branding_unprovided_dark_colors_fall_back_to_light_colors():
+def test_custom_branding_without_dark_colors():
     options = {
         "brand": {
             "css": {"dark": None},
@@ -108,8 +110,30 @@ def test_custom_branding_unprovided_dark_colors_fall_back_to_light_colors():
 
     assert cfg.brand_accent_light == "hsl(0 100% 50%)"
     assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
-    assert cfg.brand_accent_dark == cfg.brand_accent_light
-    assert cfg.brand_accent_foreground_dark == cfg.brand_accent_foreground_light
+    undefined_attributes = ["brand_accent_dark", "brand_accent_foreground_dark"]
+    for attr in undefined_attributes:
+        with unittest.TestCase().assertRaises(AttributeError):
+            _ = getattr(cfg, attr)
+    assert not cfg.brand_dark_mode_enabled
+    assert cfg.brand_light_mode_enabled
+
+
+def test_custom_branding_without_light_colors():
+    options = {
+        "brand": {
+            "css": {"light": None},
+        }
+    }
+    cfg = PackitConfig("config/complete", options=options)
+
+    assert cfg.brand_accent_dark == "hsl(30 100% 50%)"
+    assert cfg.brand_accent_foreground_dark == "hsl(322 50% 87%)"
+    undefined_attributes = ["brand_accent_light", "brand_accent_foreground_light"]
+    for attr in undefined_attributes:
+        with unittest.TestCase().assertRaises(AttributeError):
+            _ = getattr(cfg, attr)
+    assert cfg.brand_dark_mode_enabled
+    assert not cfg.brand_light_mode_enabled
 
 
 def test_custom_branding_with_complete_branding_config():
@@ -124,7 +148,9 @@ def test_custom_branding_with_complete_branding_config():
     assert cfg.brand_accent_light == "hsl(0 100% 50%)"
     assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
     assert cfg.brand_accent_dark == "hsl(30 100% 50%)"
-    assert cfg.brand_accent_foreground_dark == "hsl(322, 50%, 87%)"
+    assert cfg.brand_accent_foreground_dark == "hsl(322 50% 87%)"
+    assert cfg.brand_dark_mode_enabled
+    assert cfg.brand_light_mode_enabled
 
 
 def test_workers_can_be_enabled():

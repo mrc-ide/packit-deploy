@@ -124,9 +124,7 @@ If you have anything else running on port 80 or 443, nothing will work as expect
 
 ## Custom branding configuration
 
-For each setting's corresponding yml value, see the example 'brand' dictionaries in basicauthcustombrand/packit.yml or complete/packit.yml.
-
-All settings are optional.
+For each custom branding setting's corresponding yml value, see the example 'brand' dictionaries in basicauthcustombrand/packit.yml or complete/packit.yml. All settings are optional.
 
 ### Logo
 
@@ -150,7 +148,9 @@ The favicon file is bind-mounted into the front-end container, in a public folde
 
 ### Brand colours
 
-The brand colours are written as css variables into the public custom.css file, which override default variables in the front-end. If no colours are provided for the dark theme, the light theme colours are reused.
+The brand colours are written as css variables into the public custom.css file, which override default variables in the front-end.
+
+If the yml config provides no colours for the dark theme, dark mode will be disabled. If no colours are provided for the light theme, light mode will be disabled. If no colours are provided for either theme, then both modes will be enabled, using default colours.
 
 When choosing colours, consider contrast carefully, as described below. Do not rely solely on hue for contrast as this will create problems for users with certain types of colour blindness.
 

@@ -161,10 +161,11 @@ def test_api_configured_with_custom_branding():
 
             api = cfg.get_container("packit-api")
 
-            # assert env variables
             assert get_env_var(api, "PACKIT_BRAND_LOGO_ALT_TEXT") == b"My logo\n"
             assert get_env_var(api, "PACKIT_BRAND_LOGO_NAME") == b"examplelogo.webp\n"
             assert get_env_var(api, "PACKIT_BRAND_LOGO_LINK") == b"https://www.google.com/\n"
+            assert get_env_var(api, "PACKIT_BRAND_DARK_MODE_ENABLED") == b"true\n"
+            assert get_env_var(api, "PACKIT_BRAND_LIGHT_MODE_ENABLED") == b"true\n"
     finally:
         stop_packit(path)
 
@@ -186,8 +187,10 @@ def test_custom_branding_end_to_end():
             assert "examplefavicon.ico" in index_html
 
             custom_css = docker_util.string_from_container(api, "/usr/share/nginx/html/css/custom.css")
-            assert "--custom-accent: hsl(0 100% 50%);" in custom_css
+            assert "--custom-accent: hsl(0 100% 50%);" in custom_css  # light theme
             assert "--custom-accent-foreground: hsl(123 100% 50%);" in custom_css
+            assert "--custom-accent: hsl(30 100% 50%);" in custom_css  # dark theme
+            assert "--custom-accent-foreground: hsl(322 50% 87%);" in custom_css
 
             logo = docker_util.bytes_from_container(api, "/usr/share/nginx/html/img/examplelogo.webp")
             assert logo is not None and len(logo) > 0
@@ -321,5 +324,5 @@ def test_db_volume_is_persisted():
 @tenacity.retry(wait=tenacity.wait_fixed(1), stop=tenacity.stop_after_attempt(20))
 def create_super_user():
     print("Trying to create superuser")
-    subprocess.run(["./scripts/create-super-user"], check=True)  # noqa: S603
+    subprocess.run(["./scripts/create-super-user"], check=True)
     print("...success")

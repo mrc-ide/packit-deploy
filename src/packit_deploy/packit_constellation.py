@@ -97,6 +97,8 @@ def packit_api_get_env(cfg):
         "PACKIT_DB_PASSWORD": cfg.packit_db_password,
         "PACKIT_OUTPACK_SERVER_URL": cfg.outpack_server_url,
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
+        "PACKIT_BRAND_DARK_MODE_ENABLED": "true" if cfg.brand_dark_mode_enabled else "false",
+        "PACKIT_BRAND_LIGHT_MODE_ENABLED": "true" if cfg.brand_light_mode_enabled else "false",
         "PACKIT_CORS_ALLOWED_ORIGINS": cfg.packit_cors_allowed_origins,
         "PACKIT_BASE_URL": cfg.packit_base_url,
         "PACKIT_DEVICE_FLOW_EXPIRY_SECONDS": "300",
@@ -170,17 +172,22 @@ def packit_configure(container, cfg):
         )
     if hasattr(cfg, "brand_favicon_name"):
         substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand_favicon_name)
-    if hasattr(cfg, "brand_accent_light"):
-        new_css = (
-            ":root{\n"
-            f"  --custom-accent: {cfg.brand_accent_light};\n"
-            f"  --custom-accent-foreground: {cfg.brand_accent_foreground_light};\n"
-            "}\n"
-            ".dark {\n"
-            f"  --custom-accent: {cfg.brand_accent_dark};\n"
-            f"  --custom-accent-foreground: {cfg.brand_accent_foreground_dark};\n"
-            "}\n"
-        )
+    if hasattr(cfg, "brand_accent_light") or hasattr(cfg, "brand_accent_dark"):
+        new_css = ""
+        if cfg.brand_light_mode_enabled and hasattr(cfg, "brand_accent_light"):
+            new_css += (
+                ":root {\n"
+                f"  --custom-accent: {cfg.brand_accent_light};\n"
+                f"  --custom-accent-foreground: {cfg.brand_accent_foreground_light};\n"
+                "}\n"
+            )
+        if cfg.brand_dark_mode_enabled and hasattr(cfg, "brand_accent_dark"):
+            new_css += (
+                ".dark {\n"
+                f"  --custom-accent: {cfg.brand_accent_dark};\n"
+                f"  --custom-accent-foreground: {cfg.brand_accent_foreground_dark};\n"
+                "}\n"
+            )
         overwrite_file(container, f"{cfg.app_html_root}/css/custom.css", new_css)
 
 

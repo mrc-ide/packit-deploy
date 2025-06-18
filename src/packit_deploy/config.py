@@ -120,18 +120,25 @@ class PackitConfig:
             self.brand_favicon_path = os.path.abspath(os.path.join(path, favicon_path))
             self.brand_favicon_name = os.path.basename(self.brand_favicon_path)
         if brand_config.get("css"):
-            self.brand_accent_light = config.config_string(dat, ["brand", "css", "light", "accent"])
-            self.brand_accent_foreground_light = config.config_string(
-                dat, ["brand", "css", "light", "accent_foreground"]
-            )
+            if brand_config.get("css").get("light"):
+                self.brand_accent_light = config.config_string(dat, ["brand", "css", "light", "accent"])
+                self.brand_accent_foreground_light = config.config_string(
+                    dat, ["brand", "css", "light", "accent_foreground"]
+                )
+                self.brand_light_mode_enabled = True
+            else:
+                self.brand_light_mode_enabled = False
             if brand_config.get("css").get("dark"):
                 self.brand_accent_dark = config.config_string(dat, ["brand", "css", "dark", "accent"])
                 self.brand_accent_foreground_dark = config.config_string(
                     dat, ["brand", "css", "dark", "accent_foreground"]
                 )
+                self.brand_dark_mode_enabled = True
             else:
-                self.brand_accent_dark = self.brand_accent_light
-                self.brand_accent_foreground_dark = self.brand_accent_foreground_light
+                self.brand_dark_mode_enabled = False
+        if (not brand_config.get("css")) or (not self.brand_dark_mode_enabled and not self.brand_light_mode_enabled):
+            self.brand_light_mode_enabled = True
+            self.brand_dark_mode_enabled = True
 
         if self.proxy_enabled:
             self.proxy_hostname = config.config_string(dat, ["proxy", "hostname"])
