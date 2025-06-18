@@ -37,10 +37,10 @@ outpack:
 packit:
   api:
     name: packit-api
-    tag: mrc-6500-colour-themes
+    tag: main
   app:
     name: packit
-    tag: mrc-6500-colour-themes
+    tag: main
   db:
     name: packit-db
     tag: main

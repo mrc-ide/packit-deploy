@@ -20,9 +20,9 @@ def test_config_no_proxy():
 
     assert len(cfg.images) == 4
     assert str(cfg.images["outpack-server"]) == "mrcide/outpack_server:main"
-    assert str(cfg.images["packit"]) == "mrcide/packit:mrc-6500-colour-themes"
+    assert str(cfg.images["packit"]) == "mrcide/packit:main"
     assert str(cfg.images["packit-db"]) == "mrcide/packit-db:main"
-    assert str(cfg.images["packit-api"]) == "mrcide/packit-api:mrc-6500-colour-themes"
+    assert str(cfg.images["packit-api"]) == "mrcide/packit-api:main"
 
     assert cfg.proxy_enabled is False
     assert cfg.protect_data is False
