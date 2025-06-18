@@ -50,7 +50,7 @@ def outpack_is_initialised(container):
 
 
 def outpack_server_container(cfg):
-    name = cfg.containers["outpack-server"]
+    name = cfg.containers["outpack"]
     mounts = [constellation.ConstellationVolumeMount("outpack", "/outpack")]
     outpack_server = constellation.ConstellationContainer(
         name, cfg.outpack_ref, mounts=mounts, configure=outpack_server_configure

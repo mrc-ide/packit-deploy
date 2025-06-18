@@ -27,7 +27,7 @@ def test_start_and_stop_noproxy():
         cfg = PackitConfig(path)
         assert docker_util.network_exists(cfg.network)
         assert docker_util.volume_exists(cfg.volumes["outpack"])
-        assert docker_util.container_exists("packit-outpack-server")
+        assert docker_util.container_exists("packit-outpack")
         assert docker_util.container_exists("packit-api")
         assert docker_util.container_exists("packit-db")
         assert docker_util.container_exists("packit-app")
@@ -43,7 +43,7 @@ def test_start_and_stop_noproxy():
             assert not docker_util.container_exists("packit-api")
             assert not docker_util.container_exists("packit-db")
             assert not docker_util.container_exists("packit-app")
-            assert not docker_util.container_exists("packit-outpack-server")
+            assert not docker_util.container_exists("packit-outpack")
     finally:
         stop_packit(path)
 
@@ -116,7 +116,7 @@ def test_api_configured():
         assert get_env_var(api, "PACKIT_DB_URL") == b"jdbc:postgresql://packit-db:5432/packit?stringtype=unspecified\n"
         assert get_env_var(api, "PACKIT_DB_USER") == b"packituser\n"
         assert get_env_var(api, "PACKIT_DB_PASSWORD") == b"changeme\n"
-        assert get_env_var(api, "PACKIT_OUTPACK_SERVER_URL") == b"http://packit-outpack-server:8000\n"
+        assert get_env_var(api, "PACKIT_OUTPACK_SERVER_URL") == b"http://packit-outpack:8000\n"
         assert get_env_var(api, "PACKIT_AUTH_ENABLED") == b"false\n"
     finally:
         stop_packit(path)

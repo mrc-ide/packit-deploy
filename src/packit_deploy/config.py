@@ -57,14 +57,14 @@ class PackitConfig:
             self.packit_auth_enabled = False
 
         self.containers = {
-            "outpack-server": "outpack-server",
-            "db": "packit-db",
-            "api": "packit-api",
-            "app": "packit",
+            "outpack": "outpack",
+            "db": "db",
+            "api": "api",
+            "app": "app",
         }
 
         self.images = {
-            "outpack-server": self.outpack_ref,
+            "outpack": self.outpack_ref,
             "db": self.packit_db_ref,
             "api": self.packit_api_ref,
             "app": self.packit_app_ref,
@@ -95,7 +95,7 @@ class PackitConfig:
 
             self.redis_url = "redis://redis:6379"
 
-        self.outpack_server_url = f"http://{self.container_prefix}-{self.containers['outpack-server']}:8000"
+        self.outpack_server_url = f"http://{self.container_prefix}-{self.containers['outpack']}:8000"
 
         if dat.get("proxy"):
             self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)
