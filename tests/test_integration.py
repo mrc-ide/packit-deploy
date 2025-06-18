@@ -177,7 +177,7 @@ def test_custom_branding_end_to_end():
 
             cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
 
-            api = cfg.get_container("packit")
+            api = cfg.get_container("app")
 
             index_html = docker_util.string_from_container(api, "/usr/share/nginx/html/index.html")
             assert "<title>My Packit Instance</title>" in index_html

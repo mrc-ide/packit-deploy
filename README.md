@@ -117,7 +117,7 @@ hatch env run -- packit stop --kill config/basicauth
 If you need to see what lurks in the database, connect with
 
 ```console
-docker exec -it packit-packit-db psql -U packituser -d packit
+docker exec -it packit-db psql -U packituser -d packit
 ```
 
 If you have anything else running on port 80 or 443, nothing will work as expected; either stop that service or change the proxy port in the configuration that you are using.
