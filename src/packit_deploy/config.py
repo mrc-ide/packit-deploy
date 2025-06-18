@@ -27,6 +27,7 @@ class PackitConfig:
         self.packit_db_ref = self.build_ref(dat, "packit", "db")
         self.packit_db_user = config.config_string(dat, ["packit", "db", "user"])
         self.packit_db_password = config.config_string(dat, ["packit", "db", "password"])
+        self.packit_base_url = config.config_string(dat, ["packit", "base_url"])
 
         default_cors_allowed = "http://localhost*,https://localhost*"
         self.packit_cors_allowed_origins = config.config_string(
@@ -75,6 +76,7 @@ class PackitConfig:
             self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
             self.orderly_runner_api_url = f"http://{self.container_prefix}-orderly-runner-api:8001"
             self.orderly_runner_git_url = config.config_string(dat, ["orderly-runner", "git", "url"])
+            self.orderly_runner_env = config.config_dict(dat, ["orderly-runner", "env"], is_optional=True, default={})
             if self.orderly_runner_git_url.startswith("git@"):
                 self.orderly_runner_git_ssh_key = config.config_string(dat, ["orderly-runner", "git", "ssh"])
             else:

@@ -224,6 +224,9 @@ def test_deploy_with_runner_support():
             == b"https://github.com/reside-ic/orderly2-example.git\n"
         )
         assert get_env_var(api, "PACKIT_ORDERLY_RUNNER_LOCATION_URL") == get_env_var(api, "PACKIT_OUTPACK_SERVER_URL")
+
+        runner = cfg.get_container("orderly-runner-api")
+        assert get_env_var(runner, "PACKIT_RUNNER_EXAMPLE_ENVVAR") == b"hello\n"
     finally:
         stop_packit(path)
 

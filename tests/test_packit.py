@@ -39,3 +39,16 @@ def test_can_provide_cors_origins():
     cfg = PackitConfig("config/complete")
     env = packit_api_get_env(cfg)
     assert env["PACKIT_CORS_ALLOWED_ORIGINS"] == "https://packit.example.com"
+
+
+def test_can_set_auth_configuration():
+    cfg = PackitConfig("config/noproxy")
+    env = packit_api_get_env(cfg)
+    assert env["PACKIT_DEVICE_FLOW_EXPIRY_SECONDS"] == "300"
+    assert env["PACKIT_DEVICE_AUTH_URL"] == "https://example.com/packit/device"
+
+
+def test_can_set_base_url():
+    cfg = PackitConfig("config/noproxy")
+    env = packit_api_get_env(cfg)
+    assert env["PACKIT_BASE_URL"] == "https://example.com/packit"

@@ -9,6 +9,10 @@ from packit_deploy.docker_helpers import DockerClient
 
 class PackitConstellation:
     def __init__(self, cfg):
+        # resolve secrets early so we can set these env vars from vault values
+        if cfg.vault and cfg.vault.url:
+            vault.resolve_secrets(cfg, cfg.vault.client())
+
         outpack = outpack_server_container(cfg)
         packit_db = packit_db_container(cfg)
         packit_api = packit_api_container(cfg)
@@ -81,10 +85,6 @@ def packit_db_configure(container, _):
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
-    # resolve secrets early so we can set these env vars from vault values
-    if cfg.vault and cfg.vault.url:
-        vault.resolve_secrets(cfg, cfg.vault.client())
-
     packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=packit_api_get_env(cfg))
     return packit_api
 
@@ -100,6 +100,9 @@ def packit_api_get_env(cfg):
         "PACKIT_BRAND_DARK_MODE_ENABLED": "true" if cfg.brand_dark_mode_enabled else "false",
         "PACKIT_BRAND_LIGHT_MODE_ENABLED": "true" if cfg.brand_light_mode_enabled else "false",
         "PACKIT_CORS_ALLOWED_ORIGINS": cfg.packit_cors_allowed_origins,
+        "PACKIT_BASE_URL": cfg.packit_base_url,
+        "PACKIT_DEVICE_FLOW_EXPIRY_SECONDS": "300",
+        "PACKIT_DEVICE_AUTH_URL": f"{cfg.packit_base_url}/device",
     }
     if hasattr(cfg, "brand_logo_name"):
         env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name
@@ -248,10 +251,7 @@ def redis_configure(container, _cfg):
 def orderly_runner_api_container(cfg):
     name = cfg.containers["orderly-runner-api"]
     image = str(cfg.images["orderly-runner"])
-    env = {
-        "REDIS_URL": cfg.redis_url,
-        "ORDERLY_RUNNER_QUEUE_ID": "orderly.runner.queue",
-    }
+    env = orderly_runner_env(cfg)
     entrypoint = "/usr/local/bin/orderly.runner.server"
     args = ["/data"]
     mounts = [
@@ -272,10 +272,7 @@ def orderly_runner_worker_container(cfg):
     name = cfg.containers["orderly-runner-worker"]
     image = str(cfg.images["orderly-runner"])
     count = cfg.orderly_runner_workers
-    env = {
-        "REDIS_URL": cfg.redis_url,
-        "ORDERLY_RUNNER_QUEUE_ID": "orderly.runner.queue",
-    }
+    env = orderly_runner_env(cfg)
     entrypoint = "/usr/local/bin/orderly.runner.worker"
     args = ["/data"]
     mounts = [
@@ -291,6 +288,14 @@ def orderly_runner_worker_container(cfg):
         args=args,
         mounts=mounts,
     )
+
+
+def orderly_runner_env(cfg):
+    base = {"REDIS_URL": cfg.redis_url, "ORDERLY_RUNNER_QUEUE_ID": "orderly.runner.queue"}
+    return {
+        **base,
+        **cfg.orderly_runner_env,
+    }
 
 
 # Small script to wait for redis to come up

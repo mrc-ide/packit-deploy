@@ -167,6 +167,8 @@ def test_workers_can_be_enabled():
     assert str(cfg.images["orderly-runner"]) == "mrcide/orderly.runner:main"
     assert str(cfg.images["redis"]) == "library/redis:8.0"
 
+    assert cfg.orderly_runner_env == {"FOO": "bar"}
+
 
 def test_workers_can_be_omitted():
     cfg = PackitConfig("config/noproxy")

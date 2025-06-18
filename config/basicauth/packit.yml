@@ -35,6 +35,7 @@ outpack:
     name: outpack.orderly
     tag: main
 packit:
+  base_url: https://localhost
   api:
     name: packit-api
     tag: main
