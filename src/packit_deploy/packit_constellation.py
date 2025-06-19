@@ -50,7 +50,7 @@ def outpack_is_initialised(container):
 
 
 def outpack_server_container(cfg):
-    name = cfg.containers["outpack-server"]
+    name = cfg.containers["outpack"]
     mounts = [constellation.ConstellationVolumeMount("outpack", "/outpack")]
     outpack_server = constellation.ConstellationContainer(
         name, cfg.outpack_ref, mounts=mounts, configure=outpack_server_configure
@@ -70,7 +70,7 @@ def outpack_server_configure(container, cfg):
 
 
 def packit_db_container(cfg):
-    name = cfg.containers["packit-db"]
+    name = cfg.containers["db"]
     mounts = [constellation.ConstellationVolumeMount("packit_db", "/pgdata")]
     packit_db = constellation.ConstellationContainer(
         name, cfg.packit_db_ref, mounts=mounts, configure=packit_db_configure
@@ -84,13 +84,13 @@ def packit_db_configure(container, _):
 
 
 def packit_api_container(cfg):
-    name = cfg.containers["packit-api"]
+    name = cfg.containers["api"]
     packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=packit_api_get_env(cfg))
     return packit_api
 
 
 def packit_api_get_env(cfg):
-    packit_db = cfg.containers["packit-db"]
+    packit_db = cfg.containers["db"]
     env = {
         "PACKIT_DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
         "PACKIT_DB_USER": cfg.packit_db_user,
@@ -157,7 +157,7 @@ def packit_container(cfg):
         )
 
     packit = constellation.ConstellationContainer(
-        cfg.containers["packit"], cfg.packit_ref, mounts=mounts, configure=packit_configure
+        cfg.containers["app"], cfg.packit_app_ref, mounts=mounts, configure=packit_configure
     )
     return packit
 
