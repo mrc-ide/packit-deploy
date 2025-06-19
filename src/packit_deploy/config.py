@@ -23,7 +23,7 @@ class PackitConfig:
 
         self.outpack_ref = self.build_ref(dat, "outpack", "server")
         self.packit_api_ref = self.build_ref(dat, "packit", "api")
-        self.packit_app_ref = self.build_ref(dat, "packit", "app")
+        self.packit_ref = self.build_ref(dat, "packit", "app")
         self.packit_db_ref = self.build_ref(dat, "packit", "db")
         self.packit_db_user = config.config_string(dat, ["packit", "db", "user"])
         self.packit_db_password = config.config_string(dat, ["packit", "db", "password"])
@@ -57,17 +57,17 @@ class PackitConfig:
             self.packit_auth_enabled = False
 
         self.containers = {
-            "outpack": "outpack",
-            "db": "db",
-            "api": "api",
-            "app": "app",
+            "outpack-server": "outpack-server",
+            "packit-db": "packit-db",
+            "packit-api": "packit-api",
+            "packit": "packit",
         }
 
         self.images = {
-            "outpack": self.outpack_ref,
-            "db": self.packit_db_ref,
-            "api": self.packit_api_ref,
-            "app": self.packit_app_ref,
+            "outpack-server": self.outpack_ref,
+            "packit-db": self.packit_db_ref,
+            "packit-api": self.packit_api_ref,
+            "packit": self.packit_ref,
         }
 
         self.orderly_runner_enabled = "orderly-runner" in dat
@@ -95,7 +95,7 @@ class PackitConfig:
 
             self.redis_url = "redis://redis:6379"
 
-        self.outpack_server_url = f"http://{self.container_prefix}-{self.containers['outpack']}:8000"
+        self.outpack_server_url = f"http://{self.container_prefix}-{self.containers['outpack-server']}:8000"
 
         if dat.get("proxy"):
             self.proxy_enabled = config.config_boolean(dat, ["proxy", "enabled"], True)

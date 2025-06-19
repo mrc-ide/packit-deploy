@@ -8,7 +8,7 @@ ADMIN_EMAIL='resideUser@resideAdmin.ic.ac.uk'
 ADMIN_PASSWORD_ENCODED='$2y$10$snpZ8bgdkh2hy8lDtyHF7ejD5.K1vsMqaFteCkmBhdBQj3JTlJRM6'
 ADMIN_UUID='2754daf8-fea0-4bf4-af60-810764f24d71'
 
-docker exec packit-db create-super-user --email "$ADMIN_EMAIL" --password "$ADMIN_PASSWORD_ENCODED" --uuid "$ADMIN_UUID"
+docker exec packit-packit-db create-super-user --email "$ADMIN_EMAIL" --password "$ADMIN_PASSWORD_ENCODED" --uuid "$ADMIN_UUID"
 
 echo "Log in with":
 echo "  username: $ADMIN_EMAIL"
