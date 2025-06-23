@@ -43,13 +43,13 @@ packit:
   base_url: https://localhost
   api:
     name: packit-api
-    tag: mrc-6560-gh-registry
+    tag: main
   app:
     name: packit
-    tag: mrc-6560-gh-registry
+    tag: main
   db:
     name: packit-db
-    tag: mrc-6560-gh-registry
+    tag: main
     user: packituser
     password: changeme
   auth:
@@ -80,4 +80,4 @@ proxy:
   port_https: 443
   image:
     name: packit-proxy
-    tag: mrc-6560-gh-registry
+    tag: mrc-6560-gh-registry # TODO: Revert to main on merge

@@ -6,11 +6,7 @@ PACKAGE_NAME=packit-proxy
 PACKAGE_REGISTRY=ghcr.io
 PACKAGE_ORG=mrc-ide
 
-if [[ -v "GITHUB_SHA" ]]; then
-    GIT_SHA=${GITHUB_SHA:0:7}
-else
-    GIT_SHA=$(git rev-parse --short=7 HEAD)
-fi
+GIT_SHA=$(git rev-parse --short=7 HEAD)
 
 if [[ -v "BRANCH_NAME" ]]; then
     GIT_BRANCH=${BRANCH_NAME}
