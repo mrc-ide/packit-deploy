@@ -20,9 +20,9 @@ def test_config_no_proxy():
 
     assert len(cfg.images) == 4
     assert str(cfg.images["outpack-server"]) == "mrcide/outpack_server:main"
-    assert str(cfg.images["packit"]) == "mrcide/packit:main"
-    assert str(cfg.images["packit-db"]) == "mrcide/packit-db:main"
-    assert str(cfg.images["packit-api"]) == "mrcide/packit-api:main"
+    assert str(cfg.images["packit"]) == "ghcr.io/mrc-ide/packit:main"
+    assert str(cfg.images["packit-db"]) == "ghcr.io/mrc-ide/packit-db:main"
+    assert str(cfg.images["packit-api"]) == "ghcr.io/mrc-ide/packit-api:main"
 
     assert cfg.proxy_enabled is False
     assert cfg.protect_data is False
@@ -42,7 +42,7 @@ def test_config_proxy():
     assert cfg.proxy_enabled
     assert cfg.proxy_ssl_self_signed
     assert "proxy" in cfg.containers
-    assert str(cfg.images["proxy"]) == "mrcide/packit-proxy:main"
+    assert str(cfg.images["proxy"]) == "ghcr.io/mrc-ide/packit-proxy:main"
     assert cfg.proxy_hostname == "localhost"
     assert cfg.proxy_port_http == 80
     assert cfg.proxy_port_https == 443
