@@ -43,13 +43,13 @@ packit:
   base_url: https://localhost
   api:
     name: packit-api
-    tag: main
+    tag: mrc-6560-gh-registry
   app:
     name: packit
-    tag: main
+    tag: mrc-6560-gh-registry
   db:
     name: packit-db
-    tag: main
+    tag: mrc-6560-gh-registry
     user: packituser
     password: changeme
   auth:
@@ -80,4 +80,4 @@ proxy:
   port_https: 443
   image:
     name: packit-proxy
-    tag: main
+    tag: mrc-6560-gh-registry

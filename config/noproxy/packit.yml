@@ -39,12 +39,12 @@ packit:
   base_url: https://example.com/packit
   api:
     name: packit-api
-    tag: main
+    tag: mrc-6560-gh-registry
   app:
     name: packit
-    tag: main
+    tag: mrc-6560-gh-registry
   db:
     name: packit-db
-    tag: main
+    tag: mrc-6560-gh-registry
     user: packituser
     password: changeme
