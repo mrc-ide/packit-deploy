@@ -20,8 +20,9 @@ class PackitConfig:
 
         self.container_prefix = config.config_string(dat, ["container_prefix"])
         self.repo = config.config_string(dat, ["repo"])
+        self.outpack_repo = config.config_string(dat, ["outpack_repo"])
 
-        self.outpack_ref = self.build_ref(dat, "outpack", "server")
+        self.outpack_ref = self.build_ref(dat, "outpack", "server", self.outpack_repo)
         self.packit_api_ref = self.build_ref(dat, "packit", "api")
         self.packit_ref = self.build_ref(dat, "packit", "app")
         self.packit_db_ref = self.build_ref(dat, "packit", "db")
@@ -72,7 +73,7 @@ class PackitConfig:
 
         self.orderly_runner_enabled = "orderly-runner" in dat
         if self.orderly_runner_enabled:
-            self.orderly_runner_ref = self.build_ref(dat, "orderly-runner", "image")
+            self.orderly_runner_ref = self.build_ref(dat, "orderly-runner", "image", self.outpack_repo)
             self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
             self.orderly_runner_api_url = f"http://{self.container_prefix}-orderly-runner-api:8001"
             self.orderly_runner_git_url = config.config_string(dat, ["orderly-runner", "git", "url"])
@@ -157,10 +158,11 @@ class PackitConfig:
             self.images["proxy"] = self.proxy_ref
             self.volumes["proxy_logs"] = config.config_string(dat, ["volumes", "proxy_logs"])
 
-    def build_ref(self, dat, section, subsection):
+    def build_ref(self, dat, section, subsection, repo=None):
+        repo = self.repo if repo is None else repo
         name = config.config_string(dat, [section, subsection, "name"])
         tag = config.config_string(dat, [section, subsection, "tag"])
-        return constellation.ImageReference(self.repo, name, tag)
+        return constellation.ImageReference(repo, name, tag)
 
     def get_container(self, name):
         with DockerClient() as cl:

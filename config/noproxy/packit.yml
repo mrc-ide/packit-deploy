@@ -5,8 +5,11 @@ container_prefix: packit
 ## volumes on stop
 protect_data: false
 
-## Docker org for images
-repo: mrcide
+## Docker org for packit images
+repo: ghcr.io/mrc-ide
+
+## Docker org for outpack images
+outpack_repo: mrcide
 
 ## The name of the docker network that containers will be attached to.
 ## If you want to proxy Packit to the host, you will need to
