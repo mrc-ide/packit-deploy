@@ -20,9 +20,8 @@ class PackitConfig:
 
         self.container_prefix = config.config_string(dat, ["container_prefix"])
         self.repo = config.config_string(dat, ["repo"])
-        self.outpack_repo = config.config_string(dat, ["outpack_repo"])
 
-        self.outpack_ref = self.build_ref(dat, "outpack", "server", self.outpack_repo)
+        self.outpack_ref = self.build_ref(dat, "outpack", "server", self.repo)
         self.packit_api_ref = self.build_ref(dat, "packit", "api")
         self.packit_ref = self.build_ref(dat, "packit", "app")
         self.packit_db_ref = self.build_ref(dat, "packit", "db")
@@ -73,7 +72,7 @@ class PackitConfig:
 
         self.orderly_runner_enabled = "orderly-runner" in dat
         if self.orderly_runner_enabled:
-            self.orderly_runner_ref = self.build_ref(dat, "orderly-runner", "image", self.outpack_repo)
+            self.orderly_runner_ref = self.build_ref(dat, "orderly-runner", "image", self.repo)
             self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
             self.orderly_runner_api_url = f"http://{self.container_prefix}-orderly-runner-api:8001"
             self.orderly_runner_git_url = config.config_string(dat, ["orderly-runner", "git", "url"])
