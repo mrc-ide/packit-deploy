@@ -42,7 +42,7 @@ def test_config_proxy():
     assert cfg.proxy_enabled
     assert cfg.proxy_ssl_self_signed
     assert "proxy" in cfg.containers
-    assert str(cfg.images["proxy"]) == "ghcr.io/mrc-ide/packit-proxy:mrc-6560-gh-registry"
+    assert str(cfg.images["proxy"]) == "ghcr.io/mrc-ide/packit-proxy:main"
     assert cfg.proxy_hostname == "localhost"
     assert cfg.proxy_port_http == 80
     assert cfg.proxy_port_https == 443

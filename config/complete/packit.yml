@@ -104,7 +104,7 @@ proxy:
   port_https: 443
   image:
     name: packit-proxy
-    tag: mrc-6560-gh-registry # TODO: Revert to main on merge
+    tag: main
 
 vault:
   ## Address of the vault server.  This should be a string if it is
