@@ -19,10 +19,10 @@ def test_config_no_proxy():
     assert cfg.containers["packit-db"] == "packit-db"
 
     assert len(cfg.images) == 4
-    assert str(cfg.images["outpack-server"]) == "mrcide/outpack_server:main"
-    assert str(cfg.images["packit"]) == "mrcide/packit:main"
-    assert str(cfg.images["packit-db"]) == "mrcide/packit-db:main"
-    assert str(cfg.images["packit-api"]) == "mrcide/packit-api:main"
+    assert str(cfg.images["outpack-server"]) == "ghcr.io/mrc-ide/outpack_server:main"
+    assert str(cfg.images["packit"]) == "ghcr.io/mrc-ide/packit:main"
+    assert str(cfg.images["packit-db"]) == "ghcr.io/mrc-ide/packit-db:main"
+    assert str(cfg.images["packit-api"]) == "ghcr.io/mrc-ide/packit-api:main"
 
     assert cfg.proxy_enabled is False
     assert cfg.protect_data is False
@@ -42,7 +42,7 @@ def test_config_proxy():
     assert cfg.proxy_enabled
     assert cfg.proxy_ssl_self_signed
     assert "proxy" in cfg.containers
-    assert str(cfg.images["proxy"]) == "mrcide/packit-proxy:main"
+    assert str(cfg.images["proxy"]) == "ghcr.io/mrc-ide/packit-proxy:mrc-6560-gh-registry"
     assert cfg.proxy_hostname == "localhost"
     assert cfg.proxy_port_http == 80
     assert cfg.proxy_port_https == 443
@@ -158,13 +158,13 @@ def test_workers_can_be_enabled():
     assert cfg.images
 
     assert cfg.orderly_runner_enabled
-    assert cfg.orderly_runner_ref.repo == "mrcide"
+    assert cfg.orderly_runner_ref.repo == "ghcr.io/mrc-ide"
     assert cfg.orderly_runner_ref.name == "orderly.runner"
     assert cfg.orderly_runner_ref.tag == "main"
     assert cfg.orderly_runner_workers == 1
 
     assert len(cfg.images) == 7
-    assert str(cfg.images["orderly-runner"]) == "mrcide/orderly.runner:main"
+    assert str(cfg.images["orderly-runner"]) == "ghcr.io/mrc-ide/orderly.runner:main"
     assert str(cfg.images["redis"]) == "library/redis:8.0"
 
     assert cfg.orderly_runner_env == {"FOO": "bar"}

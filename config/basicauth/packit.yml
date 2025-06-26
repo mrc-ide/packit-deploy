@@ -10,7 +10,7 @@ container_prefix: packit
 protect_data: false
 
 ## Docker org for images
-repo: mrcide
+repo: ghcr.io/mrc-ide
 
 ## The name of the docker network that containers will be attached to.
 ## If you want to proxy Packit to the host, you will need to
@@ -64,4 +64,4 @@ proxy:
   port_https: 443
   image:
     name: packit-proxy
-    tag: main
+    tag: mrc-6560-gh-registry # TODO: Revert to main on merge
