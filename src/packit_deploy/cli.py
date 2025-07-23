@@ -5,6 +5,8 @@ import click
 from packit_deploy.config import PackitConfig
 from packit_deploy.packit_constellation import PackitConstellation
 
+_HELP_NAME = "Override the configured instance, use with care!"
+
 
 @click.group()
 @click.version_option()
@@ -37,13 +39,15 @@ def cli_configure(name):
 
 @cli.command("start")
 @click.option("--pull", is_flag=True, help="Pull images before start")
-def cli_start(*, pull):
-    _constellation().start(pull_images=pull)
+@click.option("--name", type=str, help=_HELP_NAME)
+def cli_start(*, pull, name, options=None):
+    _constellation(name, options=options).start(pull_images=pull)
 
 
 @cli.command("status")
-def cli_status():
-    name = _read_identity()
+@click.option("--name", type=str, help=_HELP_NAME)
+def cli_status(name):
+    name = _read_identity(name)
     print(f"Configured as '{name}'")
     _constellation(name).status()
 
@@ -52,7 +56,7 @@ def cli_status():
 @click.option("--kill", is_flag=True, help="Kill containers, don't wait for a clean exit")
 @click.option("--network", is_flag=True, help="Remove the docker network")
 @click.option("--volumes", is_flag=True, help="Remove the docker volumes, causing permanent data loss")
-@click.option("--name", type=str, help="Override the configured instance, use with care!")
+@click.option("--name", type=str, help=_HELP_NAME)
 def cli_stop(*, name, kill, network, volumes):
     obj = _constellation(name)
     if volumes:
@@ -83,7 +87,9 @@ def _prompt_yes_no(get_input=input):
 IDENTITY_FILE = Path(".packit_identity")
 
 
-def _read_identity(*, required=True):
+def _read_identity(name=None, *, required=True):
+    if name:
+        return name
     if IDENTITY_FILE.exists():
         with IDENTITY_FILE.open() as f:
             return f.read().strip()
@@ -93,6 +99,7 @@ def _read_identity(*, required=True):
     return None
 
 
-def _constellation(name=None) -> PackitConstellation:
-    cfg = PackitConfig(name or _read_identity())
+def _constellation(name=None, options=None) -> PackitConstellation:
+    name = _read_identity(name)
+    cfg = PackitConfig(name, options=options)
     return PackitConstellation(cfg)
