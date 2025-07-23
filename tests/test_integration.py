@@ -1,10 +1,8 @@
 import json
-import shutil
 import ssl
 import subprocess
 import time
 import urllib
-from pathlib import Path
 from unittest import mock
 
 import docker
@@ -106,7 +104,7 @@ def test_proxy_ssl_configured():
     try:
         with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
-            options = options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
             write_secrets_to_vault(s.client())
 
             cli.cli_start.callback(pull=False, name=path, options=options)
@@ -153,7 +151,7 @@ def test_api_configured_for_github_auth():
     try:
         with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
-            options = options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
             write_secrets_to_vault(s.client())
 
             cli.cli_start.callback(pull=False, name=path, options=options)
@@ -178,7 +176,7 @@ def test_api_configured_with_custom_branding():
     try:
         with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
-            options = options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
             write_secrets_to_vault(s.client())
 
             cli.cli_start.callback(pull=False, name=path, options=options)
@@ -200,7 +198,7 @@ def test_custom_branding_end_to_end():
     try:
         with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
-            options = options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
             write_secrets_to_vault(s.client())
 
             cli.cli_start.callback(pull=False, name=path, options=options)
@@ -265,7 +263,7 @@ def test_vault():
     try:
         with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
-            options = options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
             write_secrets_to_vault(s.client())
 
             cli.cli_start.callback(pull=False, name=path, options=options)
