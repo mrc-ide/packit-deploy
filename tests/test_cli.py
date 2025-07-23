@@ -17,7 +17,7 @@ def test_can_run_start(mocker):
     res = runner.invoke(cli.cli, ["start"])
     assert res.exit_code == 0
     assert cli._constellation.call_count == 1
-    assert cli._constellation.mock_calls[0] == mock.call()
+    assert cli._constellation.mock_calls[0] == mock.call(None, options=None)
 
 
 def test_can_run_status(mocker):
@@ -28,7 +28,7 @@ def test_can_run_status(mocker):
     res = runner.invoke(cli.cli, ["status"])
     assert res.exit_code == 0
     assert cli._read_identity.call_count == 1
-    assert cli._read_identity.mock_calls[0] == mock.call()
+    assert cli._read_identity.mock_calls[0] == mock.call(None)
     assert cli._constellation.call_count == 1
     assert cli._constellation.mock_calls[0] == mock.call("config/noproxy")
 

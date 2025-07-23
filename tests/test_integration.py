@@ -57,7 +57,7 @@ def test_start_and_stop_noproxy():
 def test_status(name="config/noproxy"):
     res = CliRunner().invoke(cli.cli, ["status", "--name", name])
     assert res.exit_code == 0
-    assert "Configured as config/noproxy" in res.output
+    assert "Configured as 'config/noproxy'" in res.output
 
 
 def test_start_and_stop_proxy():
@@ -335,11 +335,12 @@ def test_db_volume_is_persisted():
         assert set(users) == {"SERVICE", "resideUser@resideAdmin.ic.ac.uk"}
 
         # Tear things down, but leave the volumes in place:
-        cli.main(["stop", path, "--kill", "--network"])
+        res = CliRunner.invoke(cli.cli, ["stop", "--name", path, "--kill", "--network"])
+        assert res.exit_code == 0
 
         # Bring back up
-        res = cli.main(["start", path])
-        assert res
+        res = runner.invoke(cli.cli, ["start", "--name", path])
+        assert res.exit_code == 0
 
         # Check that the users have survived
         db = cfg.get_container("packit-db")
