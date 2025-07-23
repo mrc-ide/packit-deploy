@@ -15,34 +15,33 @@ pip install packit-deploy
 
 ## Usage
 
-So far the only commands are `start`, `stop` and `status`. Admin commands for managing users 
-and permissions will be added in due course.
+So far the only commands are `start`, `stop` and `status`.
 
 ```
-$ packit --help
-Usage:
-  packit start <path> [--extra=PATH] [--option=OPTION]... [--pull]
-  packit status <path>
-  packit stop <path> [--volumes] [--network] [--kill] [--force]
-    [--extra=PATH] [--option=OPTION]...
+$ Usage: packit [OPTIONS] COMMAND [ARGS]...
 
 Options:
-  --extra=PATH     Path, relative to <path>, of yml file of additional
-                   configuration
-  --option=OPTION  Additional configuration options, in the form key=value
-                   Use dots in key for hierarchical structure, e.g., a.b=value
-                   This argument may be repeated to provide multiple arguments
-  --pull           Pull images before starting
-  --volumes        Remove volumes (WARNING: irreversible data loss)
-  --network        Remove network
-  --kill           Kill the containers (faster, but possible db corruption)
+  --version  Show the version and exit.
+  --help     Show this message and exit.
+
+Commands:
+  configure
+  start
+  status
+  stop
 ```
 
-Here `<path>` is the path to a directory that contains a configuration file `packit.yml`.
+First, configure an instance with
+
+```
+packit configure <path>
+```
+
+where `<path>` is the path to a directory that contains a configuration file `packit.yml`.  After that, `packit start`, `packit stop` and `packit status` operate on that instance.
 
 ## Dev requirements
 
-1. [Python3](https://www.python.org/downloads/) (>= 3.7)
+1. [Python3](https://www.python.org/downloads/) (>= 3.9)
 2. [Hatch](https://hatch.pypa.io/latest/install/)
 
 ## Test
@@ -102,16 +101,17 @@ details.
 For example, to bring up the `basicauth` configuration, you can run:
 
 ```console
-hatch env run -- packit start --pull config/basicauth
+hatch env run -- packit configure config/basicauth
+hatch env run -- packit start --pull
 ./scripts/create-super-user
 ```
 
-The `--` allows `--pull` to make it through to the deploy (and not be swallowed by `hatch`).  Alternatively you can run `packit start --pull config/basicauth` after running `hatch shell`.  The `create-super-user` script sets up a user that you can log in with via basic auth and prints the login details to stdout.  After this, packit will be running at `https://localhost` though with a self-signed certificate so you will need to tell your browser that it's ok to connect.
+The `--` allows `--pull` to make it through to the deploy (and not be swallowed by `hatch`).  Alternatively you can run these commands without the `hatch env run --` part after running `hatch shell`.  The `create-super-user` script sets up a user that you can log in with via basic auth and prints the login details to stdout.  After this, packit will be running at `https://localhost` though with a self-signed certificate so you will need to tell your browser that it's ok to connect.
 
 To bring things down, run
 
 ```console
-hatch env run -- packit stop --kill config/basicauth
+hatch env run -- packit stop --kill
 ```
 
 If you need to see what lurks in the database, connect with
@@ -121,6 +121,8 @@ docker exec -it packit-packit-db psql -U packituser -d packit
 ```
 
 If you have anything else running on port 80 or 443, nothing will work as expected; either stop that service or change the proxy port in the configuration that you are using.
+
+Delete the file `.packit_identity` once you're done.  This is manual because it should not be easy in deployments!
 
 ## Custom branding configuration
 

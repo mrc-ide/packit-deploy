@@ -57,9 +57,12 @@ def test_that_can_configure_system():
 
 
 def test_can_error_if_not_configured():
-    assert cli._read_identity(required=False) is None
-    with pytest.raises(Exception, match="Packit identity is not yet configured"):
-        cli._read_identity()
+    runner = CliRunner()
+    with runner.isolated_filesystem():
+        assert cli._read_identity(required=False) is None
+        msg = "Packit identity is not yet configured"
+        with pytest.raises(Exception, match=msg):
+            cli._read_identity()
 
 
 def test_verify_data_loss_called():
