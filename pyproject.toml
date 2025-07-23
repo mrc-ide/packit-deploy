@@ -25,9 +25,9 @@ classifiers = [
     "Programming Language :: Python :: Implementation :: PyPy",
 ]
 dependencies = [
+    "click",
     "constellation~=1.4.2",
     "docker",
-    "docopt"
 ]
 
 [project.urls]
@@ -36,18 +36,19 @@ Issues = "https://github.com/mrc-ide/packit-deploy/issues"
 Source = "https://github.com/mrc-ide/packit-deploy"
 
 [project.scripts]
-packit = "packit_deploy.cli:main"
+packit = "packit_deploy.cli:cli"
 
 [tool.hatch.version]
 path = "src/packit_deploy/__about__.py"
 
 [tool.hatch.envs.default]
 dependencies = [
+    "click",
     "constellation",
     "coverage[toml]>=6.5",
     "docker",
-    "docopt",
     "pytest",
+    "pytest-mock",
     "tenacity",
     "vault_dev"
 ]

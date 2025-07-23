@@ -1,87 +1,75 @@
 import io
+import shutil
 from contextlib import redirect_stdout
+from pathlib import Path
 from unittest import mock
 
 import pytest
+from click.testing import CliRunner
 
 from src.packit_deploy import cli
-from src.packit_deploy.cli import prompt_yes_no, verify_data_loss
-from src.packit_deploy.config import PackitConfig
+from src.packit_deploy.cli import _prompt_yes_no, _verify_data_loss
 
 
-def test_parse_args():
-    res = cli.parse_args(["start", "config/novault", "--pull"])
-    assert res[0] == "config/novault"
-    assert res[1] is None
-    assert res[2] == []
-    args = res[3]
-    assert args.action == "start"
-    assert args.pull is True
-    assert args.kill is False
-    assert args.volumes is False
-    assert args.network is False
-
-    res = cli.parse_args(["start", "config/novault", "--extra=extra.yml"])
-    assert res[1] == "extra.yml"
-
-    res = cli.parse_args(["start", "config/novault", "--option=a=x", "--option=b.c=y"])
-    assert res[2] == [{"a": "x"}, {"b": {"c": "y"}}]
-
-    res = cli.parse_args(["stop", "config/novault", "--kill", "--network", "--volumes"])
-    args = res[3]
-    assert args.action == "stop"
-    assert args.pull is False
-    assert args.kill is True
-    assert args.volumes is True
-    assert args.network is True
-
-    res = cli.parse_args(["status", "config/novault"])
-    args = res[3]
-    assert args.action == "status"
-
-    res = cli.parse_args(["--version"])
-    args = res[3]
-    assert args.version is True
+def test_can_run_start(mocker):
+    mocker.patch("src.packit_deploy.cli._constellation")
+    runner = CliRunner()
+    res = runner.invoke(cli.cli, ["start"])
+    assert res.exit_code == 0
+    assert cli._constellation.call_count == 1
+    assert cli._constellation.mock_calls[0] == mock.call()
 
 
-def test_args_passed_to_start():
-    with mock.patch("src.packit_deploy.cli.packit_start") as f:
-        cli.main(["start", "config/noproxy"])
+def test_can_run_status(mocker):
+    mocker.patch("src.packit_deploy.cli._read_identity")
+    mocker.patch("src.packit_deploy.cli._constellation")
+    cli._read_identity.return_value = "config/noproxy"
+    runner = CliRunner()
+    res = runner.invoke(cli.cli, ["status"])
+    assert res.exit_code == 0
+    assert cli._read_identity.call_count == 1
+    assert cli._read_identity.mock_calls[0] == mock.call()
+    assert cli._constellation.call_count == 1
+    assert cli._constellation.mock_calls[0] == mock.call("config/noproxy")
 
-    assert f.called
-    assert f.call_args[0][1].pull is False
 
-    with mock.patch("src.packit_deploy.cli.packit_start") as f:
-        cli.main(["start", "config/noproxy", "--pull"])
+def test_that_can_configure_system():
+    runner = CliRunner()
+    path_config = Path("config").absolute()
+    with runner.isolated_filesystem():
+        shutil.copytree(path_config, "config")
 
-    assert f.called
-    assert f.call_args[0][1].pull is True
+        res = runner.invoke(cli.cli, ["configure", "config/noproxy"])
+        assert res.exit_code == 0
+        assert "Configured packit as 'config/noproxy" in res.stdout
+
+        assert cli._read_identity() == "config/noproxy"
+
+        res = runner.invoke(cli.cli, ["configure", "config/noproxy"])
+        assert res.exit_code == 0
+        assert "Packit already configured as 'config/noproxy" in res.stdout
+        assert cli._read_identity() == "config/noproxy"
+
+        res = runner.invoke(cli.cli, ["configure", "config/proxy"])
+        assert res.exit_code == 1
+        assert "already configured as 'config/noproxy'" in str(res.exception)
+        assert cli._read_identity() == "config/noproxy"
 
 
-def test_args_passed_to_stop():
-    with mock.patch("src.packit_deploy.cli.packit_stop") as f:
-        cli.main(["stop", "config/noproxy"])
-
-    assert f.called
-    assert f.call_args[0][1].kill is False
-    assert f.call_args[0][1].network is False
-    assert f.call_args[0][1].volumes is False
-
-    with mock.patch("src.packit_deploy.cli.packit_stop") as f:
-        cli.main(["stop", "config/noproxy", "--volumes", "--network"])
-
-    assert f.called
-    assert f.call_args[0][1].kill is False
-    assert f.call_args[0][1].network is True
-    assert f.call_args[0][1].volumes is True
+def test_can_error_if_not_configured():
+    assert cli._read_identity(required=False) is None
+    with pytest.raises(Exception, match="Packit identity is not yet configured"):
+        cli._read_identity()
 
 
 def test_verify_data_loss_called():
     f = io.StringIO()
     with redirect_stdout(f):
-        with mock.patch("src.packit_deploy.cli.verify_data_loss") as verify:
+        with mock.patch("src.packit_deploy.cli._verify_data_loss") as verify:
             verify.return_value = True
-            cli.main(["stop", "config/noproxy", "--volumes"])
+            runner = CliRunner()
+            res = runner.invoke(cli.cli, ["stop", "--volumes", "--name", "config/noproxy"])
+            assert res.exit_code == 0
 
     assert verify.called
 
@@ -89,45 +77,43 @@ def test_verify_data_loss_called():
 def test_verify_data_loss_not_called():
     f = io.StringIO()
     with redirect_stdout(f):
-        with mock.patch("src.packit_deploy.cli.verify_data_loss") as verify:
+        with mock.patch("src.packit_deploy.cli._verify_data_loss") as verify:
             verify.return_value = True
-            cli.main(["stop", "config/noproxy"])
+            runner = CliRunner()
+            res = runner.invoke(cli.cli, ["stop", "--name", "config/noproxy"])
+            assert res.exit_code == 0
 
     assert not verify.called
 
 
 def test_verify_data_loss_warns_if_loss():
-    cfg = PackitConfig("config/noproxy")
     f = io.StringIO()
     with redirect_stdout(f):
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+        with mock.patch("src.packit_deploy.cli._prompt_yes_no") as prompt:
             prompt.return_value = True
-            verify_data_loss(cfg)
+            _verify_data_loss(False)
 
     assert prompt.called
     assert "WARNING! PROBABLE IRREVERSIBLE DATA LOSS!" in f.getvalue()
 
 
 def test_verify_data_loss_throws_if_loss():
-    cfg = PackitConfig("config/noproxy")
-    with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+    with mock.patch("src.packit_deploy.cli._prompt_yes_no") as prompt:
         prompt.return_value = False
         with pytest.raises(Exception, match="Not continuing"):
-            verify_data_loss(cfg)
+            _verify_data_loss(False)
 
 
 def test_verify_data_prevents_unwanted_loss():
-    cfg = PackitConfig("config/noproxy")
-    cfg.protect_data = True
     msg = "Cannot remove volumes with this configuration"
-    with mock.patch("src.packit_deploy.cli.prompt_yes_no"):
+    with mock.patch("src.packit_deploy.cli._prompt_yes_no"):
         with pytest.raises(Exception, match=msg):
-            verify_data_loss(cfg)
+            _verify_data_loss(True)
 
 
 def test_prompt_is_quite_strict():
-    assert prompt_yes_no(lambda _: "yes")
-    assert not prompt_yes_no(lambda _: "no")
-    assert not prompt_yes_no(lambda _: "Yes")
-    assert not prompt_yes_no(lambda _: "Great idea!")
-    assert not prompt_yes_no(lambda _: "")
+    assert _prompt_yes_no(lambda _: "yes")
+    assert not _prompt_yes_no(lambda _: "no")
+    assert not _prompt_yes_no(lambda _: "Yes")
+    assert not _prompt_yes_no(lambda _: "Great idea!")
+    assert not _prompt_yes_no(lambda _: "")
