@@ -335,7 +335,7 @@ def test_db_volume_is_persisted():
         assert set(users) == {"SERVICE", "resideUser@resideAdmin.ic.ac.uk"}
 
         # Tear things down, but leave the volumes in place:
-        res = CliRunner.invoke(cli.cli, ["stop", "--name", path, "--kill", "--network"])
+        res = runner.invoke(cli.cli, ["stop", "--name", path, "--kill", "--network"])
         assert res.exit_code == 0
 
         # Bring back up
