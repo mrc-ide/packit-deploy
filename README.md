@@ -15,7 +15,7 @@ pip install packit-deploy
 
 ## Usage
 
-So far the only commands are `start`, `stop` and `status`.
+So far the only commands are `configure`, `start`, `stop` and `status`.
 
 ```
 $ Usage: packit [OPTIONS] COMMAND [ARGS]...
@@ -30,6 +30,8 @@ Commands:
   status
   stop
 ```
+
+Help for sub commands is available via, for example, `packit start --help`, but most have few options.
 
 First, configure an instance with
 
