@@ -8,18 +8,24 @@ from unittest import mock
 import docker
 import tenacity
 import vault_dev
+from click.testing import CliRunner
 from constellation import docker_util
 
 from src.packit_deploy import cli
 from src.packit_deploy.config import PackitConfig
 
 
+def _stop_args(path):
+    return ["stop", "--name", path, "--kill", "--volumes", "--network"]
+
+
 def test_start_and_stop_noproxy():
     path = "config/noproxy"
     try:
         # Start
-        res = cli.main(["start", path, "--pull"])
-        assert res
+        runner = CliRunner()
+        res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
+        assert res.exit_code == 0
 
         cl = docker.client.from_env()
         containers = cl.containers.list()
@@ -33,9 +39,9 @@ def test_start_and_stop_noproxy():
         assert docker_util.container_exists("packit-packit")
 
         # Stop
-        with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+        with mock.patch("src.packit_deploy.cli._prompt_yes_no") as prompt:
             prompt.return_value = True
-            cli.main(["stop", path, "--kill", "--volumes", "--network"])
+            res = runner.invoke(cli.cli, _stop_args(path))
             containers = cl.containers.list()
             assert len(containers) == 0
             assert not docker_util.network_exists(cfg.network)
@@ -48,16 +54,18 @@ def test_start_and_stop_noproxy():
         stop_packit(path)
 
 
-def test_status():
-    res = cli.main(["status", "config/noproxy"])
-    assert res
+def test_status(name="config/noproxy"):
+    res = CliRunner().invoke(cli.cli, ["status", "--name", name])
+    assert res.exit_code == 0
+    assert "Configured as 'config/noproxy'" in res.output
 
 
 def test_start_and_stop_proxy():
     path = "config/novault"
     try:
-        res = cli.main(["start", "--pull", path])
-        assert res
+        runner = CliRunner()
+        res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
+        assert res.exit_code == 0
 
         cl = docker.client.from_env()
         containers = cl.containers.list()
@@ -82,16 +90,26 @@ def test_start_and_stop_proxy():
         stop_packit(path)
 
 
+# For all tests involving vault, there's some grossness to deal with.
+# It's not easy to inject the vault configuration (url and token) into
+# the packit yml configuration, so we bypass it this way for tests.
+# Previously one could pass arbitrary additional options to override
+# bits of the constellation config by writing
+# '--option=vault.addr=URL' but that's removed generally because it
+# was never used outside of tests either.  We could also inject these
+# into the yml and rewrite it, which would make the implementation
+# less coupled from the tests.
 def test_proxy_ssl_configured():
     path = "config/complete"
     try:
         with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
-            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
-            write_secrets_to_vault(cfg)
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            write_secrets_to_vault(s.client())
 
-            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+            cli.cli_start.callback(pull=False, name=path, options=options)
 
+            cfg = PackitConfig(path)
             proxy = cfg.get_container("proxy")
             cert = docker_util.string_from_container(proxy, "run/proxy/certificate.pem")
             key = docker_util.string_from_container(proxy, "run/proxy/key.pem")
@@ -105,7 +123,10 @@ def test_proxy_ssl_configured():
 def test_api_configured():
     path = "config/noproxy"
     try:
-        cli.main(["start", path, "--pull"])
+        runner = CliRunner()
+        res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
+        assert res.exit_code == 0
+
         cl = docker.client.from_env()
         containers = cl.containers.list()
         assert len(containers) == 4
@@ -130,11 +151,12 @@ def test_api_configured_for_github_auth():
     try:
         with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
-            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
-            write_secrets_to_vault(cfg)
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            write_secrets_to_vault(s.client())
 
-            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+            cli.cli_start.callback(pull=False, name=path, options=options)
 
+            cfg = PackitConfig(path)
             api = cfg.get_container("packit-api")
 
             # assert env variables
@@ -154,11 +176,12 @@ def test_api_configured_with_custom_branding():
     try:
         with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
-            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
-            write_secrets_to_vault(cfg)
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            write_secrets_to_vault(s.client())
 
-            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+            cli.cli_start.callback(pull=False, name=path, options=options)
 
+            cfg = PackitConfig(path)
             api = cfg.get_container("packit-api")
 
             assert get_env_var(api, "PACKIT_BRAND_LOGO_ALT_TEXT") == b"My logo\n"
@@ -175,11 +198,12 @@ def test_custom_branding_end_to_end():
     try:
         with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
-            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
-            write_secrets_to_vault(cfg)
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            write_secrets_to_vault(s.client())
 
-            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+            cli.cli_start.callback(pull=False, name=path, options=options)
 
+            cfg = PackitConfig(path)
             api = cfg.get_container("packit")
 
             index_html = docker_util.string_from_container(api, "/usr/share/nginx/html/index.html")
@@ -208,7 +232,10 @@ def test_custom_branding_end_to_end():
 def test_deploy_with_runner_support():
     path = "config/runner"
     try:
-        cli.main(["start", path])
+        runner = CliRunner()
+        res = runner.invoke(cli.cli, ["start", "--name", path])
+        assert res.exit_code == 0
+
         cl = docker.client.from_env()
         containers = cl.containers.list()
 
@@ -236,11 +263,12 @@ def test_vault():
     try:
         with vault_dev.Server() as s:
             url = f"http://localhost:{s.port}"
-            cfg = PackitConfig(path, options={"vault": {"addr": url, "auth": {"args": {"token": s.token}}}})
-            write_secrets_to_vault(cfg)
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            write_secrets_to_vault(s.client())
 
-            cli.main(["start", path, f"--option=vault.addr={url}", f"--option=vault.auth.args.token={s.token}"])
+            cli.cli_start.callback(pull=False, name=path, options=options)
 
+            cfg = PackitConfig(path)
             api = cfg.get_container("packit-api")
 
             assert get_env_var(api, "PACKIT_DB_USER") == b"us3r\n"
@@ -250,13 +278,12 @@ def test_vault():
 
 
 def stop_packit(path):
-    with mock.patch("src.packit_deploy.cli.prompt_yes_no") as prompt:
+    with mock.patch("src.packit_deploy.cli._prompt_yes_no") as prompt:
         prompt.return_value = True
-        cli.main(["stop", path, "--kill", "--volumes", "--network"])
+        CliRunner().invoke(cli.cli, _stop_args(path))
 
 
-def write_secrets_to_vault(cfg):
-    cl = cfg.vault.client()
+def write_secrets_to_vault(cl):
     cl.write("secret/cert", value="c3rt")
     cl.write("secret/key", value="s3cret")
     cl.write("secret/db/user", value="us3r")
@@ -291,8 +318,9 @@ def get_env_var(container, env):
 def test_db_volume_is_persisted():
     path = "config/noproxy"
     try:
-        res = cli.main(["start", path])
-        assert res
+        runner = CliRunner()
+        res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
+        assert res.exit_code == 0
 
         # Create a real user
         create_super_user()
@@ -307,11 +335,12 @@ def test_db_volume_is_persisted():
         assert set(users) == {"SERVICE", "resideUser@resideAdmin.ic.ac.uk"}
 
         # Tear things down, but leave the volumes in place:
-        cli.main(["stop", path, "--kill", "--network"])
+        res = runner.invoke(cli.cli, ["stop", "--name", path, "--kill", "--network"])
+        assert res.exit_code == 0
 
         # Bring back up
-        res = cli.main(["start", path])
-        assert res
+        res = runner.invoke(cli.cli, ["start", "--name", path])
+        assert res.exit_code == 0
 
         # Check that the users have survived
         db = cfg.get_container("packit-db")

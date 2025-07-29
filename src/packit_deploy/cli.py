@@ -1,70 +1,71 @@
-"""Usage:
-  packit --version
-  packit start <path> [--extra=PATH] [--option=OPTION]... [--pull]
-  packit status <path>
-  packit stop <path> [--volumes] [--network] [--kill] [--force]
-    [--extra=PATH] [--option=OPTION]...
+from pathlib import Path
 
-Options:
-  --extra=PATH     Path, relative to <path>, of yml file of additional
-                   configuration
-  --option=OPTION  Additional configuration options, in the form key=value
-                   Use dots in key for hierarchical structure, e.g., a.b=value
-                   This argument may be repeated to provide multiple arguments
-  --pull           Pull images before starting
-  --volumes        Remove volumes (WARNING: irreversible data loss)
-  --network        Remove network
-  --kill           Kill the containers (faster, but possible db corruption)
-"""
+import click
 
-import docopt
-import yaml
-
-import packit_deploy.__about__ as about
 from packit_deploy.config import PackitConfig
 from packit_deploy.packit_constellation import PackitConstellation
 
+_HELP_NAME = "Override the configured instance, use with care!"
 
-def main(argv=None):
-    path, extra, options, args = parse_args(argv)
-    if args.version:
-        return about.__version__
+
+@click.group()
+@click.version_option()
+def cli():
+    pass
+
+
+@cli.command("configure")
+@click.argument("name")
+def cli_configure(name):
+    prev = _read_identity(required=False)
+    if prev:
+        if prev != name:
+            msg = (
+                f"This packit instance is already configured as '{prev}', "
+                f"but you are trying to reconfigure it as '{name}'. "
+                "If you really want to do do this, then delete the file "
+                "'{IDENTITY_FILE}' from this directory and try again"
+            )
+            raise Exception(msg)
+        else:
+            print(f"Packit already configured as '{name}")
     else:
-        cfg = PackitConfig(path, extra, options)
-        obj = PackitConstellation(cfg)
-        if args.action == "start":
-            packit_start(obj, args)
-        elif args.action == "status":
-            packit_status(obj)
-        elif args.action == "stop":
-            packit_stop(obj, args, cfg)
-        return True
+        # Check that we can read the configuration before saving it.
+        PackitConfig(name)
+        with IDENTITY_FILE.open("w") as f:
+            f.write(name)
+        print(f"Configured packit as '{name}")
 
 
-def parse_args(argv=None):
-    opts = docopt.docopt(__doc__, argv)
-    path = opts["<path>"]
-    extra = opts["--extra"]
-    options = parse_option(opts)
-    return path, extra, options, PackitArgs(opts)
+@cli.command("start")
+@click.option("--pull", is_flag=True, help="Pull images before start")
+@click.option("--name", type=str, help=_HELP_NAME)
+def cli_start(*, pull, name, options=None):
+    _constellation(name, options=options).start(pull_images=pull)
 
 
-def packit_start(obj, args):
-    obj.start(pull_images=args.pull)
+@cli.command("status")
+@click.option("--name", type=str, help=_HELP_NAME)
+def cli_status(name):
+    name = _read_identity(name)
+    print(f"Configured as '{name}'")
+    _constellation(name).status()
 
 
-def packit_status(obj):
-    obj.status()
+@cli.command("stop")
+@click.option("--kill", is_flag=True, help="Kill containers, don't wait for a clean exit")
+@click.option("--network", is_flag=True, help="Remove the docker network")
+@click.option("--volumes", is_flag=True, help="Remove the docker volumes, causing permanent data loss")
+@click.option("--name", type=str, help=_HELP_NAME)
+def cli_stop(*, name, kill, network, volumes):
+    obj = _constellation(name)
+    if volumes:
+        _verify_data_loss(obj.cfg.protect_data)
+    obj.stop(kill=kill, remove_network=network, remove_volumes=volumes)
 
 
-def packit_stop(obj, args, cfg):
-    if args.volumes:
-        verify_data_loss(cfg)
-    obj.stop(kill=args.kill, remove_network=args.network, remove_volumes=args.volumes)
-
-
-def verify_data_loss(cfg):
-    if cfg.protect_data:
+def _verify_data_loss(protect_data):
+    if protect_data:
         err = "Cannot remove volumes with this configuration"
         raise Exception(err)
     else:
@@ -74,54 +75,31 @@ You are about to delete the data volumes. This action cannot be undone
 and will result in the irreversible loss of *all* data associated with
 the application. This includes all databases, packet data etc."""
         )
-    if not prompt_yes_no():
+    if not _prompt_yes_no():
         msg = "Not continuing"
         raise Exception(msg)
 
 
-def prompt_yes_no(get_input=input):
+def _prompt_yes_no(get_input=input):
     return get_input("\nContinue? [yes/no] ") == "yes"
 
 
-def parse_option(args):
-    return [string_to_dict(x) for x in args["--option"]]
+IDENTITY_FILE = Path(".packit_identity")
 
 
-def string_to_dict(string):
-    """Convert a configuration option a.b.c=x to a dictionary
-    {"a": {"b": "c": x}}"""
-    # Won't deal with dots embedded within quotes but that's ok as
-    # that should not be allowed generally.
-    try:
-        key, value = string.split("=")
-    except ValueError as err:
-        msg = f"Invalid option '{string}', expected option in form key=value"
-        raise Exception(msg) from err
-    value = yaml_atom_parse(value)
-    for k in reversed(key.split(".")):
-        value = {k: value}
-    return value
-
-
-def yaml_atom_parse(x):
-    ret = yaml.safe_load(x)
-    if type(ret) not in [bool, int, float, str]:
-        msg = f"Invalid value '{x}' - expected simple type"
+def _read_identity(name=None, *, required=True):
+    if name:
+        return name
+    if IDENTITY_FILE.exists():
+        with IDENTITY_FILE.open() as f:
+            return f.read().strip()
+    if required:
+        msg = "Packit identity is not yet configured; run 'packit configure <name>' first"
         raise Exception(msg)
-    return ret
+    return None
 
 
-class PackitArgs:
-    def __init__(self, args):
-        if args["start"]:
-            self.action = "start"
-        elif args["status"]:
-            self.action = "status"
-        elif args["stop"]:
-            self.action = "stop"
-
-        self.pull = args["--pull"]
-        self.kill = args["--kill"]
-        self.volumes = args["--volumes"]
-        self.network = args["--network"]
-        self.version = args["--version"]
+def _constellation(name=None, options=None) -> PackitConstellation:
+    name = _read_identity(name)
+    cfg = PackitConfig(name, options=options)
+    return PackitConstellation(cfg)
