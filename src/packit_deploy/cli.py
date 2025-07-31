@@ -1,3 +1,4 @@
+import os
 from pathlib import Path
 
 import click
@@ -28,13 +29,23 @@ def cli_configure(name):
             )
             raise Exception(msg)
         else:
-            print(f"Packit already configured as '{name}")
+            print(f"Packit already configured as '{name}'")
     else:
         # Check that we can read the configuration before saving it.
         PackitConfig(name)
         with IDENTITY_FILE.open("w") as f:
             f.write(name)
-        print(f"Configured packit as '{name}")
+        print(f"Configured packit as '{name}'")
+
+
+@cli.command("unconfigure")
+def cli_unconfigure():
+    prev = _read_identity(required=False)
+    if prev:
+        print(f"Unconfigured packit (was '{prev}')")
+        os.unlink(IDENTITY_FILE)
+    else:
+        print("Packit is not configured")
 
 
 @cli.command("start")

@@ -15,10 +15,11 @@ pip install packit-deploy
 
 ## Usage
 
-So far the only commands are `configure`, `start`, `stop` and `status`.
+So far the commands are `configure`, `unconfigure`, `start`, `stop` and `status`.
 
 ```
-$ Usage: packit [OPTIONS] COMMAND [ARGS]...
+$ packit --help
+Usage: packit [OPTIONS] COMMAND [ARGS]...
 
 Options:
   --version  Show the version and exit.
@@ -29,6 +30,7 @@ Commands:
   start
   status
   stop
+  unconfigure
 ```
 
 Help for sub commands is available via, for example, `packit start --help`, but most have few options.
