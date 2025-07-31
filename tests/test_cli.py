@@ -41,19 +41,28 @@ def test_that_can_configure_system():
 
         res = runner.invoke(cli.cli, ["configure", "config/noproxy"])
         assert res.exit_code == 0
-        assert "Configured packit as 'config/noproxy" in res.stdout
+        assert "Configured packit as 'config/noproxy'" in res.stdout
 
         assert cli._read_identity() == "config/noproxy"
 
         res = runner.invoke(cli.cli, ["configure", "config/noproxy"])
         assert res.exit_code == 0
-        assert "Packit already configured as 'config/noproxy" in res.stdout
+        assert "Packit already configured as 'config/noproxy'" in res.stdout
         assert cli._read_identity() == "config/noproxy"
 
         res = runner.invoke(cli.cli, ["configure", "config/proxy"])
         assert res.exit_code == 1
         assert "already configured as 'config/noproxy'" in str(res.exception)
         assert cli._read_identity() == "config/noproxy"
+
+        res = runner.invoke(cli.cli, ["unconfigure"])
+        assert res.exit_code == 0
+        assert "Unconfigured packit (was 'config/noproxy')" in res.stdout
+        assert cli._read_identity(required=False) is None
+
+        res = runner.invoke(cli.cli, ["unconfigure"])
+        assert res.exit_code == 0
+        assert "Packit is not configured" in res.stdout
 
 
 def test_can_error_if_not_configured():
