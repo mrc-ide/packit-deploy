@@ -86,6 +86,11 @@ def test_start_and_stop_proxy():
             time.sleep(5)
             retries = retries + 1
         assert len(json.loads(res)) > 1
+
+        # has exposed default management port
+        assert get_env_var(api, "PACKIT_MANAGEMENT_PORT") == 8081
+        mgmt_result = json.loads(http_get("http://localhost:8081"))
+        assert result["_links"]["health"] == "http://localhost:8081/health"
     finally:
         stop_packit(path)
 
@@ -146,7 +151,7 @@ def test_api_configured():
         stop_packit(path)
 
 
-def test_api_configured_for_github_auth():
+def test_api_configured_for_github_auth_and_management_port():
     path = "config/complete"
     try:
         with vault_dev.Server() as s:
@@ -167,6 +172,10 @@ def test_api_configured_for_github_auth():
             assert get_env_var(api, "PACKIT_AUTH_GITHUB_TEAM") == b"packit\n"
             assert get_env_var(api, "PACKIT_JWT_SECRET") == b"jwts3cret\n"
             assert get_env_var(api, "PACKIT_AUTH_REDIRECT_URL") == b"https://packit/redirect\n"
+            # has exposed custom management port
+            assert get_env_var(api, "PACKIT_MANAGEMENT_PORT") == 8082
+            mgmt_result = json.loads(http_get("http://localhost:8082"))
+            assert result["_links"]["health"] == "http://localhost:8082/health"
     finally:
         stop_packit(path)
 
