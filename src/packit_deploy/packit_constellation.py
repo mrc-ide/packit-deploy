@@ -85,7 +85,10 @@ def packit_db_configure(container, _):
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
-    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=packit_api_get_env(cfg))
+    ports = [cfg.packit_api_management_port]
+    packit_api = constellation.ConstellationContainer(
+        name, cfg.packit_api_ref, environment=packit_api_get_env(cfg), ports=ports
+    )
     return packit_api
 
 
@@ -103,6 +106,7 @@ def packit_api_get_env(cfg):
         "PACKIT_BASE_URL": cfg.packit_base_url,
         "PACKIT_DEVICE_FLOW_EXPIRY_SECONDS": "300",
         "PACKIT_DEVICE_AUTH_URL": f"{cfg.packit_base_url}/device",
+        "PACKIT_MANAGEMENT_PORT": cfg.packit_api_management_port,
     }
     if hasattr(cfg, "brand_logo_name"):
         env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name

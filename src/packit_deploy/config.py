@@ -23,6 +23,9 @@ class PackitConfig:
 
         self.outpack_ref = self.build_ref(dat, "outpack", "server", self.repo)
         self.packit_api_ref = self.build_ref(dat, "packit", "api")
+        self.packit_api_management_port = config.config_integer(
+            dat, ["packit", "api", "management_port"], is_optional=True, default=8081
+        )
         self.packit_ref = self.build_ref(dat, "packit", "app")
         self.packit_db_ref = self.build_ref(dat, "packit", "db")
         self.packit_db_user = config.config_string(dat, ["packit", "db", "user"])
