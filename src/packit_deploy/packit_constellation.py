@@ -85,10 +85,7 @@ def packit_db_configure(container, _):
 
 def packit_api_container(cfg):
     name = cfg.containers["packit-api"]
-    ports = [cfg.packit_api_management_port]
-    packit_api = constellation.ConstellationContainer(
-        name, cfg.packit_api_ref, environment=packit_api_get_env(cfg), ports=ports
-    )
+    packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=packit_api_get_env(cfg))
     return packit_api
 
 
