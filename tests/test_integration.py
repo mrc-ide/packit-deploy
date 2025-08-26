@@ -291,13 +291,12 @@ def test_can_read_packit_metrics_on_custom_port():
         res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
         assert res.exit_code == 0
 
+        # has configured non-default management port
         cfg = PackitConfig(path)
+        api = cfg.get_container("packit-api")
+        assert get_env_var(api, "PACKIT_MANAGEMENT_PORT") == b"8082\n"
+
         proxy = cfg.get_container("proxy")
-        # wait for containers to be available
-        http_get("http://localhost")
-        # time.sleep(10) # TODO: get rid of this
-        # curl_output = docker_util.exec_safely(proxy, ["curl", "http://packit-api:8082/health"]).output.decode("UTF-8")
-        # 8082 is the custom port - default is 8081
         curl_output = curl_get_from_container(proxy, "http://packit-api:8082/health")
         assert '{"status":"UP"}' in curl_output
     finally:
