@@ -103,6 +103,7 @@ def packit_api_get_env(cfg):
         "PACKIT_BASE_URL": cfg.packit_base_url,
         "PACKIT_DEVICE_FLOW_EXPIRY_SECONDS": "300",
         "PACKIT_DEVICE_AUTH_URL": f"{cfg.packit_base_url}/device",
+        "PACKIT_MANAGEMENT_PORT": cfg.packit_api_management_port,
     }
     if hasattr(cfg, "brand_logo_name"):
         env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name

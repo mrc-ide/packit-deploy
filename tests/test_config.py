@@ -153,6 +153,11 @@ def test_custom_branding_with_complete_branding_config():
     assert cfg.brand_light_mode_enabled
 
 
+def test_management_port():
+    cfg = PackitConfig("config/novault")
+    assert cfg.packit_api_management_port == 8082
+
+
 def test_workers_can_be_enabled():
     cfg = PackitConfig("config/complete")
     assert cfg.images
