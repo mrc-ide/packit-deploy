@@ -42,7 +42,6 @@ packit:
   api:
     name: packit-api
     tag: main
-    management_port: 8082
   app:
     name: packit
     tag: main

@@ -154,7 +154,7 @@ def test_custom_branding_with_complete_branding_config():
 
 
 def test_management_port():
-    cfg = PackitConfig("config/complete")
+    cfg = PackitConfig("config/novault")
     assert cfg.packit_api_management_port == 8082
 
 

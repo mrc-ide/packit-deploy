@@ -143,12 +143,12 @@ def test_api_configured():
         assert get_env_var(api, "PACKIT_OUTPACK_SERVER_URL") == b"http://packit-outpack-server:8000\n"
         assert get_env_var(api, "PACKIT_AUTH_ENABLED") == b"false\n"
         # has configured default management port
-        assert get_env_var(api, "PACKIT_MANAGEMENT_PORT") == 8081
+        assert get_env_var(api, "PACKIT_MANAGEMENT_PORT") == b"8081\n"
     finally:
         stop_packit(path)
 
 
-def test_api_configured_for_github_auth_and_management_port():
+def test_api_configured_for_github_auth():
     path = "config/complete"
     try:
         with vault_dev.Server() as s:
@@ -169,7 +169,6 @@ def test_api_configured_for_github_auth_and_management_port():
             assert get_env_var(api, "PACKIT_AUTH_GITHUB_TEAM") == b"packit\n"
             assert get_env_var(api, "PACKIT_JWT_SECRET") == b"jwts3cret\n"
             assert get_env_var(api, "PACKIT_AUTH_REDIRECT_URL") == b"https://packit/redirect\n"
-            assert get_env_var(api, "PACKIT_MANAGEMENT_PORT") == 8082
     finally:
         stop_packit(path)
 
@@ -280,6 +279,31 @@ def test_vault():
         stop_packit(path)
 
 
+# Test that the custom management port defined in the novault config
+# has been correctly configured in the api so we can get metrics from
+# within the network - we currently do not expose packit metrics through
+# the proxy as this will be done through montagu proxy, and handled
+# separately in the nix deployment
+def test_can_read_packit_metrics_on_custom_port():
+    path = "config/novault"
+    try:
+        runner = CliRunner()
+        res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
+        assert res.exit_code == 0
+
+        cfg = PackitConfig(path)
+        proxy = cfg.get_container("proxy")
+        # wait for containers to be available
+        http_get("http://localhost")
+        # time.sleep(10) # TODO: get rid of this
+        # curl_output = docker_util.exec_safely(proxy, ["curl", "http://packit-api:8082/health"]).output.decode("UTF-8")
+        # 8082 is the custom port - default is 8081
+        curl_output = curl_get_from_container(proxy, "http://packit-api:8082/health")
+        assert '{"status":"UP"}' in curl_output
+    finally:
+        stop_packit(path)
+
+
 def stop_packit(path):
     with mock.patch("src.packit_deploy.cli._prompt_yes_no") as prompt:
         prompt.return_value = True
@@ -351,6 +375,12 @@ def test_db_volume_is_persisted():
         assert set(users) == {"SERVICE", "resideUser@resideAdmin.ic.ac.uk"}
     finally:
         stop_packit(path)
+
+
+@tenacity.retry(wait=tenacity.wait_fixed(1), stop=tenacity.stop_after_attempt(20))
+def curl_get_from_container(container, url):
+    # wait for curl results from a container that may take a few attempts while it spins up
+    return docker_util.exec_safely(container, ["curl", url]).output.decode("UTF-8")
 
 
 @tenacity.retry(wait=tenacity.wait_fixed(1), stop=tenacity.stop_after_attempt(20))
