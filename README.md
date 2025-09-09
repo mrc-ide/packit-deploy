@@ -69,7 +69,7 @@ hatch build
 
 Automatically publish to [PyPI](https://pypi.org/project/packit-deploy).  Assuming a version number `0.1.2`:
 
-* Create a [release on github](https://github.com/reside-ic/packit-deploy/releases/new)
+* Create a [release on github](https://github.com/mrc-ide/packit-deploy/releases/new)
 * Choose a tag -> Create a new tag: `v0.1.2`
 * Use this version as the description
 * Optionally describe the release
