@@ -26,6 +26,7 @@ volumes:
   outpack: outpack_volume
   proxy_logs: packit_proxy_logs
   packit_db: packit_db
+  packit_db_backup: packit_db_backup
 
 outpack:
   initial:

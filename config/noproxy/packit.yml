@@ -21,6 +21,7 @@ network: packit-network
 volumes:
   outpack: outpack_volume
   packit_db: packit_db
+  packit_db_backup: packit_db_backup
 
 outpack:
   initial:

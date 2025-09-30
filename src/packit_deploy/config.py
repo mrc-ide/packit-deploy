@@ -16,6 +16,7 @@ class PackitConfig:
         self.volumes = {
             "outpack": config.config_string(dat, ["volumes", "outpack"]),
             "packit_db": config.config_string(dat, ["volumes", "packit_db"]),
+            "packit_db_backup": config.config_string(dat, ["volumes", "packit_db_backup"]),
         }
 
         self.container_prefix = config.config_string(dat, ["container_prefix"])
