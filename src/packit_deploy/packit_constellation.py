@@ -1,3 +1,4 @@
+import os
 import re
 
 import constellation
@@ -233,8 +234,9 @@ def proxy_container(cfg, packit_api=None, packit=None):
     )
     return proxy
 
+
 def acme_container(cfg, proxy):
-    acme_buddy_staging = os.environ.get("ACME_BUDDY_STAGING", 0)
+    acme_buddy_staging = int(os.environ.get("ACME_BUDDY_STAGING", "0"))
     acme_env = {
         "ACME_BUDDY_STAGING": acme_buddy_staging,
         "HDB_ACME_USERNAME": cfg.acme_buddy_hdb_username,
