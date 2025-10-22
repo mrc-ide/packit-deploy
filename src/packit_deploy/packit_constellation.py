@@ -23,6 +23,9 @@ class PackitConstellation:
         if cfg.proxy_enabled:
             proxy = proxy_container(cfg, packit_api, packit)
             containers.append(proxy)
+            if cfg.use_acme:
+                acme = acme_container(cfg, proxy)
+                containers.append(acme)
 
         if cfg.orderly_runner_enabled:
             containers.append(redis_container(cfg))
@@ -222,22 +225,58 @@ def proxy_container(cfg, packit_api=None, packit=None):
     packit_addr = packit.name_external(cfg.container_prefix)
     proxy_args = [cfg.proxy_hostname, str(cfg.proxy_port_http), str(cfg.proxy_port_https), packit_api_addr, packit_addr]
     proxy_mounts = [constellation.ConstellationVolumeMount("proxy_logs", "/var/log/nginx")]
+    if cfg.use_acme:
+        proxy_mounts += [constellation.ConstellationVolumeMount("packit-tls", "/run/proxy")]
     proxy_ports = [cfg.proxy_port_http, cfg.proxy_port_https]
     proxy = constellation.ConstellationContainer(
         proxy_name, cfg.proxy_ref, ports=proxy_ports, args=proxy_args, mounts=proxy_mounts, configure=proxy_configure
     )
     return proxy
 
+def acme_container(cfg, proxy):
+    acme_buddy_staging = os.environ.get("ACME_BUDDY_STAGING", 0)
+    acme_env = {
+        "ACME_BUDDY_STAGING": acme_buddy_staging,
+        "HDB_ACME_USERNAME": cfg.acme_buddy_hdb_username,
+        "HDB_ACME_PASSWORD": cfg.acme_buddy_hdb_password,
+    }
+    acme_mounts = [
+        constellation.ConstellationVolumeMount("packit-tls", "/tls"),
+        constellation.ConstellationBindMount("/var/run/docker.sock", "/var/run/docker.sock"),
+    ]
+
+    acme = constellation.ConstellationContainer(
+        "acme-buddy",
+        cfg.acme_buddy_ref,
+        ports=[cfg.acme_buddy_port],
+        mounts=acme_mounts,
+        environment=acme_env,
+        args=[
+            "--domain",
+            cfg.proxy_hostname,
+            "--email",
+            "reside@imperial.ac.uk",
+            "--dns-provider",
+            "hdb",
+            "--certificate-path",
+            "/tls/certificate.pem",
+            "--key-path",
+            "/tls/key.pem",
+            "--account-path",
+            "/tls/account.json",
+            "--reload-container",
+            proxy.name_external(cfg.container_prefix),
+        ],
+    )
+
+    return acme
+
 
 def proxy_configure(container, cfg):
     print("[proxy] Configuring proxy container")
-    if cfg.proxy_ssl_self_signed:
+    if not cfg.use_acme:
         print("[proxy] Generating self-signed certificates for proxy")
         docker_util.exec_safely(container, ["self-signed-certificate", "/run/proxy"])
-    else:
-        print("[proxy] Copying ssl certificate and key into proxy")
-        docker_util.string_into_container(cfg.proxy_ssl_certificate, container, "/run/proxy/certificate.pem")
-        docker_util.string_into_container(cfg.proxy_ssl_key, container, "/run/proxy/key.pem")
 
 
 def redis_container(cfg):
