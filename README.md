@@ -99,8 +99,9 @@ The following example configurations are included under `/config`:
 
 ## Running locally
 
-You can bring up most of the configurations above for local testing (except for `complete` which includes non-existant vault secrets and `noproxy` which will not actually expose anything to interact with).  You will need access to the vault to run the `githubauth` configuration, which requires secrets for the github oauth2 client app
-details.
+First, you need to [be logged into GitHub Container Registry]([url](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#authenticating-with-a-personal-access-token-classic)) using a GitHub personal access token (PAT) that has the `read:packages` permission.
+
+You can bring up most of the configurations above for local testing (except for `complete` which includes non-existant vault secrets and `noproxy` which will not actually expose anything to interact with). You will need access to the vault to run the `githubauth` configuration, which requires secrets for the github oauth2 client app details.
 
 For example, to bring up the `basicauth` configuration, you can run:
 
