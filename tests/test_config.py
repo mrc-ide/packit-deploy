@@ -40,7 +40,7 @@ def test_config_proxy_disabled():
 def test_config_proxy():
     cfg = PackitConfig("config/novault")
     assert cfg.proxy_enabled
-    assert cfg.proxy_ssl_self_signed
+    assert not cfg.use_acme
     assert "proxy" in cfg.containers
     assert str(cfg.images["proxy"]) == "ghcr.io/mrc-ide/packit-proxy:main"
     assert cfg.proxy_hostname == "localhost"
@@ -49,9 +49,11 @@ def test_config_proxy():
 
     cfg = PackitConfig("config/complete")
     assert cfg.proxy_enabled
-    assert not cfg.proxy_ssl_self_signed
-    assert cfg.proxy_ssl_certificate == "VAULT:secret/cert:value"
-    assert cfg.proxy_ssl_key == "VAULT:secret/key:value"
+    assert cfg.use_acme
+    assert str(cfg.images["acme_buddy"]) == "ghcr.io/reside-ic/acme-buddy:main"
+    assert cfg.acme_buddy_port == 2112
+    assert "acme_buddy" in cfg.containers
+    assert "packit-tls" in cfg.volumes
 
 
 def test_github_auth():
@@ -168,7 +170,7 @@ def test_workers_can_be_enabled():
     assert cfg.orderly_runner_ref.tag == "main"
     assert cfg.orderly_runner_workers == 1
 
-    assert len(cfg.images) == 7
+    assert len(cfg.images) == 8
     assert str(cfg.images["orderly-runner"]) == "ghcr.io/mrc-ide/orderly.runner:main"
     assert str(cfg.images["redis"]) == "library/redis:8.0"
 

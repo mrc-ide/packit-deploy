@@ -89,23 +89,24 @@ orderly-runner:
 ## network
 proxy:
   enabled: true
-  ssl:
-    ## This section describes how to get the certificate in.  We
-    ## support two sources:
-    ##
-    ## 1. self signed certificates - just leave this section blank
-    ##
-    ## 2. certificates from strings - include the strings directly in
-    ##    the keys here, or more likely use a VAULT:<path>:<key>
-    ##    string to extract them from the vault.
-    certificate: "VAULT:secret/cert:value"
-    key: "VAULT:secret/key:value"
   hostname: localhost
   port_http: 80
   port_https: 443
   image:
     name: packit-proxy
     tag: main
+
+## Standard configuration for using LetsEncrypt certs with acme-buddy.
+## If this section is not included, the proxy will create
+## a self-signed certificate.
+acme_buddy:
+  image:
+    repo: ghcr.io/reside-ic
+    name: acme-buddy
+    tag: main
+  hdb_username: VAULT:secret/certbot-hdb/credentials:username
+  hdb_password: VAULT:secret/certbot-hdb/credentials:password
+  port: 2112
 
 vault:
   ## Address of the vault server.  This should be a string if it is
