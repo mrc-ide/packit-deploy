@@ -50,9 +50,9 @@ def test_config_proxy():
     cfg = PackitConfig("config/complete")
     assert cfg.proxy_enabled
     assert cfg.use_acme
-    assert str(cfg.images["acme_buddy"]) == "ghcr.io/reside-ic/acme-buddy:main"
+    assert str(cfg.images["acme-buddy"]) == "ghcr.io/reside-ic/acme-buddy:main"
     assert cfg.acme_buddy_port == 2112
-    assert "acme_buddy" in cfg.containers
+    assert "acme-buddy" in cfg.containers
     assert "packit-tls" in cfg.volumes
 
 

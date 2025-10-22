@@ -108,10 +108,12 @@ def test_proxy_ssl_configured():
             write_secrets_to_vault(s.client())
 
             cli.cli_start.callback(pull=False, name=path, options=options)
-
-            cfg = PackitConfig(path)
-            assert "hdb-us3r" in cfg.acme_buddy_hdb_username
-            assert "hdb-p@assword" in cfg.acme_buddy_hdb_password
+            client = docker.from_env()
+            container = client.containers.get("packit-acme-buddy")
+            env = container.attrs["Config"]["Env"]
+            env_dict = dict(e.split("=", 1) for e in env)
+            assert "hdb-us3r" in env_dict["HDB_ACME_USERNAME"]
+            assert "hdb-p@assword" in env_dict["HDB_ACME_PASSWORD"]
 
     finally:
         stop_packit(path)

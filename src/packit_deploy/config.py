@@ -157,8 +157,8 @@ class PackitConfig:
                 self.acme_buddy_port = config.config_integer(dat, [acme_key, "port"])
                 self.acme_buddy_hdb_username = config.config_string(dat, [acme_key, "hdb_username"])
                 self.acme_buddy_hdb_password = config.config_string(dat, [acme_key, "hdb_password"])
-                self.containers["acme_buddy"] = "acme_buddy"
-                self.images["acme_buddy"] = self.acme_buddy_ref
+                self.containers["acme-buddy"] = "acme-buddy"
+                self.images["acme-buddy"] = self.acme_buddy_ref
                 self.volumes["packit-tls"] = "packit-tls"
 
             self.proxy_name = config.config_string(dat, ["proxy", "image", "name"])
