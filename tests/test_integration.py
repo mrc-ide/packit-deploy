@@ -110,11 +110,8 @@ def test_proxy_ssl_configured():
             cli.cli_start.callback(pull=False, name=path, options=options)
 
             cfg = PackitConfig(path)
-            proxy = cfg.get_container("proxy")
-            cert = docker_util.string_from_container(proxy, "run/proxy/certificate.pem")
-            key = docker_util.string_from_container(proxy, "run/proxy/key.pem")
-            assert "c3rt" in cert
-            assert "s3cret" in key
+            assert "hdb-us3r" in cfg.acme_buddy_hdb_username
+            assert "hdb-p@assword" in cfg.acme_buddy_hdb_password
 
     finally:
         stop_packit(path)
@@ -310,8 +307,7 @@ def stop_packit(path):
 
 
 def write_secrets_to_vault(cl):
-    cl.write("secret/cert", value="c3rt")
-    cl.write("secret/key", value="s3cret")
+    cl.write("secret/certbot-hdb/credentials", username="hdb-us3r", password="hdb-p@assword")
     cl.write("secret/db/user", value="us3r")
     cl.write("secret/db/password", value="p@ssword")
     cl.write("secret/ssh", public="publ1c", private="private")
