@@ -2,7 +2,7 @@ import re
 
 import constellation
 import docker
-from constellation import docker_util, vault, acme
+from constellation import acme, docker_util, vault
 
 from packit_deploy.docker_helpers import DockerClient
 
