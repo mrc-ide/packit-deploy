@@ -3,7 +3,7 @@ import re
 
 import constellation
 import docker
-from constellation import docker_util, vault
+from constellation import docker_util, vault, acme
 
 from packit_deploy.docker_helpers import DockerClient
 
@@ -25,7 +25,7 @@ class PackitConstellation:
             proxy = proxy_container(cfg, packit_api, packit)
             containers.append(proxy)
             if cfg.use_acme:
-                acme = acme_container(cfg, proxy)
+                acme = acme_buddy_container(cfg, proxy, "packet-tls")
                 containers.append(acme)
 
         if cfg.orderly_runner_enabled:
@@ -233,45 +233,6 @@ def proxy_container(cfg, packit_api=None, packit=None):
         proxy_name, cfg.proxy_ref, ports=proxy_ports, args=proxy_args, mounts=proxy_mounts, configure=proxy_configure
     )
     return proxy
-
-
-def acme_container(cfg, proxy):
-    acme_buddy_staging = int(os.environ.get("ACME_BUDDY_STAGING", "0"))
-    acme_env = {
-        "ACME_BUDDY_STAGING": acme_buddy_staging,
-        "HDB_ACME_USERNAME": cfg.acme_buddy_hdb_username,
-        "HDB_ACME_PASSWORD": cfg.acme_buddy_hdb_password,
-    }
-    acme_mounts = [
-        constellation.ConstellationVolumeMount("packit-tls", "/tls"),
-        constellation.ConstellationBindMount("/var/run/docker.sock", "/var/run/docker.sock"),
-    ]
-
-    acme = constellation.ConstellationContainer(
-        "acme-buddy",
-        cfg.acme_buddy_ref,
-        ports=[cfg.acme_buddy_port],
-        mounts=acme_mounts,
-        environment=acme_env,
-        args=[
-            "--domain",
-            cfg.proxy_hostname,
-            "--email",
-            "reside@imperial.ac.uk",
-            "--dns-provider",
-            "hdb",
-            "--certificate-path",
-            "/tls/certificate.pem",
-            "--key-path",
-            "/tls/key.pem",
-            "--account-path",
-            "/tls/account.json",
-            "--reload-container",
-            proxy.name_external(cfg.container_prefix),
-        ],
-    )
-
-    return acme
 
 
 def proxy_configure(container, cfg):
