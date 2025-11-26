@@ -1,4 +1,3 @@
-import os
 import re
 
 import constellation
@@ -25,8 +24,8 @@ class PackitConstellation:
             proxy = proxy_container(cfg, packit_api, packit)
             containers.append(proxy)
             if cfg.use_acme:
-                acme = acme_buddy_container(cfg, proxy, "packet-tls")
-                containers.append(acme)
+                acme_container = acme.acme_buddy_container(cfg, proxy, "packet-tls")
+                containers.append(acme_container)
 
         if cfg.orderly_runner_enabled:
             containers.append(redis_container(cfg))
