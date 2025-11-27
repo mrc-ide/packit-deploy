@@ -104,10 +104,12 @@ acme_buddy:
     repo: ghcr.io/reside-ic
     name: acme-buddy
     tag: main
-  hdb_username: VAULT:secret/certbot-hdb/credentials:username
-  hdb_password: VAULT:secret/certbot-hdb/credentials:password
+  dns_provider: hdb
+  env:
+    hdb_username: VAULT:secret/certbot-hdb/credentials:username
+    hdb_password: VAULT:secret/certbot-hdb/credentials:password
   port: 2112
-
+   
 vault:
   ## Address of the vault server.  This should be a string if it is
   ## present.
