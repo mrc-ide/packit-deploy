@@ -152,7 +152,7 @@ class PackitConfig:
             acme_key = "acme_buddy"
             self.use_acme = acme_key in dat
             if self.use_acme:
-                self.acme_config = config.config_acme(dat)
+                self.acme_config = config.config_acme(dat, acme_key)
                 self.volumes["packit-tls"] = "packit-tls"
 
             self.proxy_name = config.config_string(dat, ["proxy", "image", "name"])
