@@ -54,15 +54,15 @@ packit:
     expiry_days: 1
     jwt:
       secret: "0b4g4f8z4mdsrhoxfde2mam8f00vmt0f"
+  runner:
+    git:
+      url: git@github.com:reside-ic/orderly2-example-private.git
+      ssh-key: VAULT:secret/packit/testing/orderly2-example-private:private
 
 orderly-runner:
   image:
     name: orderly.runner
     tag: main
-  # Move into packit api at some point
-  git:
-    url: git@github.com:reside-ic/orderly2-example-private.git
-    ssh: VAULT:secret/packit/testing/orderly2-example-private:private
   workers: 2
 
 ## If running a proxy directly, fill this section in.  Otherwise you
