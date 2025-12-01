@@ -105,9 +105,10 @@ acme_buddy:
     name: acme-buddy
     tag: main
   dns_provider: hdb
+  email: test@reside.com
   env:
-    hdb_username: VAULT:secret/certbot-hdb/credentials:username
-    hdb_password: VAULT:secret/certbot-hdb/credentials:password
+    HDB_ACME_USERNAME: VAULT:secret/certbot-hdb/credentials:username
+    HDB_ACME_PASSWORD: VAULT:secret/certbot-hdb/credentials:password
   port: 2112
    
 vault:

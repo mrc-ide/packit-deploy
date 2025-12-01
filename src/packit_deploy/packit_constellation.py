@@ -12,7 +12,8 @@ class PackitConstellation:
         # resolve secrets early so we can set these env vars from vault values
         if cfg.vault and cfg.vault.url:
             vault.resolve_secrets(cfg, cfg.vault.client())
-
+            if cfg.use_acme:
+                vault.resolve_secrets(cfg.acme_config, cfg.vault.client())
         outpack = outpack_server_container(cfg)
         packit_db = packit_db_container(cfg)
         packit_api = packit_api_container(cfg)
@@ -25,7 +26,7 @@ class PackitConstellation:
             containers.append(proxy)
             if cfg.use_acme:
                 acme_container = acme.acme_buddy_container(
-                    cfg.acme_buddy, "acme-buddy", proxy.name_external(cfg.container_prefix), "packet-tls", cfg.hostname
+                    cfg.acme_config, "acme-buddy", proxy.name_external(cfg.container_prefix), "packit-tls", cfg.proxy_hostname
                 )
                 containers.append(acme_container)
 

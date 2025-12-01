@@ -106,7 +106,6 @@ def test_proxy_ssl_configured():
             url = f"http://localhost:{s.port}"
             options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
             write_secrets_to_vault(s.client())
-
             cli.cli_start.callback(pull=False, name=path, options=options)
             client = docker.from_env()
             container = client.containers.get("packit-acme-buddy")

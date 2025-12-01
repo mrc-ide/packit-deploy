@@ -46,12 +46,11 @@ def test_config_proxy():
     assert cfg.proxy_hostname == "localhost"
     assert cfg.proxy_port_http == 80
     assert cfg.proxy_port_https == 443
-
     cfg = PackitConfig("config/complete")
     assert cfg.proxy_enabled
     assert cfg.use_acme
     assert str(cfg.images["acme-buddy"]) == "ghcr.io/reside-ic/acme-buddy:main"
-    assert cfg.acme_buddy_port == 2112
+    assert cfg.acme_config.port == 2112
     assert "acme-buddy" in cfg.containers
     assert "packit-tls" in cfg.volumes
 
