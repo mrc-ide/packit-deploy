@@ -383,5 +383,5 @@ def curl_get_from_container(container, url):
 @tenacity.retry(wait=tenacity.wait_fixed(1), stop=tenacity.stop_after_attempt(20))
 def create_super_user():
     print("Trying to create superuser")
-    subprocess.run(["./scripts/create-super-user"], check=True)  # noqa: S603  # nosec
+    subprocess.run(["./scripts/create-super-user"], check=True)
     print("...success")
