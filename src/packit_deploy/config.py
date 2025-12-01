@@ -63,7 +63,9 @@ class PackitConfig:
             self.packit_auth_enabled = False
 
         self.packit_runner_git_url = config.config_string(dat, ["packit", "runner", "git", "url"], is_optional=True)
-        self.packit_runner_git_ssh_key = config.config_string(dat, ["packit", "runner", "git", "ssh-key"], is_optional=True)
+        self.packit_runner_git_ssh_key = config.config_string(
+            dat, ["packit", "runner", "git", "ssh-key"], is_optional=True
+        )
 
         self.containers = {
             "outpack-server": "outpack-server",
