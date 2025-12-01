@@ -1,10 +1,14 @@
 import os
 from pathlib import Path
+import sys
 
 import click
 
-from packit_deploy.config import PackitConfig
+from pydantic import ValidationError
 from packit_deploy.packit_constellation import PackitConstellation
+from constellation import config
+from packit_deploy import schema
+
 
 _HELP_NAME = "Override the configured instance, use with care!"
 
@@ -14,6 +18,18 @@ _HELP_NAME = "Override the configured instance, use with care!"
 def cli():
     pass
 
+@cli.command("validate")
+@click.argument("name")
+@click.pass_context
+def cli_validate(ctx, name):
+    try:
+        schema.Config.load(name)
+    except ValidationError as e:
+        print(f"Found errors in configuration for {name}:", file=sys.stderr)
+        print(e, file=sys.stderr)
+        ctx.exit(1)
+    else:
+        print(f"Configuration for {name} is valid!", file=sys.stderr)
 
 @cli.command("configure")
 @click.argument("name")
@@ -32,7 +48,7 @@ def cli_configure(name):
             print(f"Packit already configured as '{name}'")
     else:
         # Check that we can read the configuration before saving it.
-        PackitConfig(name)
+        schema.Config.load(name)
         with IDENTITY_FILE.open("w") as f:
             f.write(name)
         print(f"Configured packit as '{name}'")
@@ -51,8 +67,8 @@ def cli_unconfigure():
 @cli.command("start")
 @click.option("--pull", is_flag=True, help="Pull images before start")
 @click.option("--name", type=str, help=_HELP_NAME)
-def cli_start(*, pull, name, options=None):
-    _constellation(name, options=options).start(pull_images=pull)
+def cli_start(*, pull, name):
+    _constellation(name).start(pull_images=pull)
 
 
 @cli.command("status")
@@ -110,7 +126,8 @@ def _read_identity(name=None, *, required=True):
     return None
 
 
-def _constellation(name=None, options=None) -> PackitConstellation:
+def _constellation(name=None) -> PackitConstellation:
     name = _read_identity(name)
-    cfg = PackitConfig(name, options=options)
+
+    cfg = schema.Config.load(name)
     return PackitConstellation(cfg)

@@ -1,7 +1,7 @@
 import os
 import unittest
 
-from src.packit_deploy.config import PackitConfig
+from packit_deploy.config import PackitConfig
 
 packit_deploy_project_root_dir = os.path.dirname(os.path.dirname(__file__))
 

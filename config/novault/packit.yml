@@ -29,8 +29,6 @@ volumes:
   packit_db_backup: packit_db_backup
 
 outpack:
-  initial:
-    url: https://github.com/reside-ic/orderly2-example.git
   server:
     name: outpack_server
     tag: main
