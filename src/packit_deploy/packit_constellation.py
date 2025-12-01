@@ -26,7 +26,11 @@ class PackitConstellation:
             containers.append(proxy)
             if cfg.use_acme:
                 acme_container = acme.acme_buddy_container(
-                    cfg.acme_config, "acme-buddy", proxy.name_external(cfg.container_prefix), "packit-tls", cfg.proxy_hostname
+                    cfg.acme_config,
+                    "acme-buddy",
+                    proxy.name_external(cfg.container_prefix),
+                    "packit-tls",
+                    cfg.proxy_hostname
                 )
                 containers.append(acme_container)
 
