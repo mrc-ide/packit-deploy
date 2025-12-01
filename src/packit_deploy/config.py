@@ -7,6 +7,8 @@ from packit_deploy.docker_helpers import DockerClient
 
 
 class PackitConfig:
+    app_html_root = "/usr/share/nginx/html"  # from Packit app Dockerfile
+
     def __init__(self, path, extra=None, options=None):
         dat = config.read_yaml(f"{path}/packit.yml")
         dat = config.config_build(path, dat, extra, options)
@@ -60,6 +62,9 @@ class PackitConfig:
         else:
             self.packit_auth_enabled = False
 
+        self.packit_runner_git_url = config.config_string(dat, ["packit", "runner", "git", "url"], is_optional=True)
+        self.packit_runner_git_ssh_key = config.config_string(dat, ["packit", "runner", "git", "ssh-key"], is_optional=True)
+
         self.containers = {
             "outpack-server": "outpack-server",
             "packit-db": "packit-db",
@@ -79,12 +84,8 @@ class PackitConfig:
             self.orderly_runner_ref = self.build_ref(dat, "orderly-runner", "image", self.repo)
             self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
             self.orderly_runner_api_url = f"http://{self.container_prefix}-orderly-runner-api:8001"
-            self.orderly_runner_git_url = config.config_string(dat, ["orderly-runner", "git", "url"])
             self.orderly_runner_env = config.config_dict(dat, ["orderly-runner", "env"], is_optional=True, default={})
-            if self.orderly_runner_git_url.startswith("git@"):
-                self.orderly_runner_git_ssh_key = config.config_string(dat, ["orderly-runner", "git", "ssh"])
-            else:
-                self.orderly_runner_git_ssh_key = None
+
             self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
 
             self.containers["redis"] = "redis"
