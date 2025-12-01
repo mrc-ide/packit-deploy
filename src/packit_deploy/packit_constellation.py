@@ -24,8 +24,9 @@ class PackitConstellation:
             proxy = proxy_container(cfg, packit_api, packit)
             containers.append(proxy)
             if cfg.use_acme:
-                acme_container = acme.acme_buddy_container(cfg.acme_buddy, "acme-buddy",
-                proxy.name_external(cfg.container_prefix), "packet-tls", cfg.hostname)
+                acme_container = acme.acme_buddy_container(
+                    cfg.acme_buddy, "acme-buddy", proxy.name_external(cfg.container_prefix), "packet-tls", cfg.hostname
+                )
                 containers.append(acme_container)
 
         if cfg.orderly_runner_enabled:

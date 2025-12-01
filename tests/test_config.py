@@ -185,4 +185,4 @@ def test_workers_can_be_omitted():
 def test_can_use_private_urls_for_git():
     cfg = PackitConfig("config/runner-private")
     assert cfg.orderly_runner_git_url == "git@github.com:reside-ic/orderly2-example-private.git"
-    assert type(cfg.orderly_runner_git_ssh_key) is str
+    assert isinstance(cfg.orderly_runner_git_ssh_key, str)
