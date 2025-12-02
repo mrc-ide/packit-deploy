@@ -34,9 +34,7 @@ outpack:
   server:
     name: outpack_server
     tag: main
-  migrate:
-    name: outpack.orderly
-    tag: main
+
 packit:
   base_url: https://localhost
   api:
