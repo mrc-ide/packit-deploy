@@ -11,8 +11,8 @@ import vault_dev
 from click.testing import CliRunner
 from constellation import docker_util
 
-from src.packit_deploy import cli
-from src.packit_deploy.config import PackitConfig
+from packit_deploy import cli
+from packit_deploy.config import PackitConfig
 
 
 def _stop_args(path):
@@ -39,7 +39,7 @@ def test_start_and_stop_noproxy():
         assert docker_util.container_exists("packit-packit")
 
         # Stop
-        with mock.patch("src.packit_deploy.cli._prompt_yes_no") as prompt:
+        with mock.patch("packit_deploy.cli._prompt_yes_no") as prompt:
             prompt.return_value = True
             res = runner.invoke(cli.cli, _stop_args(path))
             containers = cl.containers.list()
@@ -304,7 +304,7 @@ def test_can_read_packit_metrics_on_custom_port():
 
 
 def stop_packit(path):
-    with mock.patch("src.packit_deploy.cli._prompt_yes_no") as prompt:
+    with mock.patch("packit_deploy.cli._prompt_yes_no") as prompt:
         prompt.return_value = True
         CliRunner().invoke(cli.cli, _stop_args(path))
 

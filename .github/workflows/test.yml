@@ -43,6 +43,9 @@ jobs:
       - name: Lint
         run: |
           hatch run lint:style
+      - name: Typing
+        run: |
+          hatch run lint:typing
       - name: Test
         run: |
           hatch run cov-ci
