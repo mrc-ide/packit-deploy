@@ -12,7 +12,7 @@ def config_path(dat, key: list[str], *, root: str, is_optional: bool = False) ->
     """
     Parse the path to an external asset.
 
-    The path is the configuration is interpreted to be relative to the given
+    The path in the configuration is interpreted to be relative to the given
     root. The returned path is always absolute.
     """
     value = config.config_string(dat, key, is_optional=is_optional)
