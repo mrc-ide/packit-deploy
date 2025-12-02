@@ -70,13 +70,14 @@ packit:
         packit_api_root: "https://packit/api"
         url: "https://packit/redirect"  # Url for redirecting back to the front end after successful authentication
   cors_allowed_origins: "https://packit.example.com"
+  runner:
+    git:
+      url: https://github.com/reside-ic/orderly2-example.git
 
 orderly-runner:
   image:
     name: orderly.runner
     tag: main
-  git:
-    url: https://github.com/reside-ic/orderly2-example.git
   workers: 1
   env:
     FOO: bar
