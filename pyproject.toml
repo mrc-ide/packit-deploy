@@ -28,6 +28,7 @@ dependencies = [
     "click",
     "constellation~=1.4.6",
     "docker",
+    "jinja2",
 ]
 
 [project.urls]

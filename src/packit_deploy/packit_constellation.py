@@ -2,11 +2,18 @@ import re
 
 import constellation
 import docker
+import jinja2
 from constellation import ConstellationContainer, acme, docker_util, vault
 
 from packit_deploy import config
 from packit_deploy.config import PackitConfig
 from packit_deploy.docker_helpers import DockerClient
+
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.PackageLoader("packit_deploy"),
+    undefined=jinja2.StrictUndefined,
+    autoescape=False,  # noqa: S701, we only template from config values, not user inputs
+)
 
 
 class PackitConstellation:
@@ -244,11 +251,7 @@ def proxy_container(
     packit_api: ConstellationContainer,
     packit: ConstellationContainer,
 ):
-    packit_api_addr = f"{packit_api.name_external(cfg.container_prefix)}:8080"
-    packit_addr = packit.name_external(cfg.container_prefix)
-
     name = cfg.containers["proxy"]
-    args = [proxy.hostname, str(proxy.port_http), str(proxy.port_https), packit_api_addr, packit_addr]
     mounts = [constellation.ConstellationVolumeMount("proxy_logs", "/var/log/nginx")]
     if cfg.acme_config is not None:
         mounts.append(constellation.ConstellationVolumeMount("packit-tls", "/run/proxy"))
@@ -257,10 +260,38 @@ def proxy_container(
         name,
         proxy.image,
         ports=ports,
-        args=args,
         mounts=mounts,
+        preconfigure=lambda container, cfg: proxy_preconfigure(container, cfg, proxy, packit_api, packit),
         configure=proxy_configure,
     )
+
+
+def proxy_nginx_conf(
+    cfg: PackitConfig, proxy: config.Proxy, packit_api: ConstellationContainer, packit: ConstellationContainer
+):
+    packit_api_addr = f"{packit_api.name_external(cfg.container_prefix)}:8080"
+    packit_app_addr = packit.name_external(cfg.container_prefix)
+
+    template = JINJA_ENVIRONMENT.get_template("nginx.conf.j2")
+    return template.render(
+        upstream_api=packit_api_addr,
+        upstream_app=packit_app_addr,
+        hostname=proxy.hostname,
+        port_http=proxy.port_http,
+        port_https=proxy.port_https,
+    )
+
+
+def proxy_preconfigure(
+    container: ConstellationContainer,
+    cfg: PackitConfig,
+    proxy: config.Proxy,
+    packit_api: ConstellationContainer,
+    packit: ConstellationContainer,
+):
+    print("[proxy] Preconfiguring proxy container")
+    nginx_conf = proxy_nginx_conf(cfg, proxy, packit_api, packit)
+    docker_util.string_into_container(nginx_conf, container, "/etc/nginx/conf.d/default.conf")
 
 
 def proxy_configure(container: ConstellationContainer, cfg: PackitConfig):

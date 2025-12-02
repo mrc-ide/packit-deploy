@@ -9,8 +9,8 @@ The configuration takes as a starting point [`montagu-proxy`](https://github.com
 
 ### Configuration
 
-Before starting we need to know what we are proxying
-(i.e., the name of the `packit` and `packit-api` containers on the docker network) and what the proxy will be seen as to the outside world (the hostname, and ports for http and https).  The entrypoint takes these four values as arguments.
+The proxy image does not embed an `nginx.conf` file. It is `packit-deploy`'s responsibility to generate one and inject into the container before starting it.
+See the `src/packit_deploy/templates/nginx.conf.j2` file for the configuration template.
 
 ### SSL Certificates
 

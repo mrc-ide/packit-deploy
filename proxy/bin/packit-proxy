@@ -1,24 +1,6 @@
 #!/usr/bin/env bash
 set -eu
 
-if [ "$#" -eq 5 ]; then
-    export HTTP_HOST=$1
-    export HTTP_PORT=$2
-    export HTTPS_PORT=$3
-    export PACKIT_API=$4
-    export PACKIT=$5
-else
-    echo "Usage: HOSTNAME PORT_HTTP PORT_HTTPS PACKIT_API PACKIT"
-    echo "e.g. docker run ... montagu.vaccineimpact.org 80 443 packit_api packit"
-    exit 1
-fi
-
-echo "We will listen on ports $HTTP_PORT (http) and $HTTPS_PORT (https)"
-echo "with hostname $HTTP_HOST, proxying Packit from $PACKIT"
-
-envsubst '$HTTP_HOST,$HTTP_PORT,$HTTPS_PORT, $PACKIT_API, $PACKIT' \
-         < /etc/nginx/nginx.conf.template > /etc/nginx/nginx.conf
-
 # These paths must match the paths as used in the nginx.conf
 PATH_CONFIG=/run/proxy
 PATH_CERT="$PATH_CONFIG/certificate.pem"
