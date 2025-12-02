@@ -30,7 +30,7 @@ class PackitConstellation:
                     "acme-buddy",
                     proxy.name_external(cfg.container_prefix),
                     "packit-tls",
-                    cfg.proxy_hostname
+                    cfg.proxy_hostname,
                 )
                 containers.append(acme_container)
 
