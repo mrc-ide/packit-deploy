@@ -101,20 +101,22 @@ def packit_api_get_env(cfg: PackitConfig):
         "PACKIT_DB_PASSWORD": cfg.packit_db_password,
         "PACKIT_OUTPACK_SERVER_URL": cfg.outpack_server_url,
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
-        "PACKIT_BRAND_DARK_MODE_ENABLED": "true" if cfg.brand_dark_mode_enabled else "false",
-        "PACKIT_BRAND_LIGHT_MODE_ENABLED": "true" if cfg.brand_light_mode_enabled else "false",
+        "PACKIT_BRAND_DARK_MODE_ENABLED": "true" if cfg.brand.dark_mode_enabled else "false",
+        "PACKIT_BRAND_LIGHT_MODE_ENABLED": "true" if cfg.brand.light_mode_enabled else "false",
         "PACKIT_CORS_ALLOWED_ORIGINS": cfg.packit_cors_allowed_origins,
         "PACKIT_BASE_URL": cfg.packit_base_url,
         "PACKIT_DEVICE_FLOW_EXPIRY_SECONDS": "300",
         "PACKIT_DEVICE_AUTH_URL": f"{cfg.packit_base_url}/device",
         "PACKIT_MANAGEMENT_PORT": cfg.packit_api_management_port,
     }
-    if hasattr(cfg, "brand_logo_name"):
-        env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name
-    if hasattr(cfg, "brand_logo_alt_text"):
-        env["PACKIT_BRAND_LOGO_ALT_TEXT"] = cfg.brand_logo_alt_text
-    if hasattr(cfg, "brand_logo_link"):
-        env["PACKIT_BRAND_LOGO_LINK"] = cfg.brand_logo_link
+
+    if cfg.brand.logo is not None:
+        env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand.logo.name
+    if cfg.brand.logo_alt_text is not None:
+        env["PACKIT_BRAND_LOGO_ALT_TEXT"] = cfg.brand.logo_alt_text
+    if cfg.brand.logo_link is not None:
+        env["PACKIT_BRAND_LOGO_LINK"] = cfg.brand.logo_link
+
     if cfg.packit_auth_enabled:
         env.update(
             {
@@ -148,14 +150,14 @@ def packit_api_get_env(cfg: PackitConfig):
 def packit_container(cfg: PackitConfig):
     mounts = []
 
-    if hasattr(cfg, "brand_logo_name"):
-        logo_in_container = f"{cfg.app_html_root}/img/{cfg.brand_logo_name}"
-        mounts.append(constellation.ConstellationBindMount(cfg.brand_logo_path, logo_in_container, read_only=True))
+    if cfg.brand.logo is not None:
+        logo_in_container = f"{cfg.app_html_root}/img/{cfg.brand.logo.name}"
+        mounts.append(constellation.ConstellationBindMount(str(cfg.brand.logo), logo_in_container, read_only=True))
 
-    if hasattr(cfg, "brand_favicon_name"):
-        favicon_in_container = f"{cfg.app_html_root}/{cfg.brand_favicon_name}"
+    if cfg.brand.favicon is not None:
+        favicon_in_container = f"{cfg.app_html_root}/{cfg.brand.favicon.name}"
         mounts.append(
-            constellation.ConstellationBindMount(cfg.brand_favicon_path, favicon_in_container, read_only=True)
+            constellation.ConstellationBindMount(str(cfg.brand.favicon), favicon_in_container, read_only=True)
         )
 
     packit = constellation.ConstellationContainer(
@@ -166,31 +168,31 @@ def packit_container(cfg: PackitConfig):
 
 def packit_configure(container, cfg: PackitConfig):
     print("[packit] Configuring Packit container")
-    if hasattr(cfg, "brand_name"):
+    if cfg.brand.name is not None:
         # We configure the title tag of the index.html file here, rather than updating it dynamically with JS,
         # since using JS results in the page title visibly changing a number of seconds after the initial page load.
         substitute_file_content(
-            container, f"{cfg.app_html_root}/index.html", r"(?<=<title>).*?(?=</title>)", cfg.brand_name
+            container, f"{cfg.app_html_root}/index.html", r"(?<=<title>).*?(?=</title>)", cfg.brand.name
         )
-    if hasattr(cfg, "brand_favicon_name"):
-        substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand_favicon_name)
-    if hasattr(cfg, "brand_accent_light") or hasattr(cfg, "brand_accent_dark"):
-        new_css = ""
-        if cfg.brand_light_mode_enabled and hasattr(cfg, "brand_accent_light"):
-            new_css += (
-                ":root {\n"
-                f"  --custom-accent: {cfg.brand_accent_light};\n"
-                f"  --custom-accent-foreground: {cfg.brand_accent_foreground_light};\n"
-                "}\n"
-            )
-        if cfg.brand_dark_mode_enabled and hasattr(cfg, "brand_accent_dark"):
-            new_css += (
-                ".dark {\n"
-                f"  --custom-accent: {cfg.brand_accent_dark};\n"
-                f"  --custom-accent-foreground: {cfg.brand_accent_foreground_dark};\n"
-                "}\n"
-            )
-        overwrite_file(container, f"{cfg.app_html_root}/css/custom.css", new_css)
+    if cfg.brand.favicon is not None:
+        substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand.favicon.name)
+
+    new_css = ""
+    if cfg.brand.theme_light is not None:
+        new_css += (
+            ":root {\n"
+            f"  --custom-accent: {cfg.brand.theme_light.accent};\n"
+            f"  --custom-accent-foreground: {cfg.brand.theme_light.foreground};\n"
+            "}\n"
+        )
+    if cfg.brand.theme_dark is not None:
+        new_css += (
+            ".dark {\n"
+            f"  --custom-accent: {cfg.brand.theme_dark.accent};\n"
+            f"  --custom-accent-foreground: {cfg.brand.theme_dark.foreground};\n"
+            "}\n"
+        )
+    overwrite_file(container, f"{cfg.app_html_root}/css/custom.css", new_css)
 
 
 def overwrite_file(container, path, content):
