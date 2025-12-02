@@ -47,7 +47,7 @@ class Branding:
     theme_dark: Optional[Theme]
 
     @classmethod
-    def from_data(cls, dat, *, root: str) -> Branding:
+    def from_data(cls, dat, *, root: str) -> "Branding":
         name = config.config_string(dat, ["brand", "name"], is_optional=True)
         logo = config_path(dat, ["brand", "logo_path"], root=root, is_optional=True)
         logo_link = config.config_string(dat, ["brand", "logo_link"], is_optional=True)
