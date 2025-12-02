@@ -258,7 +258,7 @@ def proxy_container(
     ports = [proxy.port_http, proxy.port_https]
     return ConstellationContainer(
         name,
-        proxy.image,
+        image=proxy.image,
         ports=ports,
         mounts=mounts,
         preconfigure=lambda container, cfg: proxy_preconfigure(container, cfg, proxy, packit_api, packit),

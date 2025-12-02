@@ -77,8 +77,7 @@ proxy:
   port_http: 80
   port_https: 443
   image:
-    name: packit-proxy
-    tag: main
+    build: ../../proxy
 
 vault:
   ## Address of the vault server.  This should be a string if it is
