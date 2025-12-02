@@ -14,14 +14,13 @@ def test_config_no_proxy():
     assert cfg.volumes["outpack"] == "outpack_volume"
     assert cfg.container_prefix == "packit"
 
-    assert len(cfg.containers) == 4
-    assert cfg.containers["outpack-server"] == "outpack-server"
-    assert cfg.containers["packit"] == "packit"
-    assert cfg.containers["packit-api"] == "packit-api"
-    assert cfg.containers["packit-db"] == "packit-db"
+    assert cfg.outpack_server.container_name == "outpack-server"
+    assert cfg.packit_app.container_name == "packit"
+    assert cfg.packit_api.container_name == "packit-api"
+    assert cfg.packit_db.container_name == "packit-db"
 
-    assert str(cfg.outpack_ref) == "ghcr.io/mrc-ide/outpack_server:main"
-    assert str(cfg.packit_ref) == "ghcr.io/mrc-ide/packit:main"
+    assert str(cfg.outpack_server.image) == "ghcr.io/mrc-ide/outpack_server:main"
+    assert str(cfg.packit_app.image) == "ghcr.io/mrc-ide/packit:main"
     assert str(cfg.packit_db.image) == "ghcr.io/mrc-ide/packit-db:main"
     assert str(cfg.packit_api.image) == "ghcr.io/mrc-ide/packit-api:main"
 
@@ -41,7 +40,6 @@ def test_config_proxy_disabled():
 def test_config_proxy():
     cfg = PackitConfig("config/novault")
     assert cfg.proxy is not None
-    assert "proxy" in cfg.containers
     assert cfg.proxy.image == BuildSpec(os.path.join(packit_deploy_project_root_dir, "proxy"))
     assert cfg.proxy.hostname == "localhost"
     assert cfg.proxy.port_http == 80
@@ -159,7 +157,7 @@ def test_workers_can_be_enabled():
     assert cfg.orderly_runner.env == {"FOO": "bar"}
 
     assert str(cfg.orderly_runner.image) == "ghcr.io/mrc-ide/orderly.runner:main"
-    assert str(cfg.redis_image) == "library/redis:8.0"
+    assert str(cfg.redis.image) == "library/redis:8.0"
 
 
 def test_workers_can_be_omitted():
