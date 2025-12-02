@@ -84,7 +84,7 @@ def test_start_and_stop_proxy():
         while len(json.loads(res)) < 1 and retries < 5:
             res = http_get("http://localhost/api/packets")
             time.sleep(5)
-            retries = retries + 1
+            retries += 1
         assert len(json.loads(res)) > 1
     finally:
         stop_packit(path)
