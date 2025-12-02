@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from packit_deploy.config import Branding, PackitConfig, Theme
+from packit_deploy.config import Branding, PackitAuthGithub, PackitConfig, Theme
 
 packit_deploy_project_root_dir = os.path.dirname(os.path.dirname(__file__))
 
@@ -18,55 +18,60 @@ def test_config_no_proxy():
     assert cfg.containers["packit-api"] == "packit-api"
     assert cfg.containers["packit-db"] == "packit-db"
 
-    assert len(cfg.images) == 4
-    assert str(cfg.images["outpack-server"]) == "ghcr.io/mrc-ide/outpack_server:main"
-    assert str(cfg.images["packit"]) == "ghcr.io/mrc-ide/packit:main"
-    assert str(cfg.images["packit-db"]) == "ghcr.io/mrc-ide/packit-db:main"
-    assert str(cfg.images["packit-api"]) == "ghcr.io/mrc-ide/packit-api:main"
+    assert str(cfg.outpack_ref) == "ghcr.io/mrc-ide/outpack_server:main"
+    assert str(cfg.packit_ref) == "ghcr.io/mrc-ide/packit:main"
+    assert str(cfg.packit_db.image) == "ghcr.io/mrc-ide/packit-db:main"
+    assert str(cfg.packit_api.image) == "ghcr.io/mrc-ide/packit-api:main"
 
-    assert cfg.proxy_enabled is False
+    assert cfg.proxy is None
     assert cfg.protect_data is False
 
-    assert cfg.packit_db_user == "packituser"
-    assert cfg.packit_db_password == "changeme"
+    assert cfg.packit_db.user == "packituser"
+    assert cfg.packit_db.password == "changeme"
 
 
 def test_config_proxy_disabled():
     options = {"proxy": {"enabled": False}}
     cfg = PackitConfig("config/novault", options=options)
-    assert cfg.proxy_enabled is False
+    assert cfg.proxy is None
 
 
 def test_config_proxy():
     cfg = PackitConfig("config/novault")
-    assert cfg.proxy_enabled
-    assert not cfg.use_acme
+    assert cfg.proxy is not None
     assert "proxy" in cfg.containers
-    assert str(cfg.images["proxy"]) == "ghcr.io/mrc-ide/packit-proxy:main"
-    assert cfg.proxy_hostname == "localhost"
-    assert cfg.proxy_port_http == 80
-    assert cfg.proxy_port_https == 443
+    assert str(cfg.proxy.image) == "ghcr.io/mrc-ide/packit-proxy:main"
+    assert cfg.proxy.hostname == "localhost"
+    assert cfg.proxy.port_http == 80
+    assert cfg.proxy.port_https == 443
+
     cfg = PackitConfig("config/complete")
-    assert cfg.proxy_enabled
-    assert cfg.use_acme
-    assert str(cfg.images["acme-buddy"]) == "ghcr.io/reside-ic/acme-buddy:main"
-    assert cfg.acme_config.port == 2112
-    assert "acme-buddy" in cfg.containers
-    assert "packit-tls" in cfg.volumes
+    assert cfg.proxy is not None
+
+
+def test_basic_auth():
+    cfg = PackitConfig("config/basicauth")
+    assert cfg.packit_api.auth is not None
+    assert cfg.packit_api.auth.expiry_days == 1
+    assert cfg.packit_api.auth.jwt_secret == "0b4g4f8z4mdsrhoxfde2mam8f00vmt0f"
+    assert cfg.packit_api.auth.method_name == "basic"
 
 
 def test_github_auth():
     cfg = PackitConfig("config/githubauth")
-    assert cfg.packit_auth_enabled is True
-    assert cfg.packit_auth_method == "github"
-    assert cfg.packit_auth_expiry_days == 1
-    assert cfg.packit_auth_github_api_org == "mrc-ide"
-    assert cfg.packit_auth_github_api_team == "packit"
-    assert cfg.packit_auth_github_client_id == "VAULT:secret/packit/githubauth/auth/githubclient:id"
-    assert cfg.packit_auth_github_client_secret == "VAULT:secret/packit/githubauth/auth/githubclient:secret"
-    assert cfg.packit_auth_jwt_secret == "VAULT:secret/packit/githubauth/auth/jwt:secret"
-    assert cfg.packit_auth_oauth2_redirect_packit_api_root == "https://localhost/api"
-    assert cfg.packit_auth_oauth2_redirect_url == "https://localhost/redirect"
+    assert cfg.packit_api.auth is not None
+    assert cfg.packit_api.auth.expiry_days == 1
+    assert cfg.packit_api.auth.jwt_secret == "VAULT:secret/packit/githubauth/auth/jwt:secret"
+    assert cfg.packit_api.auth.method_name == "github"
+    assert isinstance(cfg.packit_api.auth.method, PackitAuthGithub)
+
+    github = cfg.packit_api.auth.method
+    assert github.org == "mrc-ide"
+    assert github.team == "packit"
+    assert github.client_id == "VAULT:secret/packit/githubauth/auth/githubclient:id"
+    assert github.client_secret == "VAULT:secret/packit/githubauth/auth/githubclient:secret"
+    assert github.oauth2_redirect_packit_api_root == "https://localhost/api"
+    assert github.oauth2_redirect_url == "https://localhost/redirect"
 
 
 def test_custom_branding_with_partial_branding_config():
@@ -140,32 +145,28 @@ def test_custom_branding_with_complete_branding_config():
 
 def test_management_port():
     cfg = PackitConfig("config/novault")
-    assert cfg.packit_api_management_port == 8082
+    assert cfg.packit_api.management_port == 8082
 
 
 def test_workers_can_be_enabled():
     cfg = PackitConfig("config/complete")
-    assert cfg.images
+    assert cfg.orderly_runner is not None
+    assert cfg.orderly_runner.image.repo == "ghcr.io/mrc-ide"
+    assert cfg.orderly_runner.image.name == "orderly.runner"
+    assert cfg.orderly_runner.image.tag == "main"
+    assert cfg.orderly_runner.workers == 1
+    assert cfg.orderly_runner.env == {"FOO": "bar"}
 
-    assert cfg.orderly_runner_enabled
-    assert cfg.orderly_runner_ref.repo == "ghcr.io/mrc-ide"
-    assert cfg.orderly_runner_ref.name == "orderly.runner"
-    assert cfg.orderly_runner_ref.tag == "main"
-    assert cfg.orderly_runner_workers == 1
-
-    assert len(cfg.images) == 8
-    assert str(cfg.images["orderly-runner"]) == "ghcr.io/mrc-ide/orderly.runner:main"
-    assert str(cfg.images["redis"]) == "library/redis:8.0"
-
-    assert cfg.orderly_runner_env == {"FOO": "bar"}
+    assert str(cfg.orderly_runner.image) == "ghcr.io/mrc-ide/orderly.runner:main"
+    assert str(cfg.redis_image) == "library/redis:8.0"
 
 
 def test_workers_can_be_omitted():
     cfg = PackitConfig("config/noproxy")
-    assert not cfg.orderly_runner_enabled
+    assert cfg.orderly_runner is None
 
 
 def test_can_use_private_urls_for_git():
     cfg = PackitConfig("config/runner-private")
-    assert cfg.packit_runner_git_url == "git@github.com:reside-ic/orderly2-example-private.git"
-    assert isinstance(cfg.packit_runner_git_ssh_key, str)
+    assert cfg.packit_api.runner_git_url == "git@github.com:reside-ic/orderly2-example-private.git"
+    assert cfg.packit_api.runner_git_ssh_key == "VAULT:secret/packit/testing/orderly2-example-private:private"

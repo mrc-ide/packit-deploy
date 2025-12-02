@@ -15,6 +15,7 @@ from cryptography.hazmat.backends import default_backend
 
 from packit_deploy import cli
 from packit_deploy.config import PackitConfig
+from packit_deploy.docker_helpers import DockerClient
 
 
 def _stop_args(path):
@@ -76,7 +77,7 @@ def test_start_and_stop_proxy():
 
         # Trivial check that the proxy container works:
         cfg = PackitConfig(path)
-        proxy = cfg.get_container("proxy")
+        proxy = get_container(cfg, "proxy")
         ports = proxy.attrs["HostConfig"]["PortBindings"]
         assert set(ports.keys()) == {"443/tcp", "80/tcp"}
         http_get("http://localhost")
@@ -152,7 +153,7 @@ def test_api_configured():
         assert len(containers) == 4
         cfg = PackitConfig(path)
 
-        api = cfg.get_container("packit-api")
+        api = get_container(cfg, "packit-api")
 
         assert (
             get_env_var(api, "PACKIT_DB_URL")
@@ -179,7 +180,7 @@ def test_api_configured_for_github_auth():
             cli.cli_start.callback(pull=False, name=path, options=options)
 
             cfg = PackitConfig(path)
-            api = cfg.get_container("packit-api")
+            api = get_container(cfg, "packit-api")
 
             # assert env variables
             assert get_env_var(api, "PACKIT_AUTH_METHOD") == b"github\n"
@@ -204,7 +205,7 @@ def test_api_configured_with_custom_branding():
             cli.cli_start.callback(pull=False, name=path, options=options)
 
             cfg = PackitConfig(path)
-            api = cfg.get_container("packit-api")
+            api = get_container(cfg, "packit-api")
 
             assert get_env_var(api, "PACKIT_BRAND_LOGO_ALT_TEXT") == b"My logo\n"
             assert get_env_var(api, "PACKIT_BRAND_LOGO_NAME") == b"examplelogo.webp\n"
@@ -226,7 +227,7 @@ def test_custom_branding_end_to_end():
             cli.cli_start.callback(pull=False, name=path, options=options)
 
             cfg = PackitConfig(path)
-            api = cfg.get_container("packit")
+            api = get_container(cfg, "packit")
 
             index_html = docker_util.string_from_container(api, "/usr/share/nginx/html/index.html")
             assert "<title>My Packit Instance</title>" in index_html
@@ -265,7 +266,7 @@ def test_deploy_with_runner_support():
         assert sum(x.name.startswith(prefix) for x in containers) == 2
 
         cfg = PackitConfig(path)
-        api = cfg.get_container("packit-api")
+        api = get_container(cfg, "packit-api")
 
         assert get_env_var(api, "PACKIT_ORDERLY_RUNNER_URL") == b"http://packit-orderly-runner-api:8001\n"
         assert (
@@ -274,7 +275,7 @@ def test_deploy_with_runner_support():
         )
         assert get_env_var(api, "PACKIT_ORDERLY_RUNNER_LOCATION_URL") == get_env_var(api, "PACKIT_OUTPACK_SERVER_URL")
 
-        runner = cfg.get_container("orderly-runner-api")
+        runner = get_container(cfg, "orderly-runner-api")
         assert get_env_var(runner, "PACKIT_RUNNER_EXAMPLE_ENVVAR") == b"hello\n"
     finally:
         stop_packit(path)
@@ -291,7 +292,7 @@ def test_vault():
             cli.cli_start.callback(pull=False, name=path, options=options)
 
             cfg = PackitConfig(path)
-            api = cfg.get_container("packit-api")
+            api = get_container(cfg, "packit-api")
 
             assert get_env_var(api, "PACKIT_DB_USER") == b"us3r\n"
             assert get_env_var(api, "PACKIT_DB_PASSWORD") == b"p@ssword\n"
@@ -313,10 +314,10 @@ def test_can_read_packit_metrics_on_custom_port():
 
         # has configured non-default management port
         cfg = PackitConfig(path)
-        api = cfg.get_container("packit-api")
+        api = get_container(cfg, "packit-api")
         assert get_env_var(api, "PACKIT_MANAGEMENT_PORT") == b"8082\n"
 
-        proxy = cfg.get_container("proxy")
+        proxy = get_container(cfg, "proxy")
         curl_output = curl_get_from_container(proxy, "http://packit-api:8082/health")
         assert '{"status":"UP"}' in curl_output
     finally:
@@ -360,6 +361,11 @@ def get_env_var(container, env):
     return docker_util.exec_safely(container, ["sh", "-c", f"echo ${env}"]).output
 
 
+def get_container(cfg, name):
+    with DockerClient() as cl:
+        return cl.containers.get(f"{cfg.container_prefix}-{cfg.containers[name]}")
+
+
 def test_db_volume_is_persisted():
     path = "config/noproxy"
     try:
@@ -375,7 +381,7 @@ def test_db_volume_is_persisted():
         cmd = ["psql", "-t", "-A", "-U", "packituser", "-d", "packit", "-c", sql]
 
         # Check that we have actually created our user:
-        db = cfg.get_container("packit-db")
+        db = get_container(cfg, "packit-db")
         users = docker_util.exec_safely(db, cmd).output.decode("UTF-8").splitlines()
         assert set(users) == {"SERVICE", "resideUser@resideAdmin.ic.ac.uk"}
 
@@ -388,7 +394,7 @@ def test_db_volume_is_persisted():
         assert res.exit_code == 0
 
         # Check that the users have survived
-        db = cfg.get_container("packit-db")
+        db = get_container(cfg, "packit-db")
         users = docker_util.exec_safely(db, cmd).output.decode("UTF-8").splitlines()
         assert set(users) == {"SERVICE", "resideUser@resideAdmin.ic.ac.uk"}
     finally:
