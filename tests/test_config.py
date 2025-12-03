@@ -1,7 +1,7 @@
 import os
-import unittest
+from pathlib import Path
 
-from src.packit_deploy.config import PackitConfig
+from packit_deploy.config import Branding, PackitConfig, Theme
 
 packit_deploy_project_root_dir = os.path.dirname(os.path.dirname(__file__))
 
@@ -80,25 +80,17 @@ def test_custom_branding_with_partial_branding_config():
     }
     cfg = PackitConfig("config/complete", options=options)
 
-    assert cfg.brand_name == "My Packit Instance"
-    assert cfg.brand_logo_alt_text == "My Packit Instance logo"
-    assert cfg.brand_logo_path == os.path.abspath(
-        os.path.join(packit_deploy_project_root_dir, "config/complete/examplelogo.webp")
+    assert cfg.brand == Branding(
+        name="My Packit Instance",
+        logo=Path(packit_deploy_project_root_dir, "config/complete/examplelogo.webp"),
+        logo_link=None,
+        logo_alt_text="My Packit Instance logo",
+        favicon=None,
+        theme_light=None,
+        theme_dark=None,
     )
-    assert cfg.brand_logo_name == "examplelogo.webp"
-    assert cfg.brand_dark_mode_enabled
-    assert cfg.brand_light_mode_enabled
-    undefined_attributes = [
-        "brand_logo_link",
-        "brand_favicon_path",
-        "brand_accent_light",
-        "brand_accent_foreground_light",
-        "brand_accent_dark",
-        "brand_accent_foreground_dark",
-    ]
-    for attr in undefined_attributes:
-        with unittest.TestCase().assertRaises(AttributeError):
-            _ = getattr(cfg, attr)
+    assert cfg.brand.dark_mode_enabled
+    assert cfg.brand.light_mode_enabled
 
 
 def test_custom_branding_without_dark_colors():
@@ -109,14 +101,11 @@ def test_custom_branding_without_dark_colors():
     }
     cfg = PackitConfig("config/complete", options=options)
 
-    assert cfg.brand_accent_light == "hsl(0 100% 50%)"
-    assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
-    undefined_attributes = ["brand_accent_dark", "brand_accent_foreground_dark"]
-    for attr in undefined_attributes:
-        with unittest.TestCase().assertRaises(AttributeError):
-            _ = getattr(cfg, attr)
-    assert not cfg.brand_dark_mode_enabled
-    assert cfg.brand_light_mode_enabled
+    assert cfg.brand.theme_light == Theme(accent="hsl(0 100% 50%)", foreground="hsl(123 100% 50%)")
+    assert cfg.brand.theme_dark is None
+
+    assert not cfg.brand.dark_mode_enabled
+    assert cfg.brand.light_mode_enabled
 
 
 def test_custom_branding_without_light_colors():
@@ -127,31 +116,26 @@ def test_custom_branding_without_light_colors():
     }
     cfg = PackitConfig("config/complete", options=options)
 
-    assert cfg.brand_accent_dark == "hsl(30 100% 50%)"
-    assert cfg.brand_accent_foreground_dark == "hsl(322 50% 87%)"
-    undefined_attributes = ["brand_accent_light", "brand_accent_foreground_light"]
-    for attr in undefined_attributes:
-        with unittest.TestCase().assertRaises(AttributeError):
-            _ = getattr(cfg, attr)
-    assert cfg.brand_dark_mode_enabled
-    assert not cfg.brand_light_mode_enabled
+    assert cfg.brand.theme_dark == Theme(accent="hsl(30 100% 50%)", foreground="hsl(322 50% 87%)")
+    assert cfg.brand.theme_light is None
+
+    assert cfg.brand.dark_mode_enabled
+    assert not cfg.brand.light_mode_enabled
 
 
 def test_custom_branding_with_complete_branding_config():
     cfg = PackitConfig("config/complete")
-
-    assert cfg.brand_logo_alt_text == "My logo"
-    assert cfg.brand_logo_link == "https://www.google.com/"
-    assert cfg.brand_favicon_path == os.path.abspath(
-        os.path.join(packit_deploy_project_root_dir, "config/complete/examplefavicon.ico")
+    assert cfg.brand == Branding(
+        name="My Packit Instance",
+        logo=Path(packit_deploy_project_root_dir, "config/complete/examplelogo.webp"),
+        logo_link="https://www.google.com/",
+        logo_alt_text="My logo",
+        theme_light=Theme(accent="hsl(0 100% 50%)", foreground="hsl(123 100% 50%)"),
+        theme_dark=Theme(accent="hsl(30 100% 50%)", foreground="hsl(322 50% 87%)"),
+        favicon=Path(packit_deploy_project_root_dir, "config/complete/examplefavicon.ico"),
     )
-    assert cfg.brand_favicon_name == "examplefavicon.ico"
-    assert cfg.brand_accent_light == "hsl(0 100% 50%)"
-    assert cfg.brand_accent_foreground_light == "hsl(123 100% 50%)"
-    assert cfg.brand_accent_dark == "hsl(30 100% 50%)"
-    assert cfg.brand_accent_foreground_dark == "hsl(322 50% 87%)"
-    assert cfg.brand_dark_mode_enabled
-    assert cfg.brand_light_mode_enabled
+    assert cfg.brand.dark_mode_enabled
+    assert cfg.brand.light_mode_enabled
 
 
 def test_management_port():
@@ -183,5 +167,5 @@ def test_workers_can_be_omitted():
 
 def test_can_use_private_urls_for_git():
     cfg = PackitConfig("config/runner-private")
-    assert cfg.orderly_runner_git_url == "git@github.com:reside-ic/orderly2-example-private.git"
-    assert isinstance(cfg.orderly_runner_git_ssh_key, str)
+    assert cfg.packit_runner_git_url == "git@github.com:reside-ic/orderly2-example-private.git"
+    assert isinstance(cfg.packit_runner_git_ssh_key, str)

@@ -4,11 +4,12 @@ import constellation
 import docker
 from constellation import acme, docker_util, vault
 
+from packit_deploy.config import PackitConfig
 from packit_deploy.docker_helpers import DockerClient
 
 
 class PackitConstellation:
-    def __init__(self, cfg):
+    def __init__(self, cfg: PackitConfig):
         # resolve secrets early so we can set these env vars from vault values
         if cfg.vault and cfg.vault.url:
             vault.resolve_secrets(cfg, cfg.vault.client())
@@ -59,7 +60,7 @@ def outpack_is_initialised(container):
     return res[0] == 0
 
 
-def outpack_server_container(cfg):
+def outpack_server_container(cfg: PackitConfig):
     name = cfg.containers["outpack-server"]
     mounts = [constellation.ConstellationVolumeMount("outpack", "/outpack")]
     outpack_server = constellation.ConstellationContainer(
@@ -68,7 +69,7 @@ def outpack_server_container(cfg):
     return outpack_server
 
 
-def outpack_server_configure(container, cfg):
+def outpack_server_configure(container, cfg: PackitConfig):
     print("[outpack] Initialising outpack repository")
     if not outpack_is_initialised(container):
         image = str(cfg.outpack_ref)
@@ -79,7 +80,7 @@ def outpack_server_configure(container, cfg):
             cl.containers.run(image, mounts=mounts, remove=True, entrypoint=args)
 
 
-def packit_db_container(cfg):
+def packit_db_container(cfg: PackitConfig):
     name = cfg.containers["packit-db"]
     mounts = [
         constellation.ConstellationVolumeMount("packit_db", "/pgdata"),
@@ -91,18 +92,18 @@ def packit_db_container(cfg):
     return packit_db
 
 
-def packit_db_configure(container, _):
+def packit_db_configure(container, _cfg: PackitConfig):
     print("[packit-db] Configuring DB container")
     docker_util.exec_safely(container, ["wait-for-db"])
 
 
-def packit_api_container(cfg):
+def packit_api_container(cfg: PackitConfig):
     name = cfg.containers["packit-api"]
     packit_api = constellation.ConstellationContainer(name, cfg.packit_api_ref, environment=packit_api_get_env(cfg))
     return packit_api
 
 
-def packit_api_get_env(cfg):
+def packit_api_get_env(cfg: PackitConfig):
     packit_db = cfg.containers["packit-db"]
     env = {
         "PACKIT_DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
@@ -110,20 +111,22 @@ def packit_api_get_env(cfg):
         "PACKIT_DB_PASSWORD": cfg.packit_db_password,
         "PACKIT_OUTPACK_SERVER_URL": cfg.outpack_server_url,
         "PACKIT_AUTH_ENABLED": "true" if cfg.packit_auth_enabled else "false",
-        "PACKIT_BRAND_DARK_MODE_ENABLED": "true" if cfg.brand_dark_mode_enabled else "false",
-        "PACKIT_BRAND_LIGHT_MODE_ENABLED": "true" if cfg.brand_light_mode_enabled else "false",
+        "PACKIT_BRAND_DARK_MODE_ENABLED": "true" if cfg.brand.dark_mode_enabled else "false",
+        "PACKIT_BRAND_LIGHT_MODE_ENABLED": "true" if cfg.brand.light_mode_enabled else "false",
         "PACKIT_CORS_ALLOWED_ORIGINS": cfg.packit_cors_allowed_origins,
         "PACKIT_BASE_URL": cfg.packit_base_url,
         "PACKIT_DEVICE_FLOW_EXPIRY_SECONDS": "300",
         "PACKIT_DEVICE_AUTH_URL": f"{cfg.packit_base_url}/device",
         "PACKIT_MANAGEMENT_PORT": cfg.packit_api_management_port,
     }
-    if hasattr(cfg, "brand_logo_name"):
-        env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand_logo_name
-    if hasattr(cfg, "brand_logo_alt_text"):
-        env["PACKIT_BRAND_LOGO_ALT_TEXT"] = cfg.brand_logo_alt_text
-    if hasattr(cfg, "brand_logo_link"):
-        env["PACKIT_BRAND_LOGO_LINK"] = cfg.brand_logo_link
+
+    if cfg.brand.logo is not None:
+        env["PACKIT_BRAND_LOGO_NAME"] = cfg.brand.logo.name
+    if cfg.brand.logo_alt_text is not None:
+        env["PACKIT_BRAND_LOGO_ALT_TEXT"] = cfg.brand.logo_alt_text
+    if cfg.brand.logo_link is not None:
+        env["PACKIT_BRAND_LOGO_LINK"] = cfg.brand.logo_link
+
     if cfg.packit_auth_enabled:
         env.update(
             {
@@ -143,31 +146,28 @@ def packit_api_get_env(cfg):
                     "PACKIT_AUTH_GITHUB_TEAM": cfg.packit_auth_github_api_team,
                 }
             )
-    if cfg.orderly_runner_enabled:
+
+    if cfg.packit_runner_git_url is not None:
         env["PACKIT_ORDERLY_RUNNER_URL"] = cfg.orderly_runner_api_url
-        env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] = cfg.orderly_runner_git_url
-        if cfg.orderly_runner_git_ssh_key:
-            env["PACKIT_ORDERLY_RUNNER_REPOSITORY_SSH_KEY"] = cfg.orderly_runner_git_ssh_key
-        # Mantra is going to tidy this up; it should always be the
-        # same as PACKIT_OUTPACK_SERVER_URL but differs because of
-        # automatic variable creation in the Kotlin framework.
+        env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] = cfg.packit_runner_git_url
+        if cfg.packit_runner_git_ssh_key is not None:
+            env["PACKIT_ORDERLY_RUNNER_REPOSITORY_SSH_KEY"] = cfg.packit_runner_git_ssh_key
         env["PACKIT_ORDERLY_RUNNER_LOCATION_URL"] = cfg.outpack_server_url
 
     return env
 
 
-def packit_container(cfg):
+def packit_container(cfg: PackitConfig):
     mounts = []
-    cfg.app_html_root = "/usr/share/nginx/html"  # from Packit app Dockerfile
 
-    if hasattr(cfg, "brand_logo_name"):
-        logo_in_container = f"{cfg.app_html_root}/img/{cfg.brand_logo_name}"
-        mounts.append(constellation.ConstellationBindMount(cfg.brand_logo_path, logo_in_container, read_only=True))
+    if cfg.brand.logo is not None:
+        logo_in_container = f"{cfg.app_html_root}/img/{cfg.brand.logo.name}"
+        mounts.append(constellation.ConstellationBindMount(str(cfg.brand.logo), logo_in_container, read_only=True))
 
-    if hasattr(cfg, "brand_favicon_name"):
-        favicon_in_container = f"{cfg.app_html_root}/{cfg.brand_favicon_name}"
+    if cfg.brand.favicon is not None:
+        favicon_in_container = f"{cfg.app_html_root}/{cfg.brand.favicon.name}"
         mounts.append(
-            constellation.ConstellationBindMount(cfg.brand_favicon_path, favicon_in_container, read_only=True)
+            constellation.ConstellationBindMount(str(cfg.brand.favicon), favicon_in_container, read_only=True)
         )
 
     packit = constellation.ConstellationContainer(
@@ -176,33 +176,33 @@ def packit_container(cfg):
     return packit
 
 
-def packit_configure(container, cfg):
+def packit_configure(container, cfg: PackitConfig):
     print("[packit] Configuring Packit container")
-    if hasattr(cfg, "brand_name"):
+    if cfg.brand.name is not None:
         # We configure the title tag of the index.html file here, rather than updating it dynamically with JS,
         # since using JS results in the page title visibly changing a number of seconds after the initial page load.
         substitute_file_content(
-            container, f"{cfg.app_html_root}/index.html", r"(?<=<title>).*?(?=</title>)", cfg.brand_name
+            container, f"{cfg.app_html_root}/index.html", r"(?<=<title>).*?(?=</title>)", cfg.brand.name
         )
-    if hasattr(cfg, "brand_favicon_name"):
-        substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand_favicon_name)
-    if hasattr(cfg, "brand_accent_light") or hasattr(cfg, "brand_accent_dark"):
-        new_css = ""
-        if cfg.brand_light_mode_enabled and hasattr(cfg, "brand_accent_light"):
-            new_css += (
-                ":root {\n"
-                f"  --custom-accent: {cfg.brand_accent_light};\n"
-                f"  --custom-accent-foreground: {cfg.brand_accent_foreground_light};\n"
-                "}\n"
-            )
-        if cfg.brand_dark_mode_enabled and hasattr(cfg, "brand_accent_dark"):
-            new_css += (
-                ".dark {\n"
-                f"  --custom-accent: {cfg.brand_accent_dark};\n"
-                f"  --custom-accent-foreground: {cfg.brand_accent_foreground_dark};\n"
-                "}\n"
-            )
-        overwrite_file(container, f"{cfg.app_html_root}/css/custom.css", new_css)
+    if cfg.brand.favicon is not None:
+        substitute_file_content(container, f"{cfg.app_html_root}/index.html", r"favicon\.ico", cfg.brand.favicon.name)
+
+    new_css = ""
+    if cfg.brand.theme_light is not None:
+        new_css += (
+            ":root {\n"
+            f"  --custom-accent: {cfg.brand.theme_light.accent};\n"
+            f"  --custom-accent-foreground: {cfg.brand.theme_light.foreground};\n"
+            "}\n"
+        )
+    if cfg.brand.theme_dark is not None:
+        new_css += (
+            ".dark {\n"
+            f"  --custom-accent: {cfg.brand.theme_dark.accent};\n"
+            f"  --custom-accent-foreground: {cfg.brand.theme_dark.foreground};\n"
+            "}\n"
+        )
+    overwrite_file(container, f"{cfg.app_html_root}/css/custom.css", new_css)
 
 
 def overwrite_file(container, path, content):
@@ -226,7 +226,7 @@ def substitute_file_content(container, path, pattern, replacement, flags=0):
     docker_util.exec_safely(container, ["rm", backup])
 
 
-def proxy_container(cfg, packit_api=None, packit=None):
+def proxy_container(cfg: PackitConfig, packit_api=None, packit=None):
     proxy_name = cfg.containers["proxy"]
     packit_api_addr = f"{packit_api.name_external(cfg.container_prefix)}:8080"
     packit_addr = packit.name_external(cfg.container_prefix)
@@ -241,26 +241,26 @@ def proxy_container(cfg, packit_api=None, packit=None):
     return proxy
 
 
-def proxy_configure(container, cfg):
+def proxy_configure(container, cfg: PackitConfig):
     print("[proxy] Configuring proxy container")
     if not cfg.use_acme:
         print("[proxy] Generating self-signed certificates for proxy")
         docker_util.exec_safely(container, ["self-signed-certificate", "/run/proxy"])
 
 
-def redis_container(cfg):
+def redis_container(cfg: PackitConfig):
     name = cfg.containers["redis"]
     image = str(cfg.images["redis"])
     return constellation.ConstellationContainer(name, image, configure=redis_configure)
 
 
-def redis_configure(container, _cfg):
+def redis_configure(container, _cfg: PackitConfig):
     print("[redis] Waiting for redis to come up")
     docker_util.string_into_container(WAIT_FOR_REDIS, container, "/wait_for_redis")
     docker_util.exec_safely(container, ["bash", "/wait_for_redis"])
 
 
-def orderly_runner_api_container(cfg):
+def orderly_runner_api_container(cfg: PackitConfig):
     name = cfg.containers["orderly-runner-api"]
     image = str(cfg.images["orderly-runner"])
     env = orderly_runner_env(cfg)
@@ -280,7 +280,7 @@ def orderly_runner_api_container(cfg):
     )
 
 
-def orderly_runner_worker_container(cfg):
+def orderly_runner_worker_container(cfg: PackitConfig):
     name = cfg.containers["orderly-runner-worker"]
     image = str(cfg.images["orderly-runner"])
     count = cfg.orderly_runner_workers
@@ -302,7 +302,7 @@ def orderly_runner_worker_container(cfg):
     )
 
 
-def orderly_runner_env(cfg):
+def orderly_runner_env(cfg: PackitConfig):
     base = {"REDIS_URL": cfg.redis_url, "ORDERLY_RUNNER_QUEUE_ID": "orderly.runner.queue"}
     return {
         **base,

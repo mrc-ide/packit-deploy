@@ -7,12 +7,12 @@ from unittest import mock
 import pytest
 from click.testing import CliRunner
 
-from src.packit_deploy import cli
-from src.packit_deploy.cli import _prompt_yes_no, _verify_data_loss
+from packit_deploy import cli
+from packit_deploy.cli import _prompt_yes_no, _verify_data_loss
 
 
 def test_can_run_start(mocker):
-    mocker.patch("src.packit_deploy.cli._constellation")
+    mocker.patch("packit_deploy.cli._constellation")
     runner = CliRunner()
     res = runner.invoke(cli.cli, ["start"])
     assert res.exit_code == 0
@@ -21,8 +21,8 @@ def test_can_run_start(mocker):
 
 
 def test_can_run_status(mocker):
-    mocker.patch("src.packit_deploy.cli._read_identity")
-    mocker.patch("src.packit_deploy.cli._constellation")
+    mocker.patch("packit_deploy.cli._read_identity")
+    mocker.patch("packit_deploy.cli._constellation")
     cli._read_identity.return_value = "config/noproxy"
     runner = CliRunner()
     res = runner.invoke(cli.cli, ["status"])
@@ -77,7 +77,7 @@ def test_can_error_if_not_configured():
 def test_verify_data_loss_called():
     f = io.StringIO()
     with redirect_stdout(f):
-        with mock.patch("src.packit_deploy.cli._verify_data_loss") as verify:
+        with mock.patch("packit_deploy.cli._verify_data_loss") as verify:
             verify.return_value = True
             runner = CliRunner()
             res = runner.invoke(cli.cli, ["stop", "--volumes", "--name", "config/noproxy"])
@@ -89,7 +89,7 @@ def test_verify_data_loss_called():
 def test_verify_data_loss_not_called():
     f = io.StringIO()
     with redirect_stdout(f):
-        with mock.patch("src.packit_deploy.cli._verify_data_loss") as verify:
+        with mock.patch("packit_deploy.cli._verify_data_loss") as verify:
             verify.return_value = True
             runner = CliRunner()
             res = runner.invoke(cli.cli, ["stop", "--name", "config/noproxy"])
@@ -101,7 +101,7 @@ def test_verify_data_loss_not_called():
 def test_verify_data_loss_warns_if_loss():
     f = io.StringIO()
     with redirect_stdout(f):
-        with mock.patch("src.packit_deploy.cli._prompt_yes_no") as prompt:
+        with mock.patch("packit_deploy.cli._prompt_yes_no") as prompt:
             prompt.return_value = True
             _verify_data_loss(False)
 
@@ -110,7 +110,7 @@ def test_verify_data_loss_warns_if_loss():
 
 
 def test_verify_data_loss_throws_if_loss():
-    with mock.patch("src.packit_deploy.cli._prompt_yes_no") as prompt:
+    with mock.patch("packit_deploy.cli._prompt_yes_no") as prompt:
         prompt.return_value = False
         with pytest.raises(Exception, match="Not continuing"):
             _verify_data_loss(False)
@@ -118,7 +118,7 @@ def test_verify_data_loss_throws_if_loss():
 
 def test_verify_data_prevents_unwanted_loss():
     msg = "Cannot remove volumes with this configuration"
-    with mock.patch("src.packit_deploy.cli._prompt_yes_no"):
+    with mock.patch("packit_deploy.cli._prompt_yes_no"):
         with pytest.raises(Exception, match=msg):
             _verify_data_loss(True)
 

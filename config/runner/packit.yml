@@ -34,9 +34,7 @@ outpack:
   server:
     name: outpack_server
     tag: main
-  migrate:
-    name: outpack.orderly
-    tag: main
+
 packit:
   base_url: https://localhost
   api:
@@ -56,14 +54,14 @@ packit:
     expiry_days: 1
     jwt:
       secret: "0b4g4f8z4mdsrhoxfde2mam8f00vmt0f"
+  runner:
+    git:
+      url: https://github.com/reside-ic/orderly2-example.git
 
 orderly-runner:
   image:
     name: orderly.runner
     tag: main
-  # Arguably this should move within the packit api now
-  git:
-    url: https://github.com/reside-ic/orderly2-example.git
   workers: 2
   env:
     PACKIT_RUNNER_EXAMPLE_ENVVAR: hello

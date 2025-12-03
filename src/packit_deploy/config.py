@@ -1,4 +1,6 @@
-import os
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Optional
 
 import constellation
 from constellation import config
@@ -6,8 +8,88 @@ from constellation import config
 from packit_deploy.docker_helpers import DockerClient
 
 
+def config_path(dat, key: list[str], *, root: str, is_optional: bool = False) -> Optional[Path]:
+    """
+    Parse the path to an external asset.
+
+    The path in the configuration is interpreted to be relative to the given
+    root. The returned path is always absolute.
+    """
+    value = config.config_string(dat, key, is_optional=is_optional)
+    if value is not None:
+        return Path(root, value).absolute()
+    else:
+        return None
+
+
+@dataclass
+class Theme:
+    accent: str
+    foreground: str
+
+    @classmethod
+    def from_data(cls, dat, key: list[str]) -> Optional["Theme"]:
+        theme = config.config_dict(dat, key, is_optional=True)
+        if theme is not None:
+            return Theme(theme["accent"], theme["accent_foreground"])
+        else:
+            return None
+
+
+@dataclass
+class Branding:
+    name: Optional[str]
+    logo: Optional[Path]
+    logo_link: Optional[str]
+    logo_alt_text: Optional[str]
+    favicon: Optional[Path]
+    theme_light: Optional[Theme]
+    theme_dark: Optional[Theme]
+
+    @classmethod
+    def from_data(cls, dat, *, root: str) -> "Branding":
+        name = config.config_string(dat, ["brand", "name"], is_optional=True)
+        logo = config_path(dat, ["brand", "logo_path"], root=root, is_optional=True)
+        logo_link = config.config_string(dat, ["brand", "logo_link"], is_optional=True)
+        logo_alt_text = config.config_string(dat, ["brand", "logo_alt_text"], is_optional=True)
+        if logo_alt_text is None and name is not None:
+            logo_alt_text = f"{name} logo"
+        favicon = config_path(dat, ["brand", "favicon_path"], root=root, is_optional=True)
+
+        theme_light = Theme.from_data(dat, ["brand", "css", "light"])
+        theme_dark = Theme.from_data(dat, ["brand", "css", "dark"])
+
+        return Branding(
+            name=name,
+            logo=logo,
+            logo_link=logo_link,
+            logo_alt_text=logo_alt_text,
+            favicon=favicon,
+            theme_light=theme_light,
+            theme_dark=theme_dark,
+        )
+
+    @property
+    def light_mode_enabled(self) -> bool:
+        if self.theme_light is None and self.theme_dark is None:
+            return True
+        else:
+            return self.theme_light is not None
+
+    @property
+    def dark_mode_enabled(self) -> bool:
+        if self.theme_light is None and self.theme_dark is None:
+            return True
+        else:
+            return self.theme_dark is not None
+
+
 class PackitConfig:
-    def __init__(self, path, extra=None, options=None):
+    app_html_root = "/usr/share/nginx/html"  # from Packit app Dockerfile
+
+    brand: Branding
+
+    def __init__(self, path, extra=None, options=None) -> None:
         dat = config.read_yaml(f"{path}/packit.yml")
         dat = config.config_build(path, dat, extra, options)
         self.vault = config.config_vault(dat, ["vault"])
@@ -60,6 +142,11 @@ class PackitConfig:
         else:
             self.packit_auth_enabled = False
 
+        self.packit_runner_git_url = config.config_string(dat, ["packit", "runner", "git", "url"], is_optional=True)
+        self.packit_runner_git_ssh_key = config.config_string(
+            dat, ["packit", "runner", "git", "ssh-key"], is_optional=True
+        )
+
         self.containers = {
             "outpack-server": "outpack-server",
             "packit-db": "packit-db",
@@ -79,12 +166,8 @@ class PackitConfig:
             self.orderly_runner_ref = self.build_ref(dat, "orderly-runner", "image", self.repo)
             self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
             self.orderly_runner_api_url = f"http://{self.container_prefix}-orderly-runner-api:8001"
-            self.orderly_runner_git_url = config.config_string(dat, ["orderly-runner", "git", "url"])
             self.orderly_runner_env = config.config_dict(dat, ["orderly-runner", "env"], is_optional=True, default={})
-            if self.orderly_runner_git_url.startswith("git@"):
-                self.orderly_runner_git_ssh_key = config.config_string(dat, ["orderly-runner", "git", "ssh"])
-            else:
-                self.orderly_runner_git_ssh_key = None
+
             self.orderly_runner_workers = config.config_integer(dat, ["orderly-runner", "workers"])
 
             self.containers["redis"] = "redis"
@@ -106,43 +189,7 @@ class PackitConfig:
         else:
             self.proxy_enabled = False
 
-        brand_config = dat.get("brand", {})
-        if brand_config.get("name"):
-            self.brand_name = config.config_string(dat, ["brand", "name"])
-        if brand_config.get("logo_path"):
-            logo_path = config.config_string(dat, ["brand", "logo_path"])
-            self.brand_logo_path = os.path.abspath(os.path.join(path, logo_path))
-            self.brand_logo_name = os.path.basename(self.brand_logo_path)
-        if brand_config.get("logo_link"):
-            self.brand_logo_link = config.config_string(dat, ["brand", "logo_link"])
-        if brand_config.get("logo_alt_text"):
-            self.brand_logo_alt_text = config.config_string(dat, ["brand", "logo_alt_text"])
-        elif brand_config.get("name"):
-            self.brand_logo_alt_text = f"{self.brand_name} logo"
-        if brand_config.get("favicon_path"):
-            favicon_path = config.config_string(dat, ["brand", "favicon_path"])
-            self.brand_favicon_path = os.path.abspath(os.path.join(path, favicon_path))
-            self.brand_favicon_name = os.path.basename(self.brand_favicon_path)
-        if brand_config.get("css"):
-            if brand_config.get("css").get("light"):
-                self.brand_accent_light = config.config_string(dat, ["brand", "css", "light", "accent"])
-                self.brand_accent_foreground_light = config.config_string(
-                    dat, ["brand", "css", "light", "accent_foreground"]
-                )
-                self.brand_light_mode_enabled = True
-            else:
-                self.brand_light_mode_enabled = False
-            if brand_config.get("css").get("dark"):
-                self.brand_accent_dark = config.config_string(dat, ["brand", "css", "dark", "accent"])
-                self.brand_accent_foreground_dark = config.config_string(
-                    dat, ["brand", "css", "dark", "accent_foreground"]
-                )
-                self.brand_dark_mode_enabled = True
-            else:
-                self.brand_dark_mode_enabled = False
-        if (not brand_config.get("css")) or (not self.brand_dark_mode_enabled and not self.brand_light_mode_enabled):
-            self.brand_light_mode_enabled = True
-            self.brand_dark_mode_enabled = True
+        self.brand = Branding.from_data(dat, root=path)
 
         if self.proxy_enabled:
             self.proxy_hostname = config.config_string(dat, ["proxy", "hostname"])
