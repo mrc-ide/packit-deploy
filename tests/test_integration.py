@@ -136,9 +136,9 @@ def test_acme_buddy_writes_cert():
             pubkey = cert.public_key()
             pubkey.verify(cert.signature, cert.tbs_certificate_bytes)
 
-
     finally:
         stop_packit(path)
+
 
 def test_api_configured():
     path = "config/noproxy"
