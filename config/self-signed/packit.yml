@@ -1,0 +1,126 @@
+## The name of the docker network that containers will be attached to.
+## If you want to proxy Packit to the host, you will need to
+## arrange a proxy on this network, or use dev_mode in the web section
+## below.
+## Prefix for container names; we'll use {container_prefix}-(container_name)
+container_prefix: packit
+
+## Set this flag to true to prevent use of --volumes in the cli to remove
+## volumes on stop
+protect_data: false
+
+## Docker org for images
+repo: ghcr.io/mrc-ide
+
+## The name of the docker network that containers will be attached to.
+## If you want to proxy Packit to the host, you will need to
+## arrange a proxy on this network
+network: packit-network
+
+## Names of the docker volumes to use:
+##
+## outpack: stores the outpack metadata
+## proxy_logs: stores logs from the reverse proxy (only used if proxy is given)
+## (More volumes are anticipated as the tool develops)
+volumes:
+  outpack: outpack_volume
+  proxy_logs: packit_proxy_logs
+  packit_db: packit_db
+  packit_db_backup: packit_db_backup
+  orderly_library: orderly_library
+  orderly_logs: orderly_logs
+
+outpack:
+  server:
+    name: outpack_server
+    tag: main
+  migrate:
+    name: outpack.orderly
+    tag: main
+
+packit:
+  base_url: https://localhost
+  api:
+    name: packit-api
+    tag: main
+  app:
+    name: packit
+    tag: main
+  db:
+    name: packit-db
+    tag: main
+    user: VAULT:secret/db/user:value
+    password: VAULT:secret/db/password:value
+  auth:
+    enabled: true
+    auth_method: github
+    expiry_days: 1
+    github_api_org: mrc-ide
+    github_api_team: packit
+    # Details of your Github OAuth app, which should be kept in the vault. The app's Authorization callback url must
+    # have the same root as the packit_api_root specified below, and should be of the form
+    # {PACKIT_API_ROOT}/login/oauth2/code/github
+    github_client:
+      id: VAULT:secret/auth/githubclient/id:value
+      secret: VAULT:secret/auth/githubclient/secret:value
+    jwt:
+      # Secret used to generate JWT tokens - this can be any string, the secret at this key in the vault is a random
+      # 32 char string, and is probably fine to re-use
+      secret: VAULT:secret/auth/jwt/secret:value
+    oauth2:
+      redirect:
+        # Root url which OAuth2 app will use to redirect back to packit api - must match OAuth2 app's registered url
+        packit_api_root: "https://packit/api"
+        url: "https://packit/redirect"  # Url for redirecting back to the front end after successful authentication
+  cors_allowed_origins: "https://packit.example.com"
+
+orderly-runner:
+  image:
+    name: orderly.runner
+    tag: main
+  git:
+    url: https://github.com/reside-ic/orderly2-example.git
+  workers: 1
+  env:
+    FOO: bar
+
+## If running a proxy directly, fill this section in.  Otherwise you
+## are responsible for proxying the application out of the docker
+## network
+proxy:
+  enabled: true
+  hostname: localhost
+  port_http: 80
+  port_https: 443
+  image:
+    name: packit-proxy
+    tag: main
+
+## Standard configuration for using LetsEncrypt certs with acme-buddy.
+## If this section is not included, the proxy will create
+## a self-signed certificate.
+acme_buddy:
+  image:
+    repo: ghcr.io/reside-ic
+    name: acme-buddy
+    tag: main
+  email: test@reside.com
+  env:
+    ACME_BUDDY_SELF_SIGNED: 1
+  port: 2112
+   
+vault:
+  ## Address of the vault server.  This should be a string if it is
+  ## present.
+  addr: ~
+  auth:
+    ## Authentication type - must be either "token" or the name of a
+    ## supported authentication method.  These seem to be poorly
+    ## documented in the hvac, but include "github" for github
+    ## authentication.
+    ##
+    ## On a vault client object, see auth.implemented_class_names for
+    ## a list, which is currently
+    ##
+    ##     azure, github, gcp, kubernetes, ldap, mfa, okta
+    method: token

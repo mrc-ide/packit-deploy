@@ -10,6 +10,8 @@ import tenacity
 import vault_dev
 from click.testing import CliRunner
 from constellation import docker_util
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
 
 from src.packit_deploy import cli
 from src.packit_deploy.config import PackitConfig
@@ -117,6 +119,26 @@ def test_proxy_ssl_configured():
     finally:
         stop_packit(path)
 
+
+def test_acme_buddy_writes_cert():
+    path = "config/self-signed"
+    try:
+        with vault_dev.Server() as s:
+            url = f"http://localhost:{s.port}"
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            write_secrets_to_vault(s.client())
+            cli.cli_start.callback(pull=False, name=path, options=options)
+            client = docker.from_env()
+            proxy = client.containers.get("packit-proxy")
+            cert_str = docker_util.string_from_container(proxy, "/run/proxy/certificate.pem")
+            cert = x509.load_pem_x509_certificate(cert_str.encode(), default_backend())
+            assert cert.subject == cert.issuer
+            pubkey = cert.public_key()
+            pubkey.verify(cert.signature, cert.tbs_certificate_bytes)
+
+
+    finally:
+        stop_packit(path)
 
 def test_api_configured():
     path = "config/noproxy"

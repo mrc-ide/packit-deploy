@@ -46,6 +46,7 @@ dependencies = [
     "click",
     "constellation",
     "coverage[toml]>=6.5",
+    "cryptography",
     "docker",
     "pytest",
     "pytest-mock",

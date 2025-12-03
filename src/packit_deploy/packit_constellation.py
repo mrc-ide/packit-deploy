@@ -12,7 +12,7 @@ class PackitConstellation:
         # resolve secrets early so we can set these env vars from vault values
         if cfg.vault and cfg.vault.url:
             vault.resolve_secrets(cfg, cfg.vault.client())
-            if cfg.use_acme:
+            if cfg.use_acme:  # pragma: no cover
                 vault.resolve_secrets(cfg.acme_config, cfg.vault.client())
         outpack = outpack_server_container(cfg)
         packit_db = packit_db_container(cfg)
