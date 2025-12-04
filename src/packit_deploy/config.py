@@ -195,11 +195,14 @@ class PackitConfig:
             self.proxy_hostname = config.config_string(dat, ["proxy", "hostname"])
             self.proxy_port_http = config.config_integer(dat, ["proxy", "port_http"])
             self.proxy_port_https = config.config_integer(dat, ["proxy", "port_https"])
-            ssl = config.config_dict(dat, ["proxy", "ssl"], True)
-            self.proxy_ssl_self_signed = ssl is None
-            if not self.proxy_ssl_self_signed:
-                self.proxy_ssl_certificate = config.config_string(dat, ["proxy", "ssl", "certificate"], True)
-                self.proxy_ssl_key = config.config_string(dat, ["proxy", "ssl", "key"], True)
+
+            acme_key = "acme_buddy"
+            self.use_acme = acme_key in dat
+            if self.use_acme:
+                self.acme_config = config.config_acme(dat, acme_key)
+                self.containers["acme-buddy"] = "acme-buddy"
+                self.images["acme-buddy"] = self.acme_config.ref
+                self.volumes["packit-tls"] = "packit-tls"
 
             self.proxy_name = config.config_string(dat, ["proxy", "image", "name"])
             self.proxy_tag = config.config_string(dat, ["proxy", "image", "tag"])

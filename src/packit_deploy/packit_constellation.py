@@ -2,7 +2,7 @@ import re
 
 import constellation
 import docker
-from constellation import docker_util, vault
+from constellation import acme, docker_util, vault
 
 from packit_deploy.config import PackitConfig
 from packit_deploy.docker_helpers import DockerClient
@@ -13,7 +13,8 @@ class PackitConstellation:
         # resolve secrets early so we can set these env vars from vault values
         if cfg.vault and cfg.vault.url:
             vault.resolve_secrets(cfg, cfg.vault.client())
-
+            if cfg.use_acme:  # pragma: no cover
+                vault.resolve_secrets(cfg.acme_config, cfg.vault.client())
         outpack = outpack_server_container(cfg)
         packit_db = packit_db_container(cfg)
         packit_api = packit_api_container(cfg)
@@ -24,6 +25,15 @@ class PackitConstellation:
         if cfg.proxy_enabled:
             proxy = proxy_container(cfg, packit_api, packit)
             containers.append(proxy)
+            if cfg.use_acme:
+                acme_container = acme.acme_buddy_container(
+                    cfg.acme_config,
+                    "acme-buddy",
+                    proxy.name_external(cfg.container_prefix),
+                    "packit-tls",
+                    cfg.proxy_hostname,
+                )
+                containers.append(acme_container)
 
         if cfg.orderly_runner_enabled:
             containers.append(redis_container(cfg))
@@ -222,6 +232,8 @@ def proxy_container(cfg: PackitConfig, packit_api=None, packit=None):
     packit_addr = packit.name_external(cfg.container_prefix)
     proxy_args = [cfg.proxy_hostname, str(cfg.proxy_port_http), str(cfg.proxy_port_https), packit_api_addr, packit_addr]
     proxy_mounts = [constellation.ConstellationVolumeMount("proxy_logs", "/var/log/nginx")]
+    if cfg.use_acme:
+        proxy_mounts += [constellation.ConstellationVolumeMount("packit-tls", "/run/proxy")]
     proxy_ports = [cfg.proxy_port_http, cfg.proxy_port_https]
     proxy = constellation.ConstellationContainer(
         proxy_name, cfg.proxy_ref, ports=proxy_ports, args=proxy_args, mounts=proxy_mounts, configure=proxy_configure
@@ -231,13 +243,9 @@ def proxy_container(cfg: PackitConfig, packit_api=None, packit=None):
 
 def proxy_configure(container, cfg: PackitConfig):
     print("[proxy] Configuring proxy container")
-    if cfg.proxy_ssl_self_signed:
+    if not cfg.use_acme:
         print("[proxy] Generating self-signed certificates for proxy")
         docker_util.exec_safely(container, ["self-signed-certificate", "/run/proxy"])
-    else:
-        print("[proxy] Copying ssl certificate and key into proxy")
-        docker_util.string_into_container(cfg.proxy_ssl_certificate, container, "/run/proxy/certificate.pem")
-        docker_util.string_into_container(cfg.proxy_ssl_key, container, "/run/proxy/key.pem")
 
 
 def redis_container(cfg: PackitConfig):

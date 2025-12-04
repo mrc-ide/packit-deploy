@@ -25,7 +25,7 @@ def test_environment_with_private_runner_contains_url_and_key():
     env = packit_api_get_env(cfg)
     assert env["PACKIT_ORDERLY_RUNNER_URL"] == "http://packit-orderly-runner-api:8001"
     assert env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] == "git@github.com:reside-ic/orderly2-example-private.git"
-    assert type(env["PACKIT_ORDERLY_RUNNER_REPOSITORY_SSH_KEY"]) is str
+    assert isinstance(env["PACKIT_ORDERLY_RUNNER_REPOSITORY_SSH_KEY"], str)
     assert env["PACKIT_ORDERLY_RUNNER_LOCATION_URL"] == "http://packit-outpack-server:8000"
 
 

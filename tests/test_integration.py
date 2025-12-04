@@ -10,6 +10,8 @@ import tenacity
 import vault_dev
 from click.testing import CliRunner
 from constellation import docker_util
+from cryptography import x509
+from cryptography.hazmat.backends import default_backend
 
 from packit_deploy import cli
 from packit_deploy.config import PackitConfig
@@ -84,7 +86,7 @@ def test_start_and_stop_proxy():
         while len(json.loads(res)) < 1 and retries < 5:
             res = http_get("http://localhost/api/packets")
             time.sleep(5)
-            retries = retries + 1
+            retries += 1
         assert len(json.loads(res)) > 1
     finally:
         stop_packit(path)
@@ -106,15 +108,33 @@ def test_proxy_ssl_configured():
             url = f"http://localhost:{s.port}"
             options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
             write_secrets_to_vault(s.client())
-
             cli.cli_start.callback(pull=False, name=path, options=options)
+            client = docker.from_env()
+            container = client.containers.get("packit-acme-buddy")
+            env = container.attrs["Config"]["Env"]
+            env_dict = dict(e.split("=", 1) for e in env)
+            assert "hdb-us3r" in env_dict["HDB_ACME_USERNAME"]
+            assert "hdb-p@assword" in env_dict["HDB_ACME_PASSWORD"]
 
-            cfg = PackitConfig(path)
-            proxy = cfg.get_container("proxy")
-            cert = docker_util.string_from_container(proxy, "run/proxy/certificate.pem")
-            key = docker_util.string_from_container(proxy, "run/proxy/key.pem")
-            assert "c3rt" in cert
-            assert "s3cret" in key
+    finally:
+        stop_packit(path)
+
+
+def test_acme_buddy_writes_cert():
+    path = "config/self-signed"
+    try:
+        with vault_dev.Server() as s:
+            url = f"http://localhost:{s.port}"
+            options = {"vault": {"addr": url, "auth": {"args": {"token": s.token}}}}
+            write_secrets_to_vault(s.client())
+            cli.cli_start.callback(pull=False, name=path, options=options)
+            client = docker.from_env()
+            proxy = client.containers.get("packit-proxy")
+            cert_str = docker_util.string_from_container(proxy, "/run/proxy/certificate.pem")
+            cert = x509.load_pem_x509_certificate(cert_str.encode(), default_backend())
+            assert cert.subject == cert.issuer
+            pubkey = cert.public_key()
+            pubkey.verify(cert.signature, cert.tbs_certificate_bytes)
 
     finally:
         stop_packit(path)
@@ -310,8 +330,7 @@ def stop_packit(path):
 
 
 def write_secrets_to_vault(cl):
-    cl.write("secret/cert", value="c3rt")
-    cl.write("secret/key", value="s3cret")
+    cl.write("secret/certbot-hdb/credentials", username="hdb-us3r", password="hdb-p@assword")
     cl.write("secret/db/user", value="us3r")
     cl.write("secret/db/password", value="p@ssword")
     cl.write("secret/ssh", public="publ1c", private="private")

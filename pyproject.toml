@@ -44,6 +44,8 @@ path = "src/packit_deploy/__about__.py"
 [tool.hatch.envs.default]
 dependencies = [
     "coverage[toml]>=6.5",
+    "cryptography",
+    "docker",
     "pytest",
     "pytest-mock",
     "tenacity",

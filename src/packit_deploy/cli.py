@@ -25,7 +25,7 @@ def cli_configure(name):
                 f"This packit instance is already configured as '{prev}', "
                 f"but you are trying to reconfigure it as '{name}'. "
                 "If you really want to do do this, then delete the file "
-                "'{IDENTITY_FILE}' from this directory and try again"
+                f"'{IDENTITY_FILE}' from this directory and try again"
             )
             raise Exception(msg)
         else:
