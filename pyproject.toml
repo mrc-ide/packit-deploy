@@ -26,7 +26,7 @@ classifiers = [
 ]
 dependencies = [
     "click",
-    "constellation~=1.4.2",
+    "constellation~=1.4.6",
     "docker",
 ]
 
@@ -181,6 +181,14 @@ exclude_lines = [
 
 [[tool.mypy.overrides]]
 module = "constellation"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "constellation.vault"
+ignore_missing_imports = true
+
+[[tool.mypy.overrides]]
+module = "constellation.acme"
 ignore_missing_imports = true
 
 [[tool.mypy.overrides]]
