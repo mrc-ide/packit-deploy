@@ -127,7 +127,8 @@ class PackitAuthGithub:
 class PackitAuth:
     VALID_AUTH_METHODS = frozenset(("github", "basic", "preauth"))
 
-    method: Union[str, PackitAuthGithub]
+    method: str
+    github: Optional[PackitAuthGithub]
     expiry_days: int
     jwt_secret: str
 
@@ -135,17 +136,12 @@ class PackitAuth:
     def from_data(cls, dat, key: list[str]) -> "PackitAuth":
         method = config.config_enum(dat, [*key, "auth_method"], PackitAuth.VALID_AUTH_METHODS)
         if method == "github":
-            method = PackitAuthGithub.from_data(dat, key)
+            github = PackitAuthGithub.from_data(dat, key)
+        else:
+            github = None
         expiry_days = config.config_integer(dat, [*key, "expiry_days"])
         jwt_secret = config.config_string(dat, [*key, "jwt", "secret"])
-        return PackitAuth(method=method, expiry_days=expiry_days, jwt_secret=jwt_secret)
-
-    @property
-    def method_name(self) -> str:
-        if isinstance(self.method, PackitAuthGithub):
-            return "github"
-        else:
-            return self.method
+        return PackitAuth(method=method, github=github, expiry_days=expiry_days, jwt_secret=jwt_secret)
 
 
 @dataclass

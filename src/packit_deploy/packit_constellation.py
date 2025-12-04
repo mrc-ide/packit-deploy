@@ -139,13 +139,13 @@ def packit_api_get_env(cfg: PackitConfig) -> dict[str, str]:
     if cfg.packit_api.auth is not None:
         env.update(
             {
-                "PACKIT_AUTH_METHOD": cfg.packit_api.auth.method_name,
+                "PACKIT_AUTH_METHOD": cfg.packit_api.auth.method,
                 "PACKIT_JWT_EXPIRY_DAYS": str(cfg.packit_api.auth.expiry_days),
                 "PACKIT_JWT_SECRET": cfg.packit_api.auth.jwt_secret,
             }
         )
-        if isinstance(cfg.packit_api.auth.method, config.PackitAuthGithub):
-            github = cfg.packit_api.auth.method
+        if cfg.packit_api.auth.github is not None:
+            github = cfg.packit_api.auth.github
             env.update(
                 {
                     "PACKIT_GITHUB_CLIENT_ID": github.client_id,
