@@ -1,7 +1,7 @@
 import os
 from pathlib import Path
 
-from packit_deploy.config import Branding, PackitAuthGithub, PackitConfig, Theme
+from packit_deploy.config import Branding, PackitConfig, Theme
 
 packit_deploy_project_root_dir = os.path.dirname(os.path.dirname(__file__))
 
@@ -54,7 +54,7 @@ def test_basic_auth():
     assert cfg.packit_api.auth is not None
     assert cfg.packit_api.auth.expiry_days == 1
     assert cfg.packit_api.auth.jwt_secret == "0b4g4f8z4mdsrhoxfde2mam8f00vmt0f"
-    assert cfg.packit_api.auth.method_name == "basic"
+    assert cfg.packit_api.auth.method == "basic"
 
 
 def test_github_auth():
@@ -62,16 +62,15 @@ def test_github_auth():
     assert cfg.packit_api.auth is not None
     assert cfg.packit_api.auth.expiry_days == 1
     assert cfg.packit_api.auth.jwt_secret == "VAULT:secret/packit/githubauth/auth/jwt:secret"
-    assert cfg.packit_api.auth.method_name == "github"
-    assert isinstance(cfg.packit_api.auth.method, PackitAuthGithub)
+    assert cfg.packit_api.auth.method == "github"
 
-    github = cfg.packit_api.auth.method
-    assert github.org == "mrc-ide"
-    assert github.team == "packit"
-    assert github.client_id == "VAULT:secret/packit/githubauth/auth/githubclient:id"
-    assert github.client_secret == "VAULT:secret/packit/githubauth/auth/githubclient:secret"
-    assert github.oauth2_redirect_packit_api_root == "https://localhost/api"
-    assert github.oauth2_redirect_url == "https://localhost/redirect"
+    assert cfg.packit_api.auth.github is not None
+    assert cfg.packit_api.auth.github.org == "mrc-ide"
+    assert cfg.packit_api.auth.github.team == "packit"
+    assert cfg.packit_api.auth.github.client_id == "VAULT:secret/packit/githubauth/auth/githubclient:id"
+    assert cfg.packit_api.auth.github.client_secret == "VAULT:secret/packit/githubauth/auth/githubclient:secret"
+    assert cfg.packit_api.auth.github.oauth2_redirect_packit_api_root == "https://localhost/api"
+    assert cfg.packit_api.auth.github.oauth2_redirect_url == "https://localhost/redirect"
 
 
 def test_custom_branding_with_partial_branding_config():
