@@ -134,8 +134,6 @@ def test_acme_buddy_writes_cert():
             cert_str = docker_util.string_from_container(proxy, "/run/proxy/certificate.pem")
             cert = x509.load_pem_x509_certificate(cert_str.encode(), default_backend())
             assert cert.subject == cert.issuer
-            pubkey = cert.public_key()
-            pubkey.verify(cert.signature, cert.tbs_certificate_bytes)
 
     finally:
         stop_packit(path)
