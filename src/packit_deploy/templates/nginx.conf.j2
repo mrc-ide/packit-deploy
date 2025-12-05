@@ -45,11 +45,11 @@ server {
     root /usr/share/nginx/html;
 
     location /api/ {
-        proxy_pass http://{{ instance.upstream_api }}/;
+        proxy_pass {{ instance.packit_api_url }}/;
     }
 
     location / {
-        proxy_pass http://{{ instance.upstream_app }}/;
+        proxy_pass {{ instance.packit_app_url }}/;
     }
 }
 {%- endfor -%}
@@ -108,3 +108,19 @@ server {
         return 301 https://$host$request_uri;
     }
 }
+
+{%- if port_metrics is not none -%}
+{%- for instance in instances -%}
+server {
+    listen       {{ port_metrics }};
+    server_name  {{ instance.hostname }};
+
+    location /metrics/outpack_server {
+        proxy_pass {{ instance.outpack_server_url }}/metrics;
+    }
+    location /metrics/packit-api {
+        proxy_pass {{ instance.packit_api_management_url }}/prometheus;
+    }
+}
+{%- endfor -%}
+{%- endif -%}

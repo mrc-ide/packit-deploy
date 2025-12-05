@@ -312,6 +312,7 @@ class Proxy:
     hostname: str
     port_http: int
     port_https: int
+    port_metrics: Optional[int]
 
     @classmethod
     def from_data(cls, dat, key: list[str], *, ctx: Context) -> "Proxy":
@@ -319,8 +320,15 @@ class Proxy:
         hostname = config.config_string(dat, [*key, "hostname"])
         port_http = config.config_integer(dat, [*key, "port_http"])
         port_https = config.config_integer(dat, [*key, "port_https"])
+        port_metrics = config.config_integer(dat, [*key, "port_metrics"], is_optional=True)
 
-        return Proxy(image=image, hostname=hostname, port_http=port_http, port_https=port_https)
+        return Proxy(
+            image=image,
+            hostname=hostname,
+            port_http=port_http,
+            port_https=port_https,
+            port_metrics=port_metrics,
+        )
 
 
 @dataclass
@@ -397,12 +405,16 @@ class PackitInstance:
         return f"http://{self.outpack_server.container_name}:8000"
 
     @property
-    def packit_app_endpoint(self) -> str:
-        return f"{self.packit_app.container_name}:80"
+    def packit_app_url(self) -> str:
+        return f"http://{self.packit_app.container_name}:80"
 
     @property
-    def packit_api_endpoint(self) -> str:
-        return f"{self.packit_api.container_name}:8080"
+    def packit_api_url(self) -> str:
+        return f"http://{self.packit_api.container_name}:8080"
+
+    @property
+    def packit_api_management_url(self) -> str:
+        return f"http://{self.packit_api.container_name}:{self.packit_api.management_port}"
 
 
 class PackitConfig:

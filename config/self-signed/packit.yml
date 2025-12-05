@@ -92,6 +92,7 @@ proxy:
   hostname: localhost
   port_http: 80
   port_https: 443
+  port_metrics: 8080
   image:
     name: packit-proxy
     tag: main

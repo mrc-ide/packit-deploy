@@ -262,6 +262,8 @@ def proxy_container(proxy: config.Proxy, cfg: PackitConfig):
     if cfg.acme_config is not None:
         mounts.append(constellation.ConstellationVolumeMount("packit-tls", "/run/proxy"))
     ports = [proxy.port_http, proxy.port_https]
+    if proxy.port_metrics is not None:
+        ports.append(proxy.port_metrics)
     return ConstellationContainer(
         name,
         image=proxy.image,
@@ -278,8 +280,10 @@ def proxy_preconfigure(container: ConstellationContainer, cfg: PackitConfig, pro
     instances = [
         {
             "hostname": instance_hostname(name, proxy.hostname),
-            "upstream_api": instance.packit_api_endpoint,
-            "upstream_app": instance.packit_app_endpoint,
+            "outpack_server_url": instance.outpack_server_url,
+            "packit_app_url": instance.packit_app_url,
+            "packit_api_url": instance.packit_api_url,
+            "packit_api_management_url": instance.packit_api_management_url,
             "name": instance.brand.name or name,
         }
         for name, instance in cfg.instances.items()
@@ -296,6 +300,7 @@ def proxy_preconfigure(container: ConstellationContainer, cfg: PackitConfig, pro
         instances=instances,
         port_http=proxy.port_http,
         port_https=proxy.port_https,
+        port_metrics=proxy.port_metrics,
         index_hostname=index_hostname,
     )
     write_to_container(nginx_conf.encode("utf-8"), container, "/etc/nginx/conf.d/default.conf")
