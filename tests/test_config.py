@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+from constellation import BuildSpec
+
 from packit_deploy.config import Branding, PackitConfig, Theme
 
 packit_deploy_project_root_dir = os.path.dirname(os.path.dirname(__file__))
@@ -40,7 +42,7 @@ def test_config_proxy():
     cfg = PackitConfig("config/novault")
     assert cfg.proxy is not None
     assert "proxy" in cfg.containers
-    assert str(cfg.proxy.image) == "ghcr.io/mrc-ide/packit-proxy:main"
+    assert cfg.proxy.image == BuildSpec(os.path.join(packit_deploy_project_root_dir, "proxy"))
     assert cfg.proxy.hostname == "localhost"
     assert cfg.proxy.port_http == 80
     assert cfg.proxy.port_https == 443

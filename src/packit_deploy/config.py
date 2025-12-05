@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import Optional, Union
 
 import constellation
-from constellation import config
+from constellation import BuildSpec, config
 from constellation.acme import AcmeBuddyConfig
 from constellation.vault import VaultConfig
 
@@ -17,7 +17,7 @@ def config_path(dat, key: list[str], *, root: str, is_optional: bool = False) ->
     """
     value = config.config_string(dat, key, is_optional=is_optional)
     if value is not None:
-        return Path(root, value).absolute()
+        return Path(root, value).resolve()
     else:
         return None
 
@@ -32,6 +32,16 @@ def config_ref(dat, key: list[str], *, repo: str) -> constellation.ImageReferenc
     name = config.config_string(dat, [*key, "name"])
     tag = config.config_string(dat, [*key, "tag"])
     return constellation.ImageReference(repo, name, tag)
+
+
+def config_buildable(dat, key: list[str], *, repo: str, root: str) -> Union["BuildSpec", constellation.ImageReference]:
+    build = config_path(dat, [*key, "build"], is_optional=True, root=root)
+    if build is not None:
+        return BuildSpec(path=str(build))
+    else:
+        name = config.config_string(dat, [*key, "name"])
+        tag = config.config_string(dat, [*key, "tag"])
+        return constellation.ImageReference(repo, name, tag)
 
 
 @dataclass
@@ -221,14 +231,14 @@ class SSL:
 
 @dataclass
 class Proxy:
-    image: constellation.ImageReference
+    image: Union[BuildSpec, constellation.ImageReference]
     hostname: str
     port_http: int
     port_https: int
 
     @classmethod
-    def from_data(cls, dat, key: list[str], *, repo: str) -> "Proxy":
-        image = config_ref(dat, [*key, "image"], repo=repo)
+    def from_data(cls, dat, key: list[str], *, repo: str, root: str) -> "Proxy":
+        image = config_buildable(dat, [*key, "image"], repo=repo, root=root)
         hostname = config.config_string(dat, [*key, "hostname"])
         port_http = config.config_integer(dat, [*key, "port_http"])
         port_https = config.config_integer(dat, [*key, "port_https"])
@@ -298,7 +308,7 @@ class PackitConfig:
         self.brand = Branding.from_data(dat, root=path)
 
         if "proxy" in dat and config.config_boolean(dat, ["proxy", "enabled"]):
-            self.proxy = Proxy.from_data(dat, ["proxy"], repo=self.repo)
+            self.proxy = Proxy.from_data(dat, ["proxy"], repo=self.repo, root=path)
             self.containers["proxy"] = "proxy"
             self.volumes["proxy_logs"] = config.config_string(dat, ["volumes", "proxy_logs"])
         else:
