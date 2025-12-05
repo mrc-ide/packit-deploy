@@ -1,0 +1,92 @@
+## Prefix for container names; we'll use {container_prefix}-(container_name)
+container_prefix: packit
+
+## Set this flag to true to prevent use of --volumes in the cli to remove
+## volumes on stop
+protect_data: false
+
+## Docker org for images
+repo: ghcr.io/mrc-ide
+
+## The name of the docker network that containers will be attached to.
+## If you want to proxy Packit to the host, you will need to
+## arrange a proxy on this network
+network: packit-network
+
+## Names of the docker volumes to use:
+volumes:
+  proxy_logs: packit_proxy_logs
+
+instances:
+  foo:
+    volumes:
+      outpack: foo_outpack_volume
+      packit_db: foo_packit_db
+
+    outpack:
+      server:
+        name: outpack_server
+        tag: main
+
+    packit:
+      base_url: https://foo.localhost
+      api:
+        name: packit-api
+        tag: main
+      app:
+        name: packit
+        tag: main
+      db:
+        name: packit-db
+        tag: main
+        user: packituser
+        password: changeme
+    brand:
+      name: Foo
+
+  bar:
+    volumes:
+      outpack: bar_outpack_volume
+      packit_db: bar_packit_db
+
+    outpack:
+      server:
+        name: outpack_server
+        tag: main
+
+    packit:
+      base_url: https://bar.localhost
+      api:
+        name: packit-api
+        tag: main
+      app:
+        name: packit
+        tag: main
+      db:
+        name: packit-db
+        tag: main
+        user: packituser
+        password: changeme
+    brand:
+      name: Bar
+
+## If running a proxy directly, fill this section in.  Otherwise you
+## are responsible for proxying the application out of the docker
+## network
+proxy:
+  enabled: true
+  hostname: localhost
+  port_http: 80
+  port_https: 443
+  image:
+    build: ../../proxy
+
+acme_buddy:
+  image:
+    repo: ghcr.io/reside-ic
+    name: acme-buddy
+    tag: main
+  email: test@reside.com
+  env:
+    ACME_BUDDY_SELF_SIGNED: 1
+  port: 2112

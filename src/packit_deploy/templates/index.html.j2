@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Packit</title>
+  </head>
+  <body>
+    <h1>Packit</h1>
+    <p>
+      <ul>
+        {% for instance in instances -%}
+          <li><a href="https://{{ instance.hostname }}/">{{ instance.name }}</a></li>
+        {% endfor %}
+      </ul>
+    </p>
+  </body>
+</html>
+
