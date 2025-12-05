@@ -157,16 +157,17 @@ class PackitAuth:
 @dataclass
 class ContainerConfig:
     """
-    A generic config class for containers that don't support any customization.
+    A generic config class for containers that don't need allow any
+    configuration options other than an image reference.
     """
 
     container_name: str
     image: constellation.ImageReference
 
     @classmethod
-    def from_data(cls, dat, key: list[str], *, repo: str, name: str) -> "ContainerConfig":
+    def from_data(cls, dat, key: list[str], *, repo: str, container_name: str) -> "ContainerConfig":
         return ContainerConfig(
-            container_name=name,
+            container_name=container_name,
             image=config_ref(dat, key, repo=repo),
         )
 
@@ -316,9 +317,9 @@ class PackitConfig:
         self.repo = config.config_string(dat, ["repo"])
 
         self.outpack_server = ContainerConfig.from_data(
-            dat, ["outpack", "server"], repo=self.repo, name="outpack-server"
+            dat, ["outpack", "server"], repo=self.repo, container_name="outpack-server"
         )
-        self.packit_app = ContainerConfig.from_data(dat, ["packit", "app"], repo=self.repo, name="packit")
+        self.packit_app = ContainerConfig.from_data(dat, ["packit", "app"], repo=self.repo, container_name="packit")
         self.packit_api = PackitAPI.from_data(dat, ["packit"], repo=self.repo)
         self.packit_db = PackitDB.from_data(dat, ["packit", "db"], repo=self.repo)
 
