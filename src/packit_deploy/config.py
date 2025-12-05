@@ -212,7 +212,7 @@ class PackitAPI:
         image = config_ref(dat, [*key, "api"], repo=ctx.repo)
         management_port = config.config_integer(dat, [*key, "api", "management_port"], is_optional=True, default=8081)
         base_url = config.config_string(dat, [*key, "base_url"])
-        default_roles = config.config_list(dat, [*key, "default_roles"], is_optional=True, default=[])
+        default_roles = config.config_string(dat, [*key, "default_roles"], is_optional=True, default="")
 
         cors_allowed_origins = config.config_string(
             dat,
