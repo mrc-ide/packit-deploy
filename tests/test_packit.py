@@ -14,19 +14,19 @@ def test_environment_with_no_runner_contains_no_envvars():
 def test_environment_with_public_runner_contains_url():
     cfg = PackitConfig("config/runner")
     env = packit_api_get_env(cfg)
-    assert env["PACKIT_ORDERLY_RUNNER_URL"] == "http://packit-orderly-runner-api:8001"
+    assert env["PACKIT_ORDERLY_RUNNER_URL"] == "http://orderly-runner-api:8001"
     assert env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] == "https://github.com/reside-ic/orderly2-example.git"
     assert "PACKIT_ORDERLY_RUNNER_REPOSITORY_SSH_KEY" not in env
-    assert env["PACKIT_ORDERLY_RUNNER_LOCATION_URL"] == "http://packit-outpack-server:8000"
+    assert env["PACKIT_ORDERLY_RUNNER_LOCATION_URL"] == "http://outpack-server:8000"
 
 
 def test_environment_with_private_runner_contains_url_and_key():
     cfg = PackitConfig("config/runner-private")
     env = packit_api_get_env(cfg)
-    assert env["PACKIT_ORDERLY_RUNNER_URL"] == "http://packit-orderly-runner-api:8001"
+    assert env["PACKIT_ORDERLY_RUNNER_URL"] == "http://orderly-runner-api:8001"
     assert env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] == "git@github.com:reside-ic/orderly2-example-private.git"
     assert isinstance(env["PACKIT_ORDERLY_RUNNER_REPOSITORY_SSH_KEY"], str)
-    assert env["PACKIT_ORDERLY_RUNNER_LOCATION_URL"] == "http://packit-outpack-server:8000"
+    assert env["PACKIT_ORDERLY_RUNNER_LOCATION_URL"] == "http://outpack-server:8000"
 
 
 def test_default_cors_origins():

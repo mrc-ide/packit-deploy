@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Optional
+from typing import ClassVar, Optional, Union
 
 import constellation
-from constellation import config
+from constellation import BuildSpec, config
 from constellation.acme import AcmeBuddyConfig
 from constellation.vault import VaultConfig
 
@@ -17,7 +17,7 @@ def config_path(dat, key: list[str], *, root: str, is_optional: bool = False) ->
     """
     value = config.config_string(dat, key, is_optional=is_optional)
     if value is not None:
-        return Path(root, value).absolute()
+        return Path(root, value).resolve()
     else:
         return None
 
@@ -32,6 +32,16 @@ def config_ref(dat, key: list[str], *, repo: str) -> constellation.ImageReferenc
     name = config.config_string(dat, [*key, "name"])
     tag = config.config_string(dat, [*key, "tag"])
     return constellation.ImageReference(repo, name, tag)
+
+
+def config_buildable(dat, key: list[str], *, repo: str, root: str) -> Union["BuildSpec", constellation.ImageReference]:
+    build = config_path(dat, [*key, "build"], is_optional=True, root=root)
+    if build is not None:
+        return BuildSpec(path=str(build))
+    else:
+        name = config.config_string(dat, [*key, "name"])
+        tag = config.config_string(dat, [*key, "tag"])
+        return constellation.ImageReference(repo, name, tag)
 
 
 @dataclass
@@ -145,7 +155,27 @@ class PackitAuth:
 
 
 @dataclass
+class ContainerConfig:
+    """
+    A generic config class for containers that don't need allow any
+    configuration options other than an image reference.
+    """
+
+    container_name: str
+    image: constellation.ImageReference
+
+    @classmethod
+    def from_data(cls, dat, key: list[str], *, repo: str, container_name: str) -> "ContainerConfig":
+        return ContainerConfig(
+            container_name=container_name,
+            image=config_ref(dat, key, repo=repo),
+        )
+
+
+@dataclass
 class PackitAPI:
+    container_name: ClassVar[str] = "packit-api"
+
     image: constellation.ImageReference
     management_port: int
     base_url: str
@@ -187,6 +217,7 @@ class PackitAPI:
 
 @dataclass
 class PackitDB:
+    container_name: ClassVar[str] = "packit-db"
     image: constellation.ImageReference
     user: str
     password: str
@@ -198,9 +229,16 @@ class PackitDB:
         password = config.config_string(dat, [*key, "password"])
         return PackitDB(image=image, user=user, password=password)
 
+    @property
+    def jdbc_url(self):
+        return f"jdbc:postgresql://{self.container_name}:5432/packit?stringtype=unspecified"
+
 
 @dataclass
 class OrderlyRunner:
+    container_name_api: ClassVar[str] = "orderly-runner-api"
+    container_name_worker: ClassVar[str] = "orderly-runner-worker"
+
     image: constellation.ImageReference
     workers: int
     env: dict[str, str]
@@ -212,6 +250,10 @@ class OrderlyRunner:
         env = config.config_dict(dat, ["orderly-runner", "env"], is_optional=True, default={})
         return OrderlyRunner(image=image, workers=workers, env=env)
 
+    @property
+    def api_url(self) -> str:
+        return f"http://{self.container_name_api}:8001"
+
 
 @dataclass
 class SSL:
@@ -221,14 +263,16 @@ class SSL:
 
 @dataclass
 class Proxy:
-    image: constellation.ImageReference
+    container_name: ClassVar[str] = "proxy"
+
+    image: Union[BuildSpec, constellation.ImageReference]
     hostname: str
     port_http: int
     port_https: int
 
     @classmethod
-    def from_data(cls, dat, key: list[str], *, repo: str) -> "Proxy":
-        image = config_ref(dat, [*key, "image"], repo=repo)
+    def from_data(cls, dat, key: list[str], *, repo: str, root: str) -> "Proxy":
+        image = config_buildable(dat, [*key, "image"], repo=repo, root=root)
         hostname = config.config_string(dat, [*key, "hostname"])
         port_http = config.config_integer(dat, [*key, "port_http"])
         port_https = config.config_integer(dat, [*key, "port_https"])
@@ -240,7 +284,6 @@ class PackitConfig:
     app_html_root = "/usr/share/nginx/html"  # from Packit app Dockerfile
 
     volumes: dict[str, str]
-    containers: dict[str, str]
 
     container_prefix: str
     network: str
@@ -248,8 +291,8 @@ class PackitConfig:
     repo: str
     vault: VaultConfig
 
-    outpack_ref: constellation.ImageReference
-    packit_ref: constellation.ImageReference
+    outpack: ContainerConfig
+    packit_app: ContainerConfig
     packit_api: PackitAPI
     packit_db: PackitDB
     orderly_runner: Optional[OrderlyRunner]
@@ -273,56 +316,45 @@ class PackitConfig:
         self.container_prefix = config.config_string(dat, ["container_prefix"])
         self.repo = config.config_string(dat, ["repo"])
 
-        self.outpack_ref = config_ref(dat, ["outpack", "server"], repo=self.repo)
-        self.packit_ref = config_ref(dat, ["packit", "app"], repo=self.repo)
-        self.packit_db = PackitDB.from_data(dat, ["packit", "db"], repo=self.repo)
+        self.outpack_server = ContainerConfig.from_data(
+            dat, ["outpack", "server"], repo=self.repo, container_name="outpack-server"
+        )
+        self.packit_app = ContainerConfig.from_data(dat, ["packit", "app"], repo=self.repo, container_name="packit")
         self.packit_api = PackitAPI.from_data(dat, ["packit"], repo=self.repo)
-
-        self.containers = {
-            "outpack-server": "outpack-server",
-            "packit-db": "packit-db",
-            "packit-api": "packit-api",
-            "packit": "packit",
-        }
+        self.packit_db = PackitDB.from_data(dat, ["packit", "db"], repo=self.repo)
 
         if "orderly-runner" in dat:
             self.orderly_runner = OrderlyRunner.from_data(dat, ["orderly-runner"], repo=self.repo)
             self.volumes["orderly_library"] = config.config_string(dat, ["volumes", "orderly_library"])
             self.volumes["orderly_logs"] = config.config_string(dat, ["volumes", "orderly_logs"])
-            self.containers["redis"] = "redis"
-            self.containers["orderly-runner-api"] = "orderly-runner-api"
-            self.containers["orderly-runner-worker"] = "orderly-runner-worker"
         else:
             self.orderly_runner = None
 
         self.brand = Branding.from_data(dat, root=path)
 
         if "proxy" in dat and config.config_boolean(dat, ["proxy", "enabled"]):
-            self.proxy = Proxy.from_data(dat, ["proxy"], repo=self.repo)
-            self.containers["proxy"] = "proxy"
+            self.proxy = Proxy.from_data(dat, ["proxy"], repo=self.repo, root=path)
             self.volumes["proxy_logs"] = config.config_string(dat, ["volumes", "proxy_logs"])
         else:
             self.proxy = None
 
         if "acme_buddy" in dat:
             self.acme_config = config.config_acme(dat, "acme_buddy")
-            self.containers["acme-buddy"] = "acme-buddy"
             self.volumes["packit-tls"] = "packit-tls"
         else:
             self.acme_config = None
 
     @property
     def outpack_server_url(self) -> str:
-        return f"http://{self.container_prefix}-{self.containers['outpack-server']}:8000"
-
-    @property
-    def orderly_runner_api_url(self) -> str:
-        return f"http://{self.container_prefix}-orderly-runner-api:8001"
+        return f"http://{self.outpack_server.container_name}:8000"
 
     @property
     def redis_url(self) -> str:
         return "redis://redis:6379"
 
     @property
-    def redis_image(self) -> constellation.ImageReference:
-        return constellation.ImageReference("library", "redis", "8.0")
+    def redis(self) -> ContainerConfig:
+        return ContainerConfig(
+            container_name="redis",
+            image=constellation.ImageReference("library", "redis", "8.0"),
+        )

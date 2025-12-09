@@ -26,8 +26,9 @@ classifiers = [
 ]
 dependencies = [
     "click",
-    "constellation~=1.4.6",
+    "constellation~=1.5.0",
     "docker",
+    "jinja2",
 ]
 
 [project.urls]

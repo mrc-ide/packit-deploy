@@ -2,11 +2,18 @@ import re
 
 import constellation
 import docker
+import jinja2
 from constellation import ConstellationContainer, acme, docker_util, vault
 
 from packit_deploy import config
 from packit_deploy.config import PackitConfig
 from packit_deploy.docker_helpers import DockerClient
+
+JINJA_ENVIRONMENT = jinja2.Environment(
+    loader=jinja2.PackageLoader("packit_deploy"),
+    undefined=jinja2.StrictUndefined,
+    autoescape=False,  # noqa: S701, we only template from config values, not user inputs
+)
 
 
 class PackitConstellation:
@@ -25,7 +32,7 @@ class PackitConstellation:
         containers = [outpack, packit_db, packit_api, packit]
 
         if cfg.proxy is not None:
-            proxy = proxy_container(cfg, cfg.proxy, packit_api, packit)
+            proxy = proxy_container(cfg.proxy, cfg)
             containers.append(proxy)
             if cfg.acme_config is not None:
                 acme_container = acme.acme_buddy_container(
@@ -63,11 +70,11 @@ def outpack_is_initialised(container):
 
 
 def outpack_server_container(cfg: PackitConfig) -> ConstellationContainer:
-    name = cfg.containers["outpack-server"]
+    name = cfg.outpack_server.container_name
     mounts = [constellation.ConstellationVolumeMount("outpack", "/outpack")]
     return ConstellationContainer(
         name,
-        cfg.outpack_ref,
+        cfg.outpack_server.image,
         mounts=mounts,
         configure=outpack_server_configure,
     )
@@ -76,7 +83,7 @@ def outpack_server_container(cfg: PackitConfig) -> ConstellationContainer:
 def outpack_server_configure(container, cfg: PackitConfig):
     print("[outpack] Initialising outpack repository")
     if not outpack_is_initialised(container):
-        image = str(cfg.outpack_ref)
+        image = str(cfg.outpack_server.image)
         mounts = [docker.types.Mount("/outpack", cfg.volumes["outpack"])]
 
         with DockerClient() as cl:
@@ -85,7 +92,7 @@ def outpack_server_configure(container, cfg: PackitConfig):
 
 
 def packit_db_container(cfg: PackitConfig) -> ConstellationContainer:
-    name = cfg.containers["packit-db"]
+    name = cfg.packit_db.container_name
     mounts = [
         constellation.ConstellationVolumeMount("packit_db", "/pgdata"),
         constellation.ConstellationVolumeMount("packit_db_backup", "/pgbackup"),
@@ -104,7 +111,7 @@ def packit_db_configure(container, _cfg: PackitConfig):
 
 
 def packit_api_container(cfg: PackitConfig) -> ConstellationContainer:
-    name = cfg.containers["packit-api"]
+    name = cfg.packit_api.container_name
     return ConstellationContainer(
         name,
         cfg.packit_api.image,
@@ -113,9 +120,8 @@ def packit_api_container(cfg: PackitConfig) -> ConstellationContainer:
 
 
 def packit_api_get_env(cfg: PackitConfig) -> dict[str, str]:
-    packit_db = cfg.containers["packit-db"]
     env: dict[str, str] = {
-        "PACKIT_DB_URL": f"jdbc:postgresql://{cfg.container_prefix}-{packit_db}:5432/packit?stringtype=unspecified",
+        "PACKIT_DB_URL": cfg.packit_db.jdbc_url,
         "PACKIT_DB_USER": cfg.packit_db.user,
         "PACKIT_DB_PASSWORD": cfg.packit_db.password,
         "PACKIT_OUTPACK_SERVER_URL": cfg.outpack_server_url,
@@ -158,7 +164,11 @@ def packit_api_get_env(cfg: PackitConfig) -> dict[str, str]:
             )
 
     if cfg.packit_api.runner_git_url is not None:
-        env["PACKIT_ORDERLY_RUNNER_URL"] = cfg.orderly_runner_api_url
+        if cfg.orderly_runner is None:
+            msg = "Runner is configured on the API but not available"
+            raise Exception(msg)
+
+        env["PACKIT_ORDERLY_RUNNER_URL"] = cfg.orderly_runner.api_url
         env["PACKIT_ORDERLY_RUNNER_REPOSITORY_URL"] = cfg.packit_api.runner_git_url
         if cfg.packit_api.runner_git_ssh_key is not None:
             env["PACKIT_ORDERLY_RUNNER_REPOSITORY_SSH_KEY"] = cfg.packit_api.runner_git_ssh_key
@@ -168,6 +178,7 @@ def packit_api_get_env(cfg: PackitConfig) -> dict[str, str]:
 
 
 def packit_container(cfg: PackitConfig):
+    name = cfg.packit_app.container_name
     mounts = []
 
     if cfg.brand.logo is not None:
@@ -181,8 +192,8 @@ def packit_container(cfg: PackitConfig):
         )
 
     return ConstellationContainer(
-        cfg.containers["packit"],
-        cfg.packit_ref,
+        name,
+        cfg.packit_app.image,
         mounts=mounts,
         configure=packit_configure,
     )
@@ -238,29 +249,40 @@ def substitute_file_content(container, path, pattern, replacement, flags=0):
     docker_util.exec_safely(container, ["rm", backup])
 
 
-def proxy_container(
-    cfg: PackitConfig,
-    proxy: config.Proxy,
-    packit_api: ConstellationContainer,
-    packit: ConstellationContainer,
-):
-    packit_api_addr = f"{packit_api.name_external(cfg.container_prefix)}:8080"
-    packit_addr = packit.name_external(cfg.container_prefix)
-
-    name = cfg.containers["proxy"]
-    args = [proxy.hostname, str(proxy.port_http), str(proxy.port_https), packit_api_addr, packit_addr]
+def proxy_container(proxy: config.Proxy, cfg: PackitConfig):
+    name = proxy.container_name
     mounts = [constellation.ConstellationVolumeMount("proxy_logs", "/var/log/nginx")]
     if cfg.acme_config is not None:
         mounts.append(constellation.ConstellationVolumeMount("packit-tls", "/run/proxy"))
     ports = [proxy.port_http, proxy.port_https]
     return ConstellationContainer(
         name,
-        proxy.image,
+        image=proxy.image,
         ports=ports,
-        args=args,
         mounts=mounts,
+        preconfigure=lambda container, cfg: proxy_preconfigure(container, cfg, proxy),
         configure=proxy_configure,
     )
+
+
+def proxy_nginx_conf(cfg: PackitConfig, proxy: config.Proxy):
+    packit_api_addr = f"{cfg.packit_api.container_name}:8080"
+    packit_app_addr = cfg.packit_app.container_name
+
+    template = JINJA_ENVIRONMENT.get_template("nginx.conf.j2")
+    return template.render(
+        upstream_api=packit_api_addr,
+        upstream_app=packit_app_addr,
+        hostname=proxy.hostname,
+        port_http=proxy.port_http,
+        port_https=proxy.port_https,
+    )
+
+
+def proxy_preconfigure(container: ConstellationContainer, cfg: PackitConfig, proxy: config.Proxy):
+    print("[proxy] Preconfiguring proxy container")
+    nginx_conf = proxy_nginx_conf(cfg, proxy)
+    docker_util.string_into_container(nginx_conf, container, "/etc/nginx/conf.d/default.conf")
 
 
 def proxy_configure(container: ConstellationContainer, cfg: PackitConfig):
@@ -271,8 +293,8 @@ def proxy_configure(container: ConstellationContainer, cfg: PackitConfig):
 
 
 def redis_container(cfg: PackitConfig) -> ConstellationContainer:
-    name = cfg.containers["redis"]
-    image = str(cfg.redis_image)
+    name = cfg.redis.container_name
+    image = str(cfg.redis.image)
     return ConstellationContainer(
         name,
         image,
@@ -287,7 +309,7 @@ def redis_configure(container, _cfg: PackitConfig):
 
 
 def orderly_runner_api_container(cfg: PackitConfig, runner: config.OrderlyRunner):
-    name = cfg.containers["orderly-runner-api"]
+    name = runner.container_name_api
     image = str(runner.image)
     env = orderly_runner_env(cfg, runner)
     entrypoint = "/usr/local/bin/orderly.runner.server"
@@ -307,7 +329,7 @@ def orderly_runner_api_container(cfg: PackitConfig, runner: config.OrderlyRunner
 
 
 def orderly_runner_worker_containers(cfg: PackitConfig, runner: config.OrderlyRunner):
-    name = cfg.containers["orderly-runner-worker"]
+    name = runner.container_name_worker
     image = str(runner.image)
     count = runner.workers
     env = orderly_runner_env(cfg, runner)
