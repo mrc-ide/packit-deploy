@@ -335,7 +335,7 @@ def test_can_read_metrics_from_proxy_single_instance():
         print(api.logs())
         assert api.status == "running"
 
-        api_res = http_get("http://localhost:8080/metrics/packit-api")
+        api_res = http_get("http://localhost:8080/metrics/packit-api", retries=50)
         assert "application_ready_time_seconds" in api_res
 
         outpack_res = http_get("http://localhost:8080/metrics/outpack_server")
@@ -380,7 +380,7 @@ def write_secrets_to_vault(cl):
 
 # Because we wait for a go signal to come up, we might not be able to
 # make the request right away:
-def http_get(url, retries=50, poll=1):
+def http_get(url, retries=5, poll=1):
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
