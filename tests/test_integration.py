@@ -6,7 +6,6 @@ import urllib
 from unittest import mock
 
 import docker
-import pytest
 import tenacity
 import vault_dev
 from click.testing import CliRunner
@@ -23,7 +22,6 @@ def _stop_args(path):
     return ["stop", "--name", path, "--kill", "--volumes", "--network"]
 
 
-@pytest.mark.skip()
 def test_start_and_stop_noproxy():
     path = "config/noproxy"
     try:
@@ -59,14 +57,12 @@ def test_start_and_stop_noproxy():
         stop_packit(path)
 
 
-@pytest.mark.skip()
 def test_status(name="config/noproxy"):
     res = CliRunner().invoke(cli.cli, ["status", "--name", name])
     assert res.exit_code == 0
     assert "Configured as 'config/noproxy'" in res.output
 
 
-@pytest.mark.skip()
 def test_start_and_stop_proxy():
     path = "config/novault"
     try:
@@ -105,7 +101,6 @@ def test_start_and_stop_proxy():
 # was never used outside of tests either.  We could also inject these
 # into the yml and rewrite it, which would make the implementation
 # less coupled from the tests.
-@pytest.mark.skip()
 def test_proxy_ssl_configured():
     path = "config/complete"
     try:
@@ -125,7 +120,6 @@ def test_proxy_ssl_configured():
         stop_packit(path)
 
 
-@pytest.mark.skip()
 def test_acme_buddy_writes_cert():
     path = "config/self-signed"
     try:
@@ -144,7 +138,6 @@ def test_acme_buddy_writes_cert():
         stop_packit(path)
 
 
-@pytest.mark.skip()
 def test_api_configured():
     path = "config/noproxy"
     try:
@@ -169,7 +162,6 @@ def test_api_configured():
         stop_packit(path)
 
 
-@pytest.mark.skip()
 def test_api_configured_for_github_auth():
     path = "config/complete"
     try:
@@ -194,7 +186,6 @@ def test_api_configured_for_github_auth():
         stop_packit(path)
 
 
-@pytest.mark.skip()
 def test_api_configured_with_custom_branding():
     path = "config/complete"
     try:
@@ -216,7 +207,6 @@ def test_api_configured_with_custom_branding():
         stop_packit(path)
 
 
-@pytest.mark.skip()
 def test_custom_branding_end_to_end():
     path = "config/complete"
     try:
@@ -252,7 +242,6 @@ def test_custom_branding_end_to_end():
 
 
 # Very basic test for now, just checking that everything appears:
-@pytest.mark.skip()
 def test_deploy_with_runner_support():
     path = "config/runner"
     try:
@@ -281,7 +270,6 @@ def test_deploy_with_runner_support():
         stop_packit(path)
 
 
-@pytest.mark.skip()
 def test_vault():
     path = "config/complete"
     try:
@@ -305,7 +293,6 @@ def test_vault():
 # within the network - we currently do not expose packit metrics through
 # the proxy as this will be done through montagu proxy, and handled
 # separately in the nix deployment
-@pytest.mark.skip()
 def test_can_read_packit_health_metrics_on_custom_port():
     path = "config/novault"
     try:
