@@ -380,7 +380,7 @@ def write_secrets_to_vault(cl):
 
 # Because we wait for a go signal to come up, we might not be able to
 # make the request right away:
-def http_get(url, retries=5, poll=1):
+def http_get(url, retries=50, poll=1):
     ctx = ssl.create_default_context()
     ctx.check_hostname = False
     ctx.verify_mode = ssl.CERT_NONE
