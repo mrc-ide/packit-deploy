@@ -22,6 +22,7 @@ instances:
     volumes:
       outpack: foo_outpack_volume
       packit_db: foo_packit_db
+      packit_db_backup: foo_packit_db_backup
 
     outpack:
       server:
@@ -48,6 +49,7 @@ instances:
     volumes:
       outpack: bar_outpack_volume
       packit_db: bar_packit_db
+      packit_db_backup: bar_packit_db_backup
 
     outpack:
       server:
@@ -78,6 +80,7 @@ proxy:
   hostname: localhost
   port_http: 80
   port_https: 443
+  port_metrics: 8080
   image:
     build: ../../proxy
 

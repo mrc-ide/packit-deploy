@@ -289,11 +289,11 @@ def test_vault():
 
 
 # Test that the custom management port defined in the novault config
-# has been correctly configured in the api so we can get metrics from
+# has been correctly configured in the api so we can get health metrics from
 # within the network - we currently do not expose packit metrics through
 # the proxy as this will be done through montagu proxy, and handled
 # separately in the nix deployment
-def test_can_read_packit_metrics_on_custom_port():
+def test_can_read_packit_health_metrics_on_custom_port():
     path = "config/novault"
     try:
         runner = CliRunner()
@@ -307,6 +307,46 @@ def test_can_read_packit_metrics_on_custom_port():
         proxy = get_container("packit-proxy")
         curl_output = curl_get_from_container(proxy, "http://packit-api:8082/health")
         assert '{"status":"UP"}' in curl_output
+    finally:
+        stop_packit(path)
+
+
+def test_can_read_metrics_from_proxy_single_instance():
+    path = "config/runner"
+    try:
+        runner = CliRunner()
+        res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
+        assert res.exit_code == 0
+
+        retries = 50
+        api_res = http_get("http://localhost:8080/metrics/packit-api", retries=retries)
+        assert "application_ready_time_seconds" in api_res
+
+        outpack_res = http_get("http://localhost:8080/metrics/outpack_server", retries=retries)
+        assert "outpack_server_build_info" in outpack_res
+    finally:
+        stop_packit(path)
+
+
+def test_can_read_metrics_from_proxy_multi_instance():
+    path = "config/multipackit"
+    try:
+        runner = CliRunner()
+        res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
+        assert res.exit_code == 0
+
+        retries = 50
+        expected_api_metrics_content = "application_ready_time_seconds"
+        assert expected_api_metrics_content in http_get("http://foo.localhost:8080/metrics/packit-api", retries=retries)
+        assert expected_api_metrics_content in http_get("http://bar.localhost:8080/metrics/packit-api", retries=retries)
+
+        expected_outpack_metrics_content = "outpack_server_build_info"
+        assert expected_outpack_metrics_content in http_get(
+            "http://foo.localhost:8080/metrics/outpack_server", retries=retries
+        )
+        assert expected_outpack_metrics_content in http_get(
+            "http://bar.localhost:8080/metrics/outpack_server", retries=retries
+        )
     finally:
         stop_packit(path)
 
