@@ -121,6 +121,7 @@ server {
     location /metrics/packit-api {
         proxy_pass {{ instance.packit_api_management_url }}/prometheus;
     }
+
 }
 {%- endfor -%}
 {%- endif -%}

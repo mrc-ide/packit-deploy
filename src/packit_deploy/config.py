@@ -199,6 +199,7 @@ class ContainerConfig:
 class PackitAPI:
     container_name: str
     image: constellation.ImageReference
+    # port at which api provides health metrics, separately proxied by montagu API - different from Proxy port_metrics!
     management_port: int
     base_url: str
     cors_allowed_origins: str
@@ -312,6 +313,7 @@ class Proxy:
     hostname: str
     port_http: int
     port_https: int
+    # port at which proxy will provide api and outpack server metrics. Different from PackitAPI management_port!
     port_metrics: Optional[int]
 
     @classmethod
