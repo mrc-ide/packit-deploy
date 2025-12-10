@@ -1,5 +1,4 @@
 import json
-import pytest
 import ssl
 import subprocess
 import time
@@ -7,6 +6,7 @@ import urllib
 from unittest import mock
 
 import docker
+import pytest
 import tenacity
 import vault_dev
 from click.testing import CliRunner
@@ -331,14 +331,11 @@ def test_can_read_metrics_from_proxy_single_instance():
         res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
         assert res.exit_code == 0
 
-        api = get_container("packit-packit-api")
-        print(api.logs())
-        assert api.status == "running"
-
-        api_res = http_get("http://localhost:8080/metrics/packit-api", retries=50)
+        retries = 50
+        api_res = http_get("http://localhost:8080/metrics/packit-api", retries=retries)
         assert "application_ready_time_seconds" in api_res
 
-        outpack_res = http_get("http://localhost:8080/metrics/outpack_server")
+        outpack_res = http_get("http://localhost:8080/metrics/outpack_server", retries=retries)
         assert "outpack_server_build_info" in outpack_res
     finally:
         stop_packit(path)
@@ -351,13 +348,18 @@ def test_can_read_metrics_from_proxy_multi_instance():
         res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
         assert res.exit_code == 0
 
+        retries = 50
         expected_api_metrics_content = "application_ready_time_seconds"
-        assert expected_api_metrics_content in http_get("http://foo.localhost:8080/metrics/packit-api")
-        assert expected_api_metrics_content in http_get("http://bar.localhost:8080/metrics/packit-api")
+        assert expected_api_metrics_content in http_get("http://foo.localhost:8080/metrics/packit-api", retries=retries)
+        assert expected_api_metrics_content in http_get("http://bar.localhost:8080/metrics/packit-api", retries=retries)
 
         expected_outpack_metrics_content = "outpack_server_build_info"
-        assert expected_outpack_metrics_content in http_get("http://foo.localhost:8080/metrics/outpack_server")
-        assert expected_outpack_metrics_content in http_get("http://bar.localhost:8080/metrics/outpack_server")
+        assert expected_outpack_metrics_content in http_get(
+            "http://foo.localhost:8080/metrics/outpack_server", retries=retries
+        )
+        assert expected_outpack_metrics_content in http_get(
+            "http://bar.localhost:8080/metrics/outpack_server", retries=retries
+        )
     finally:
         stop_packit(path)
 

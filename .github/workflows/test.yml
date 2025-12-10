@@ -51,6 +51,3 @@ jobs:
         uses: codecov/codecov-action@v5
         with:
           fail_ci_if_error: true
-      - name: Setup tmate session if failure
-        if: failure()
-        uses: mxschmitt/action-tmate@v3
