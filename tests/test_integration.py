@@ -310,6 +310,7 @@ def test_can_read_packit_health_metrics_on_custom_port():
     finally:
         stop_packit(path)
 
+
 def test_can_read_metrics_from_proxy_single_instance():
     path = "config/runner"
     try:
@@ -331,7 +332,7 @@ def test_can_read_metrics_from_proxy_multi_instance():
     try:
         runner = CliRunner()
         res = runner.invoke(cli.cli, ["start", "--pull", "--name", path])
-        assert res.exit_code == 0#
+        assert res.exit_code == 0
 
         expected_api_metrics_content = "application_ready_time_seconds"
         assert expected_api_metrics_content in http_get("http://foo.localhost:8080/metrics/packit-api")
