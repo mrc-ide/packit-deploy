@@ -135,7 +135,7 @@ def packit_api_get_env(instance: config.PackitInstance, runner: Optional[config.
         "PACKIT_CORS_ALLOWED_ORIGINS": instance.packit_api.cors_allowed_origins,
         "PACKIT_BASE_URL": instance.packit_api.base_url,
         "PACKIT_DEVICE_FLOW_EXPIRY_SECONDS": "300",
-        "PACKIT_DEVICE_AUTH_URL": f"{instance.packit_api.base_url}/device",
+        "PACKIT_DEVICE_AUTH_URL": f"{instance.packit_api.base_url.rstrip('/')}/device",
         "PACKIT_MANAGEMENT_PORT": str(instance.packit_api.management_port),
         "PACKIT_DEFAULT_ROLES": instance.packit_api.default_roles,
     }
