@@ -9,7 +9,7 @@ from constellation.acme import AcmeBuddyConfig
 from constellation.vault import VaultConfig
 
 
-def config_path(dat, key: list[str], *, root: str, is_optional: bool = False) -> Optional[Path]:
+def config_path(dat, key: list[str], *, root: str, is_optional: bool = False) -> Path | None:
     """
     Parse the path to an external asset.
 
@@ -52,7 +52,7 @@ APP_HTML_ROOT = "/usr/share/nginx/html"  # from Packit app Dockerfile
 class Context:
     root: str
     repo: str
-    instance: Optional[str]
+    instance: str | None
 
     def container_name(self, name: str) -> str:
         if self.instance is None:
@@ -83,13 +83,13 @@ class Theme:
 
 @dataclass
 class Branding:
-    name: Optional[str]
-    logo: Optional[Path]
-    logo_link: Optional[str]
-    logo_alt_text: Optional[str]
-    favicon: Optional[Path]
-    theme_light: Optional[Theme]
-    theme_dark: Optional[Theme]
+    name: str | None
+    logo: Path | None
+    logo_link: str | None
+    logo_alt_text: str | None
+    favicon: Path | None
+    theme_light: Theme | None
+    theme_dark: Theme | None
 
     @classmethod
     def from_data(cls, dat, key: list[str], *, ctx: Context) -> "Branding":
@@ -161,7 +161,7 @@ class PackitAuth:
     VALID_AUTH_METHODS = frozenset(("github", "basic", "preauth"))
 
     method: str
-    github: Optional[PackitAuthGithub]
+    github: PackitAuthGithub | None
     expiry_days: int
     jwt_secret: str
 
@@ -203,9 +203,9 @@ class PackitAPI:
     management_port: int
     base_url: str
     cors_allowed_origins: str
-    auth: Optional[PackitAuth]
-    runner_git_url: Optional[str]
-    runner_git_ssh_key: Optional[str]
+    auth: PackitAuth | None
+    runner_git_url: str | None
+    runner_git_ssh_key: str | None
     default_roles: str
 
     @classmethod
@@ -309,12 +309,12 @@ class SSL:
 class Proxy:
     container_name: ClassVar[str] = "proxy"
 
-    image: Union[BuildSpec, constellation.ImageReference]
+    image: BuildSpec | constellation.ImageReference
     hostname: str
     port_http: int
     port_https: int
     # port at which proxy will provide api and outpack server metrics. Different from PackitAPI management_port!
-    port_metrics: Optional[int]
+    port_metrics: int | None
 
     @classmethod
     def from_data(cls, dat, key: list[str], *, ctx: Context) -> "Proxy":
@@ -356,7 +356,7 @@ class PackitInstance:
 
     # packit_db_backup is not really needed for much. It was mostly used as
     # scratch space for maintenance operations.
-    volume_id_packit_db_backup: Optional[str]
+    volume_id_packit_db_backup: str | None
 
     # This is the map from volume ID to volume name, for instance-specific
     # volumes. It gets merged with other instances later.
@@ -430,13 +430,13 @@ class PackitConfig:
     protect_data: bool
     vault: VaultConfig
 
-    orderly_runner: Optional[OrderlyRunner]
-    proxy: Optional[Proxy]
-    acme_config: Optional[AcmeBuddyConfig]
+    orderly_runner: OrderlyRunner | None
+    proxy: Proxy | None
+    acme_config: AcmeBuddyConfig | None
 
     # The map of instances we host, with the same as the key.
     # In cases where a single unnamed instance is hosted, the key is None.
-    instances: dict[Optional[str], PackitInstance]
+    instances: dict[str | None, PackitInstance]
 
     def __init__(self, path, extra=None, options=None) -> None:
         dat = config.read_yaml(f"{path}/packit.yml")
