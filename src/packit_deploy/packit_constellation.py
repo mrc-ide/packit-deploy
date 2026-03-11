@@ -1,5 +1,4 @@
 import re
-from typing import Optional
 
 import constellation
 import jinja2
@@ -77,7 +76,7 @@ class PackitConstellation:
         self.obj.status()
 
 
-def instance_hostname(name: Optional[str], toplevel: str):
+def instance_hostname(name: str | None, toplevel: str):
     if name is not None:
         return f"{name}.{toplevel}"
     else:
@@ -113,7 +112,7 @@ def packit_db_configure(container, _cfg: PackitConfig):
 
 
 def packit_api_container(
-    instance: config.PackitInstance, runner: Optional[config.OrderlyRunner]
+    instance: config.PackitInstance, runner: config.OrderlyRunner | None
 ) -> ConstellationContainer:
     name = instance.packit_api.container_name
     return ConstellationContainer(
@@ -123,7 +122,7 @@ def packit_api_container(
     )
 
 
-def packit_api_get_env(instance: config.PackitInstance, runner: Optional[config.OrderlyRunner]) -> dict[str, str]:
+def packit_api_get_env(instance: config.PackitInstance, runner: config.OrderlyRunner | None) -> dict[str, str]:
     env: dict[str, str] = {
         "PACKIT_DB_URL": instance.packit_db.jdbc_url,
         "PACKIT_DB_USER": instance.packit_db.user,
