@@ -356,7 +356,7 @@ def orderly_runner_worker_containers(runner: config.OrderlyRunner):
     entrypoint = "/usr/local/bin/orderly.runner.worker"
     args = ["/data"]
     mounts = [
-        constellation.ConstellationVolumeMount("orderly_library", "/library"),
+        constellation.ConstellationVolumeMount("orderly_library", "/library", read_only=True),
         constellation.ConstellationVolumeMount("orderly_logs", "/logs"),
     ]
     return constellation.ConstellationService(
