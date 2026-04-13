@@ -49,6 +49,7 @@ On our machines, we use either [montagu-config](https://github.com/vimc/montagu-
 
 To use packit-deploy on our machines:
 
+1. Consider etiquette: when deploying to a production-like instance (science montagu, production montagu, and non-dev non-montagu packit instances), check with the team using the instance that it's convenient timing to take down packit temporarily (unless you can see that no reports have been run for months).
 1. If there has been a change to packit-deploy or the config, use [infra-scripts](https://github.com/reside-ic/infra-scripts) to install the latest version of the deploy tool and clone the config.
 1. SSH into the machine you want to update.
 1. `cd` into the config directory (either `montagu-config` or `packit-config` depending on the instance).
