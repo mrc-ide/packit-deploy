@@ -51,6 +51,10 @@ server {
     location / {
         proxy_pass {{ instance.packit_app_url }}/;
     }
+    
+    # this sets the maximum upload size information to be unlimited. 
+
+    client_max_body_size 0;
 }
 {%- endfor -%}
 
