@@ -45,13 +45,13 @@ where `<path>` is the path to a directory that contains a configuration file `pa
 
 ### In practice
 
-On our machines, we use either [montagu-config](https://github.com/vimc/montagu-config) or [packit-config](https://github.com/mrc-ide/packit-config) to provide the configuration file `packit.yml`. 
+On our servers, we use either [montagu-config](https://github.com/vimc/montagu-config) or [packit-config](https://github.com/mrc-ide/packit-config) to provide the configuration file `packit.yml`. 
 
-To use packit-deploy on our machines:
+To use packit-deploy on our servers:
 
 1. Consider etiquette: when deploying to a production-like instance (science montagu, production montagu, and non-dev non-montagu packit instances), check with the team using the instance that it's convenient timing to take down packit temporarily (unless you can see that no reports have been run for months).
 1. If there has been a change to packit-deploy or the config, use [infra-scripts](https://github.com/reside-ic/infra-scripts/blob/main/PACKIT.md) to install the latest version of the deploy tool and clone the config.
-1. SSH into the machine you want to update.
+1. SSH into the server you want to update.
 1. `cd` into the config directory (either `montagu-config` or `packit-config` depending on the instance).
 1. Use `packit` as above, e.g. run `packit status` to see what configuration is active, if any.
 
