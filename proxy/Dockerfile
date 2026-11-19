@@ -1,7 +1,7 @@
 FROM nginx:stable
 
-#	Only used	for	generating self-signed certificates
-RUN	apt-get	update &&	apt-get	install	-y openssl
+# Only used for generating self-signed certificates
+RUN apt-get update && apt-get install -y openssl
 
 VOLUME /var/log/nginx
 VOLUME /run/proxy
